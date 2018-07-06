@@ -1,0 +1,13 @@
+This "distribution" of the elastic electron scattering fitting program
+FITR (a.k.a. FITRAV) includes FITR version 5E and RAVPRO version 1E.
+A "makefile" is included which has compilation options for a number
+of operating systems.  The operating system is defined by the environment
+variable OSNAME.  This has been tested recently on Linux with g77 and
+gfortran.  On other operating systems, some adjustment may be necessary.
+Note that with gfortran, the program "notab" must be used to convert
+the "tab formatted" Fortran source to the classic space-format (see
+the program in the directory "notab").
+
+The makefile will compile the code to assume a Fourier-Bessel charge
+density.  Other charge density subroutines are included in the directory
+"chgden".
