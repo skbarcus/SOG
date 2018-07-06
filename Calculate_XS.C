@@ -51,6 +51,7 @@ void Calculate_XS()
   Double_t Fch3H, Fch3He, Fm3H, Fm3He;    //Form factors.
   Double_t mottxs3H, mottxs3He;           //Mott XS.
   Double_t xs3H, xs3He;                   //Absolute XS.
+  Double_t xsch3He, xsm3He;
 
   Double_t MtH3 = 3.0160492*0.9315;       //Mass of trinucleon (H3 or He3) [GeV].
   Double_t MtHe3 = 3.0160293*0.9315;
@@ -164,11 +165,17 @@ void Calculate_XS()
   //Calculate Mott cross section and remember to multiply by Z^2 and the recoil factor Ef/Ei. 
   mottxs3H = (  (pow(1,2)*(EfH3/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(angle/2.0),4.0)))*pow(cos(angle/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
   mottxs3He = (  (pow(2,2)*(EfHe3/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(angle/2.0),4.0)))*pow(cos(angle/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
-  cout<<"Mott XS 3He = "<<mottxs3He<<" fm^2"<<endl;
+  cout<<"3He: Mott XS = "<<mottxs3He<<" fm^2"<<endl;
   
   //xcrosssectionH3[i] = Q2H3;
   xs3H = fabs( mottxs3H*(1.0/etaH3) * (  (Q2effH3/q2_3H3)*pow(Fch3H,2.0) + (pow(muH3,2.0)*Q2effH3/(2.0*pow(MtH3,2.0)*GeV2fm)) * (Q2effH3/(2.0*q2_3H3) + pow(tan(angle/2.0),2.0)) * pow(Fm3H,2.0)  ) );
   //xcrosssectionHe3[i] = Q2He3;
   xs3He = fabs( mottxs3He*(1.0/etaHe3) * (  (Q2effHe3/q2_3He3)*pow(Fch3He,2.0) + (pow(muHe3,2.0)*Q2effHe3/(2.0*pow(MtHe3,2.0)*GeV2fm)) * (Q2effHe3/(2.0*q2_3He3) + pow(tan(angle/2.0),2.0)) * pow(Fm3He,2.0)  ) );
-  cout<<"XS 3He = "<<xs3He<<"fm^2/sr = "<<xs3He*pow(10,4)<<" ub/sr"<<endl;
+
+  //Calculate the charge and magnetic contributions to the XS.
+  xsch3He = fabs( mottxs3He*(1.0/etaHe3) * (  (Q2effHe3/q2_3He3)*pow(Fch3He,2.0)  ) );
+  xsm3He = fabs( mottxs3He*(1.0/etaHe3) * (  (pow(muHe3,2.0)*Q2effHe3/(2.0*pow(MtHe3,2.0)*GeV2fm)) * (Q2effHe3/(2.0*q2_3He3) + pow(tan(angle/2.0),2.0)) * pow(Fm3He,2.0)  ) );
+
+		 cout<<"3He: Charge contribution to XS = "<<xsch3He<<" fm^2/sr.   Magnetic contribution to XS = "<<xsm3He<<" fm^2/sr. Percent magnetic contribution = "<<100.*xsm3He/(xsch3He+xsm3He)<<"%."<<endl;
+		 cout<<"3He: XS = "<<xs3He<<" fm^2/sr = "<<xs3He*pow(10,4)<<" ub/sr"<<endl;
 }
