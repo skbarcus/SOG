@@ -594,7 +594,7 @@ Double_t mottxs(Double_t *angle2, Double_t *par)
  c2->SetGrid();
  c2->SetLogy();
 
- //Set Qi and R[i] = to the corresponding ffit parameters.
+ //Set Qi and R[i] = to the corresponding fit parameters.
  for(Int_t i=0;i<ngaus;i++)
    {
      Qi[i] = fxs->GetParameter(i);
@@ -608,6 +608,8 @@ Double_t mottxs(Double_t *angle2, Double_t *par)
    }
 
  cout<<"Gamma = "<<fxs->GetParameter(2*ngaus)<<endl;
+ //If fitting gamma need to redefine it from the XS fit parameter.
+ gamma = fxs->GetParameter(2*ngaus);
 
  Double_t ChFF(Double_t *Q, Double_t *par)
  {
@@ -626,7 +628,7 @@ Double_t mottxs(Double_t *angle2, Double_t *par)
       }
     
     fitch = fitch * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
-    //fitch = fabs(fitch);  //If want |Fch(q)|. Want this off for calculation of charge distribution.
+    fitch = fabs(fitch);  //If want |Fch(q)|. Want this off for calculation of charge distribution.
     return fitch;
  }
 
@@ -827,7 +829,7 @@ Double_t mottxs(Double_t *angle2, Double_t *par)
   Double_t *re_full = new Double_t[n+1];
   Double_t *im_full = new Double_t[n+1];
   
-  //Fill the real and complex arrays. The complex array is all zeros since we have real data. The real data is from the histogram binned to the chare form factor dervived from the SOG fit. 
+  //Fill the real and complex arrays. The complex array is all zeros since we have real data. The real data is from the histogram binned to the charge form factor dervived from the SOG fit. 
   for(Int_t i=0;i<n+1;i++)
     {
       re_full[i] = hChFF->GetBinContent(i+1);

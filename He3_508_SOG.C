@@ -15,6 +15,7 @@ Double_t GeV2fm = 1./0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
 Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
 Double_t C = 299792458.0;                //Speed of light [m/s]. 
 Double_t alpha = 1.0/137.0;              //Fine structure constant.
+Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 Int_t userand = 0;
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
@@ -64,12 +65,12 @@ void He3_508_SOG()
 
   if(usedifmin == 0)
     {
-      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_508.txt","r");
+      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
     }
 
   if(usedifmin == 1)
     {
-      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_508.txt","r");
+      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
     }
 
   //Read in data.
@@ -407,17 +408,17 @@ Double_t mottxs(Double_t *angle2, Double_t *par)
 	fitm = fitm + summtemp;
       }
     
-    fitm = fabs( fitm ) * exp(-0.25*Q2eff*pow(par[3*ngaus],2.0));
+    fitm = fitm * exp(-0.25*Q2eff*pow(par[3*ngaus],2.0));   //For some reason had fabs(fitm).
 
 
-    val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
+    val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2))*(0.5*Q2eff/q2_3 + pow(tan(angle[0]*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
 
     return val;
   }
  
  //c2->SetLogy(); 
  graph->Draw();
- TF1 *fxs = new TF1("fxs",xs, ymin, ymax,ngaus*3+1);//ngaus*2);
+ TF1 *fxs = new TF1("fxs", xs, ymin, ymax, ngaus*3+1);//ngaus*2);
 
  if(userand == 1)
    {
@@ -622,7 +623,7 @@ Double_t mottxs(Double_t *angle2, Double_t *par)
  c2->SetGrid();
  c2->SetLogy();
 
- //Set Qi and R[i] = to the corresponding ffit parameters.
+ //Set Qi and R[i] = to the corresponding fit parameters.
  for(Int_t i=0;i<ngaus;i++)
    {
      Qich[i] = fxs->GetParameter(i);
@@ -642,6 +643,8 @@ Double_t mottxs(Double_t *angle2, Double_t *par)
    }
 
  cout<<"Gamma = "<<fxs->GetParameter(3*ngaus)<<endl;
+ //If fit gamma too need to redefine gamma to the fit parameter.
+ gamma = fxs->GetParameter(3*ngaus);
 
  //Plot Charge FF.
  Double_t ChFF(Double_t *Q, Double_t *par)
