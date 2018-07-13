@@ -105,7 +105,7 @@ void SOG_XS_Fit()
   cout<<"Number of lines = "<<nlines<<endl;
   fclose(fp);
 
- //Make a new TGraph to plot on the canvas. Parameters are (number of points, x values array, y values array).
+  //Make a new TGraph to plot on the canvas. Parameters are (number of points, x values array, y values array).
   TGraphErrors *graph = new TGraphErrors(nlines-skip,theta,sigexp,0,uncertainty);
   //Draw the new TGraph called graph on the canvas. 
   graph->Draw("");
@@ -255,7 +255,7 @@ void SOG_XS_Fit()
     for(Int_t i=0; i<ngaus; i++)
       { 
 	//Fit just the Qi values using predetermined R[i] values.
-	    sumchtemp = (par[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );
+	sumchtemp = (par[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );
 	
        fitch =  fitch + sumchtemp;
       }
@@ -280,13 +280,6 @@ void SOG_XS_Fit()
 
     return val;
   }
-
-
-
-
-
-
-
 
 //Calculate XS fitting the Qi and Ri, but not gamma.
  Double_t xs1(Double_t *angle, Double_t *par)
@@ -337,13 +330,6 @@ void SOG_XS_Fit()
 
     return val;
   }
-
-
-
-
-
-
-
 
  //c2->SetLogy(); 
  graph->Draw();
