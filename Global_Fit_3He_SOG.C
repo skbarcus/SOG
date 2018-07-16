@@ -8,6 +8,7 @@
 #include <TROOT.h>
 #include <TLegend.h>
 #include <math.h>
+#include "TMinuit.h"
 
 Double_t pi = 3.141592654;
 Double_t deg2rad = pi/180.0;
@@ -27,7 +28,7 @@ Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
 Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
-Double_t E0 = 0.640;   //0.5084                 //Initial e- energy GeV.
+//Double_t E0 = 0.5084;                    //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
 Double_t ymax = 100.;//100
@@ -42,11 +43,12 @@ Int_t skip = 2.;                          //Gives number of lines to skip at top
 Int_t nlines = 0;                        //Counts number of lines in the data file. 
 Int_t ncols;                             //Set how many columns of data we have in the data file.
 char* str[1000];                          //Variable to read lines of the data file.
-Float_t thetatemp,qefftemp,sigexptemp,uncertaintytemp;
+Float_t thetatemp,qefftemp,sigexptemp,uncertaintytemp,E0temp;
 Float_t theta[100];                     //Angle in degrees.
 Float_t qeff[100];                      //q effective in fm^-1.
 Float_t sigexp[100];                    //Sigma experimental (cross section). Not sure on units yet.
 Float_t uncertainty[100];
+Float_t E0[100];
 
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
@@ -54,23 +56,105 @@ Double_t R[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 
-void SOG_XS_Fit() 
+  //Make a function for the XS using the SOG parameterization that can be minimized to fit the measured cross sections.
+  //This XS function fits only the Qi values.
+  Double_t XS(float E0, float theta, Double_t *par)
+  {
+    //Double_t value=( (par[0]*par[0])/(x*x)-1)/ ( par[1]+par[2]*y-par[3]*y*y);
+    //Double_t value = par[0] * x*x + par[1];
+    Double_t val = 0.;
+    Double_t mottxs = 0.;
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+    
+    Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+    Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
+    Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=6 A=12
+                
+    Double_t W = E0 - Ef;
+    //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
+    Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2eff  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
+    Double_t eta = 1.0 + Q2eff/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2.
+
+    Double_t Qtot = 1.0;
+    Double_t Qtemp = 0.;
+    /*
+    for(Int_t i=0;i++,ngaus)
+      {
+	Qtemp = Qtemp + par[i];
+      }*/
+
+    //Calculate Mott XS.
+    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+    
+    //if(par[0]+par[1]+par[2]+par[3]+par[4]+par[5]+par[6]+par[7]+par[8]+par[9]+par[10]+par[11] == 1.)
+    //{
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 
+	//Fit just the Qi values using predetermined R[i] values.
+	sumchtemp = (par[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );
+	
+       fitch =  fitch + sumchtemp;
+      }
+    //}
+    //fitch =  fitch * exp(-0.25*Q2eff*pow(gamma,2.0));
+    fitch =  fitch * exp(-0.25*Q2eff*pow(gamma,2.0));
+   
+    //if(par[ngaus+0]+par[ngaus+1]+par[ngaus+2]+par[ngaus+3]+par[ngaus+4]+par[ngaus+5]+par[ngaus+6]+par[ngaus+7]+par[ngaus+8]+par[ngaus+9]+par[ngaus+10]+par[ngaus+11] == 1.)
+    //{
+    //Define SOG for magnetic FF.
+    for(Int_t i=0; i<ngaus; i++)
+      {
+	//Fit just the Qi values using predetermined R[i] values.
+	summtemp = (par[ngaus+i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );	
+
+	fitm = fitm + summtemp;
+      }
+    //}
+    fitm = fitm * exp(-0.25*Q2eff*pow(gamma,2.0));   //For some reason had fabs(fitm).
+
+    val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
+    return val;
+  }
+
+  //Create a Chi^2 function to minimize. 
+  void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
+  {
+    const Int_t nbins = 59;
+    //Int_t i;
+    //calculate chisquare
+    Double_t chisq = 0;
+    Double_t delta;
+    for(Int_t i=0;i<nbins; i++) 
+      {
+	delta  = (sigexp[i]-XS(E0[i],theta[i],par))/uncertainty[i];
+	chisq += delta*delta;
+      }
+    f = chisq;
+  }
+
+void Global_Fit_3He_SOG() 
 {
   //Make a new canvas to plot data.
-  TCanvas* c1=new TCanvas("c1");
-  c1->SetGrid();
+  //TCanvas* c1=new TCanvas("c1");
+  //c1->SetGrid();
 
   //Read in data from text file.
   //Open file.
 
   if(usedifmin == 0)
     {
-      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
+      //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
+      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data.txt","r");
     }
 
   if(usedifmin == 1)
     {
-      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
+      //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
+      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data.txt","r");
     }
 
   //Read in data.
@@ -85,53 +169,68 @@ void SOG_XS_Fit()
     else
       {
 	//Read in the number of columns of data in your data file. 
-	ncols = fscanf(fp,"%f %f %f %f",&thetatemp, &qefftemp, &sigexptemp, &uncertaintytemp);
+	ncols = fscanf(fp,"%f %f %f %f",&E0temp, &thetatemp, &sigexptemp, &uncertaintytemp);
 	if (ncols < 0) break;    
 	//cout<<thetatemp<<"   "<<qefftemp<<"   "<<sigexptemp<<"   "<<uncertaintytemp<<endl;
+	E0[nlines-skip] = E0temp;
 	theta[nlines-skip] = thetatemp;
-	qeff[nlines-skip] = qefftemp;
 	sigexp[nlines-skip] = sigexptemp;
         uncertainty[nlines-skip] = uncertaintytemp; 
 	nlines++;
       }
   }
 
-//Print the data read from the file. 
-  for(int i=0; i<18; i++)
+  //Print the data read from the file. 
+  for(int i=0; i<59; i++)
     {
-      cout<<"theta["<<i<<"] = "<<theta[i]<<"   qeff["<<i<<"] = "<<qeff[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   uncertainty["<<i<<"] = "<<uncertainty[i]<<endl;
+      cout<<"E0["<<i<<"] = "<<E0[i]<<"   theta["<<i<<"] = "<<theta[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   uncertainty["<<i<<"] = "<<uncertainty[i]<<endl;
     }
-
+  
   cout<<"Number of lines = "<<nlines<<endl;
   fclose(fp);
+  
+  //Initiate Minuit for minimization.
+  TMinuit *gMinuit = new TMinuit(24);  //initialize TMinuit with a maximum of 24 params
+  gMinuit->SetFCN(fcn);
 
-  //Make a new TGraph to plot on the canvas. Parameters are (number of points, x values array, y values array).
-  TGraphErrors *graph = new TGraphErrors(nlines-skip,theta,sigexp,0,uncertainty);
-  //Draw the new TGraph called graph on the canvas. 
-  graph->Draw("");
-  c1->SetLogy();
-  //Set X axis
-  //graph->GetXaxis()->SetLimits(-12,12);
-  //Set Y axis Min and Max (not sure why different from X).
-  //graph->SetMinimum(0);
-  //graph->SetMaximum(120);
-  graph->SetLineWidth(1);
-  graph->SetLineColor(4);
-  graph->SetFillColor(0);
-  graph->SetMarkerColor(1);
-  graph->SetMarkerSize(0.4);
-  graph->SetMarkerStyle(20);
-  graph->SetTitle("3He Cross Section; Angle (degrees); #\sigma_{exp}");
-  //graph_expected.SetFillColor(kYellow);
-  //graph_expected.DrawClone("E3AL"); // E3 draws the band
+  Double_t arglist[10];
+  Int_t ierflg = 0;
 
-  // Draw the Legend
-  TLegend leg(0.9,.7,.56,.9,"Legend Title");
-  leg.SetFillColor(0);
-  leg.AddEntry(graph,"Curve Name");
-  leg.DrawClone("Same");                     //Lets you draw multiple curves to the same canvas.
-
- Double_t xs2(Double_t *angle, Double_t *par)
+  arglist[0] = 1.;
+  gMinuit->mnexcm("SET ERR", arglist ,1,ierflg);
+  
+  //Set step sizes.
+  static Double_t stepsize[4] = {0.001 , 0.1 , 0.01 , 0.001};
+  
+  //Set starting guesses for parameters. (Use Amroun's SOG parameters.)
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], 0.,1.,ierflg);
+    }
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], 0.,1.,ierflg);
+    }
+  
+  // Now ready for minimization step
+  arglist[0] = 50000.;
+  arglist[1] = 1.;
+  cout<<"Sup1"<<endl;
+  gMinuit->mnexcm("MIGRAD", arglist ,2,ierflg);
+  cout<<"Sup2"<<endl;
+  // Print results
+  Double_t amin,edm,errdef;
+  Int_t nvpar,nparx,icstat;
+  gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
+  //gMinuit->mnprin(3,amin);
+  
+  //Print the Ri used for the minimization. 
+  for(Int_t i=0;i<ngaus;i++)
+   {
+     cout<<"R["<<i<<"] = "<<R[i]<<endl;
+   }
+  
+  Double_t xs2(Double_t *angle, Double_t *par)
   {
     Double_t val = 0.;
     Double_t mottxs = 0.;
@@ -139,16 +238,16 @@ void SOG_XS_Fit()
     Double_t sumchtemp = 0.;
     Double_t fitm = 0.;
     Double_t summtemp = 0.;
-
+    
     Ef = E0/(1.0+2.0*E0*pow(sin(angle[0]*deg2rad/2.0),2.0)/MtHe3);
     Double_t Q2 = 4.0*E0*Ef*pow(sin(angle[0]*deg2rad/2.0),2.0) * GeV2fm;
     Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=6 A=12
-                
+    
     Double_t W = E0 - Ef;
     //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
     Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2eff  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
     Double_t eta = 1.0 + Q2eff/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2.
-
+    
     //Calculate Mott XS.
     mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(angle[0]*deg2rad/2.0),4.0)))*pow(cos(angle[0]*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
     
@@ -158,7 +257,7 @@ void SOG_XS_Fit()
       { 
 	//cout<<"R["<<i<<"] = "<<R[i]<<endl;
 	/*
-	if(fitvars == 0)
+	  if(fitvars == 0)
 	  {
 	    //I can't figure out if shit in here influences the fit even if the if statement is never entered. It seems to influence the fit at least in that it can break it.
 	    cout<<"Sup?"<<endl;
@@ -331,8 +430,6 @@ void SOG_XS_Fit()
     return val;
   }
 
- //c2->SetLogy(); 
- graph->Draw();
  TF1 *fxs0 = new TF1("fxs0", xs0, ymin, ymax, ngaus*2);
  TF1 *fxs1 = new TF1("fxs1", xs1, ymin, ymax, ngaus*3);
  TF1 *fxs2 = new TF1("fxs2", xs2, ymin, ymax, ngaus*3+1);
@@ -384,448 +481,9 @@ void SOG_XS_Fit()
    {
      cout<<"R["<<i<<"] = "<<R[i]<<endl;
    }
-
-if(fitvars == 0)
-   {
-     //Starting Qich values.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs0->SetParameter(i,Qich[i]);
-	 //fxs0->SetParameter(i,0.1);
-       }
-     /*
-     fxs0->SetParameter(0,Qich[0]);
-     fxs0->SetParameter(1,Qich[1]);
-     fxs0->SetParameter(2,Qich[2]);
-     fxs0->SetParameter(3,Qich[3]);
-     fxs0->SetParameter(4,Qich[4]);
-     fxs0->SetParameter(5,Qich[5]);
-     fxs0->SetParameter(6,Qich[6]);
-     fxs0->SetParameter(7,Qich[7]);
-     fxs0->SetParameter(8,Qich[8]);
-     fxs0->SetParameter(9,Qich[9]);
-     fxs0->SetParameter(10,Qich[10]);
-     fxs0->SetParameter(11,Qich[11]);
-     */
-     
-     //Force Qich to be positive.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs0->SetParLimits(i,0.,1.);
-       }
-     
-     /*
-     fxs0->SetParLimits(0,Qich[0],Qich[0]);
-     fxs0->SetParLimits(1,Qich[1],Qich[1]);
-     fxs0->SetParLimits(2,Qich[2],Qich[2]);
-     fxs0->SetParLimits(3,Qich[3],Qich[3]);
-     fxs0->SetParLimits(4,Qich[4],Qich[4]);
-     fxs0->SetParLimits(5,Qich[5],Qich[5]);
-     fxs0->SetParLimits(6,Qich[6],Qich[6]);
-     fxs0->SetParLimits(7,Qich[7],Qich[7]);
-     fxs0->SetParLimits(8,Qich[8],Qich[8]);
-     fxs0->SetParLimits(9,Qich[9],Qich[9]);
-     fxs0->SetParLimits(10,Qich[10],Qich[10]);
-     fxs0->SetParLimits(11,Qich[11],Qich[11]);
-     */
-     //Starting Qim values.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs0->SetParameter(ngaus+i,Qim[i]);
-	 //fxs0->SetParameter(ngaus+i,0.1);
-       }
-     /*
-     fxs0->SetParameter(ngaus,Qim[0]);
-     fxs0->SetParameter(ngaus+1,Qim[1]);
-     fxs0->SetParameter(ngaus+2,Qim[2]);
-     fxs0->SetParameter(ngaus+3,Qim[3]);
-     fxs0->SetParameter(ngaus+4,Qim[4]);
-     fxs0->SetParameter(ngaus+5,Qim[5]);
-     fxs0->SetParameter(ngaus+6,Qim[6]);
-     fxs0->SetParameter(ngaus+7,Qim[7]);
-     fxs0->SetParameter(ngaus+8,Qim[8]);
-     fxs0->SetParameter(ngaus+9,Qim[9]);
-     fxs0->SetParameter(ngaus+10,Qim[10]);
-     fxs0->SetParameter(ngaus+11,Qim[11]);
-     */
-     
-     //Force Qim to be positive.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs0->SetParLimits(ngaus+i,0.,1.);
-       }
-     
-     /*
-     fxs0->SetParLimits(ngaus,Qim[0],Qim[0]);
-     fxs0->SetParLimits(ngaus+1,Qim[1],Qim[1]);
-     fxs0->SetParLimits(ngaus+2,Qim[2],Qim[2]);
-     fxs0->SetParLimits(ngaus+3,Qim[3],Qim[3]);
-     fxs0->SetParLimits(ngaus+4,Qim[4],Qim[4]);
-     fxs0->SetParLimits(ngaus+5,Qim[5],Qim[5]);
-     fxs0->SetParLimits(ngaus+6,Qim[6],Qim[6]);
-     fxs0->SetParLimits(ngaus+7,Qim[7],Qim[7]);
-     fxs0->SetParLimits(ngaus+8,Qim[8],Qim[8]);
-     fxs0->SetParLimits(ngaus+9,Qim[9],Qim[9]);
-     fxs0->SetParLimits(ngaus+10,Qim[10],Qim[10]);
-     fxs0->SetParLimits(ngaus+11,Qim[11],Qim[11]);
-     */
-     cout<<"Yo5"<<endl;
-     
-   }//end fitvars == 0 parameter assignments.
-
-if(fitvars == 1)
-   {
-     //Starting Qich values.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs1->SetParameter(i,Qich[i]);
-       }
-     /*
-     fxs1->SetParameter(0,Qich[0]);
-     fxs1->SetParameter(1,Qich[1]);
-     fxs1->SetParameter(2,Qich[2]);
-     fxs1->SetParameter(3,Qich[3]);
-     fxs1->SetParameter(4,Qich[4]);
-     fxs1->SetParameter(5,Qich[5]);
-     fxs1->SetParameter(6,Qich[6]);
-     fxs1->SetParameter(7,Qich[7]);
-     fxs1->SetParameter(8,Qich[8]);
-     fxs1->SetParameter(9,Qich[9]);
-     fxs1->SetParameter(10,Qich[10]);
-     fxs1->SetParameter(11,Qich[11]);
-     */
-
-     //Force Qich to be positive.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs1->SetParLimits(i,0.,1.);
-       }
-     /*
-     fxs1->SetParLimits(0,0.,1.);
-     fxs1->SetParLimits(1,0.,1.);
-     fxs1->SetParLimits(2,0.,1.);
-     fxs1->SetParLimits(3,0.,1.);
-     fxs1->SetParLimits(4,0.,1.);
-     fxs1->SetParLimits(5,0.,1.);
-     fxs1->SetParLimits(6,0.,1.);
-     fxs1->SetParLimits(7,0.,1.);
-     fxs1->SetParLimits(8,0.,1.);
-     fxs1->SetParLimits(9,0.,1.);
-     fxs1->SetParLimits(10,0.,1.);
-     fxs1->SetParLimits(11,0.,1.);
-     */
-        
-     //Starting Qim values.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs1->SetParameter(2*ngaus+i,Qim[i]);
-       }
-     /*
-     fxs1->SetParameter(2*ngaus,Qim[0]);
-     fxs1->SetParameter(2*ngaus+1,Qim[1]);
-     fxs1->SetParameter(2*ngaus+2,Qim[2]);
-     fxs1->SetParameter(2*ngaus+3,Qim[3]);
-     fxs1->SetParameter(2*ngaus+4,Qim[4]);
-     fxs1->SetParameter(2*ngaus+5,Qim[5]);
-     fxs1->SetParameter(2*ngaus+6,Qim[6]);
-     fxs1->SetParameter(2*ngaus+7,Qim[7]);
-     fxs1->SetParameter(2*ngaus+8,Qim[8]);
-     fxs1->SetParameter(2*ngaus+9,Qim[9]);
-     fxs1->SetParameter(2*ngaus+10,Qim[10]);
-     fxs1->SetParameter(2*ngaus+11,Qim[11]);
-     */
-     
-     //Force Qim to be positive.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs1->SetParLimits(2*ngaus+i,0.,1.);
-       }
-     /*
-     fxs1->SetParLimits(2*ngaus,0.,1.);
-     fxs1->SetParLimits(2*ngaus+1,0.,1.);
-     fxs1->SetParLimits(2*ngaus+2,0.,1.);
-     fxs1->SetParLimits(2*ngaus+3,0.,1.);
-     fxs1->SetParLimits(2*ngaus+4,0.,1.);
-     fxs1->SetParLimits(2*ngaus+5,0.,1.);
-     fxs1->SetParLimits(2*ngaus+6,0.,1.);
-     fxs1->SetParLimits(2*ngaus+7,0.,1.);
-     fxs1->SetParLimits(2*ngaus+8,0.,1.);
-     fxs1->SetParLimits(2*ngaus+9,0.,1.);
-     fxs1->SetParLimits(2*ngaus+10,0.,1.);
-     fxs1->SetParLimits(2*ngaus+11,0.,1.);
-     cout<<"Yo5"<<endl;
-     */
-
-     //Starting Ri values.
-     fxs1->SetParameter(ngaus,0.00000001);   //Make sure R[0] is not actually zero as it would cause a pole to appear.
-     for(Int_t i=1;i<ngaus;i++)
-       {
-	 fxs1->SetParameter(ngaus+i,R[i]);
-       }
-     /*
-     fxs1->SetParameter(ngaus,0.00000001);
-     fxs1->SetParameter(ngaus+1,R[1]);
-     fxs1->SetParameter(ngaus+2,R[2]);
-     fxs1->SetParameter(ngaus+3,R[3]);
-     fxs1->SetParameter(ngaus+4,R[4]);
-     fxs1->SetParameter(ngaus+5,R[5]);
-     fxs1->SetParameter(ngaus+6,R[6]);
-     fxs1->SetParameter(ngaus+7,R[7]);
-     fxs1->SetParameter(ngaus+8,R[8]);
-     fxs1->SetParameter(ngaus+9,R[9]);
-     fxs1->SetParameter(ngaus+10,R[10]);
-     fxs1->SetParameter(ngaus+11,R[11]);
-     */
-
-     if(userand == 0)
-       {
-	 Double_t d = 0.1001;//0.5001//0.1001
-
-	 fxs1->SetParLimits(ngaus,0.00000001,0.001);//0.5
-	 for(Int_t i=1;i<ngaus;i++)
-	   {
-	     fxs1->SetParLimits(ngaus+i,R[i]-dx,R[i]+dx);
-	   }
-	 /*
-	 fxs1->SetParLimits(11,0.00000001,0.1001);//0.5
-	 fxs1->SetParLimits(12,R[1]-d,R[1]+d);
-	 fxs1->SetParLimits(13,R[2]-d,R[2]+d);
-	 fxs1->SetParLimits(14,R[3]-d,R[3]+d);
-	 fxs1->SetParLimits(15,R[4]-d,R[4]+d);
-	 fxs1->SetParLimits(16,R[5]-d,R[5]+d);
-	 fxs1->SetParLimits(17,R[6]-d,R[6]+d);
-	 fxs1->SetParLimits(18,R[7]-d,R[7]+d);
-	 fxs1->SetParLimits(19,R[8]-d,R[8]+d);
-	 fxs1->SetParLimits(20,R[9]-d,R[9]+d);
-	 fxs1->SetParLimits(21,R[10]-d,R[10]+d);
-	 */
-       } 
-     
-     if(userand == 1)
-       {
-	 Double_t dx = 0.1001;//0.5001
-	 
-	 fxs1->SetParLimits(ngaus,0.00000001,0.001);//0.5
-	 for(Int_t i=1;i<ngaus;i++)
-	   {
-	     fxs1->SetParLimits(ngaus+i,R[i]-dx,R[i]+dx);
-	   }
-	 /*
-	 fxs1->SetParLimits(12,0.00000001,0.001);//0.5
-	 fxs1->SetParLimits(13,R[1]-dx,R[1]+dx);
-	 fxs1->SetParLimits(14,R[2]-dx,R[2]+dx);
-	 fxs1->SetParLimits(15,R[3]-dx,R[3]+dx);
-	 fxs1->SetParLimits(16,R[4]-dx,R[4]+dx);
-	 fxs1->SetParLimits(17,R[5]-dx,R[5]+dx);
-	 fxs1->SetParLimits(18,R[6]-dx,R[6]+dx);
-	 fxs1->SetParLimits(19,R[7]-dx,R[7]+dx);
-	 fxs1->SetParLimits(20,R[8]-dx,R[8]+dx);
-	 fxs1->SetParLimits(21,R[9]-dx,R[9]+dx);
-	 fxs1->SetParLimits(22,R[10]-dx,R[10]+dx);
-	 fxs1->SetParLimits(23,R[11]-dx,R[11]+dx);
-	 */
-       } 
-     
-   }//end fitvars == 1 parameter assignments.
-
- if(fitvars == 2)
-   {   
-     //Starting Qich values.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs2->SetParameter(i,Qich[i]);
-       }
-     /*
-     fxs2->SetParameter(0,Qich[0]);
-     fxs2->SetParameter(1,Qich[1]);
-     fxs2->SetParameter(2,Qich[2]);
-     fxs2->SetParameter(3,Qich[3]);
-     fxs2->SetParameter(4,Qich[4]);
-     fxs2->SetParameter(5,Qich[5]);
-     fxs2->SetParameter(6,Qich[6]);
-     fxs2->SetParameter(7,Qich[7]);
-     fxs2->SetParameter(8,Qich[8]);
-     fxs2->SetParameter(9,Qich[9]);
-     fxs2->SetParameter(10,Qich[10]);
-     fxs2->SetParameter(11,Qich[11]);
-     */
-     
-     //Force Qich to be positive.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs2->SetParLimits(i,0.,1.);
-       }
-     /*
-     fxs2->SetParLimits(0,0.,1.);
-     fxs2->SetParLimits(1,0.,1.);
-     fxs2->SetParLimits(2,0.,1.);
-     fxs2->SetParLimits(3,0.,1.);
-     fxs2->SetParLimits(4,0.,1.);
-     fxs2->SetParLimits(5,0.,1.);
-     fxs2->SetParLimits(6,0.,1.);
-     fxs2->SetParLimits(7,0.,1.);
-     fxs2->SetParLimits(8,0.,1.);
-     fxs2->SetParLimits(9,0.,1.);
-     fxs2->SetParLimits(10,0.,1.);
-     fxs2->SetParLimits(11,0.,1.);
-     */
-     
-     //Starting Ri values.
-     fxs2->SetParameter(ngaus,0.00000001);
-     for(Int_t i=1;i<ngaus;i++)
-       {
-	 fxs2->SetParameter(ngaus+i,R[i]);
-       }
-     /*
-     fxs2->SetParameter(ngaus,0.00000001);
-     fxs2->SetParameter(ngaus+1,R[1]);
-     fxs2->SetParameter(ngaus+2,R[2]);
-     fxs2->SetParameter(ngaus+3,R[3]);
-     fxs2->SetParameter(ngaus+4,R[4]);
-     fxs2->SetParameter(ngaus+5,R[5]);
-     fxs2->SetParameter(ngaus+6,R[6]);
-     fxs2->SetParameter(ngaus+7,R[7]);
-     fxs2->SetParameter(ngaus+8,R[8]);
-     fxs2->SetParameter(ngaus+9,R[9]);
-     fxs2->SetParameter(ngaus+10,R[10]);
-     fxs2->SetParameter(ngaus+11,R[11]);
-     */
-     
-     //Starting Qim values.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs2->SetParameter(2*ngaus+i,Qim[i]);
-       }
-     /*
-     fxs2->SetParameter(2*ngaus,Qim[0]);
-     fxs2->SetParameter(2*ngaus+1,Qim[1]);
-     fxs2->SetParameter(2*ngaus+2,Qim[2]);
-     fxs2->SetParameter(2*ngaus+3,Qim[3]);
-     fxs2->SetParameter(2*ngaus+4,Qim[4]);
-     fxs2->SetParameter(2*ngaus+5,Qim[5]);
-     fxs2->SetParameter(2*ngaus+6,Qim[6]);
-     fxs2->SetParameter(2*ngaus+7,Qim[7]);
-     fxs2->SetParameter(2*ngaus+8,Qim[8]);
-     fxs2->SetParameter(2*ngaus+9,Qim[9]);
-     fxs2->SetParameter(2*ngaus+10,Qim[10]);
-     fxs2->SetParameter(2*ngaus+11,Qim[11]);
-     */
-     
-     //Force Qim to be positive.
-     for(Int_t i=0;i<ngaus;i++)
-       {
-	 fxs2->SetParLimits(2*ngaus+i,0.,1.);
-       }
-     /*
-     fxs2->SetParLimits(2*ngaus,0.,1.);
-     fxs2->SetParLimits(2*ngaus+1,0.,1.);
-     fxs2->SetParLimits(2*ngaus+2,0.,1.);
-     fxs2->SetParLimits(2*ngaus+3,0.,1.);
-     fxs2->SetParLimits(2*ngaus+4,0.,1.);
-     fxs2->SetParLimits(2*ngaus+5,0.,1.);
-     fxs2->SetParLimits(2*ngaus+6,0.,1.);
-     fxs2->SetParLimits(2*ngaus+7,0.,1.);
-     fxs2->SetParLimits(2*ngaus+8,0.,1.);
-     fxs2->SetParLimits(2*ngaus+9,0.,1.);
-     fxs2->SetParLimits(2*ngaus+10,0.,1.);
-     fxs2->SetParLimits(2*ngaus+11,0.,1.);
-     cout<<"Yo5"<<endl;
-     */
-     
-     //Starting value for gamma.
-     //fxs2->SetParameter(3*ngaus,0.8);              //Gives much better fits around chi^2 ~ 1.
-     fxs2->SetParameter(3*ngaus,0.8*pow(2./3.,0.5)); //Amroun's value. Makes fit chi^2 much more variable and the fits worse. Still can get fits around chi^2 ~ 1.
-     
-     if(userand == 0)
-       {
-	 Double_t d = 0.1001;//0.5001//0.1001
-
-	 fxs2->SetParLimits(ngaus,0.00000001,0.001);
-	 for(Int_t i=1;i<ngaus;i++)
-	   {
-	     fxs2->SetParLimits(ngaus+i,R[i]-dx,R[i]+dx);
-	   }
-	 /*
-	 fxs2->SetParLimits(11,0.00000001,0.1001);//0.5
-	 fxs2->SetParLimits(12,R[1]-d,R[1]+d);
-	 fxs2->SetParLimits(13,R[2]-d,R[2]+d);
-	 fxs2->SetParLimits(14,R[3]-d,R[3]+d);
-	 fxs2->SetParLimits(15,R[4]-d,R[4]+d);
-	 fxs2->SetParLimits(16,R[5]-d,R[5]+d);
-	 fxs2->SetParLimits(17,R[6]-d,R[6]+d);
-	 fxs2->SetParLimits(18,R[7]-d,R[7]+d);
-	 fxs2->SetParLimits(19,R[8]-d,R[8]+d);
-	 fxs2->SetParLimits(20,R[9]-d,R[9]+d);
-	 fxs2->SetParLimits(21,R[10]-d,R[10]+d);
-	 */
-       } 
-     
-     if(userand == 1)
-       {
-	 Double_t dx = 0.1001;//0.5001
-	 
-	 fxs2->SetParLimits(ngaus,0.00000001,0.001);
-	 for(Int_t i=1;i<ngaus;i++)
-	   {
-	     fxs2->SetParLimits(ngaus+i,R[i]-dx,R[i]+dx);
-	   }
-	 /*
-	 fxs2->SetParLimits(12,0.00000001,0.001);//0.5
-	 fxs2->SetParLimits(13,R[1]-dx,R[1]+dx);
-	 fxs2->SetParLimits(14,R[2]-dx,R[2]+dx);
-	 fxs2->SetParLimits(15,R[3]-dx,R[3]+dx);
-	 fxs2->SetParLimits(16,R[4]-dx,R[4]+dx);
-	 fxs2->SetParLimits(17,R[5]-dx,R[5]+dx);
-	 fxs2->SetParLimits(18,R[6]-dx,R[6]+dx);
-	 fxs2->SetParLimits(19,R[7]-dx,R[7]+dx);
-	 fxs2->SetParLimits(20,R[8]-dx,R[8]+dx);
-	 fxs2->SetParLimits(21,R[9]-dx,R[9]+dx);
-	 fxs2->SetParLimits(22,R[10]-dx,R[10]+dx);
-	 fxs2->SetParLimits(23,R[11]-dx,R[11]+dx);
-	 */
-       } 
-   }//end fitvars == 2 parameter assignments.
  
- // Set stat options
- //gStyle->SetStatY(0.9);                
- // Set y-position (fraction of pad size)
- //gStyle->SetStatX(0.9);                
- // Set x-position (fraction of pad size)
- gStyle->SetStatW(0.15);                
- // Set width of stat-box (fraction of pad size)
- gStyle->SetStatH(0.025);
 
- //Fit just the Qi.
- if(fitvars == 0)
-   {
-     graph->Fit(fxs0,"");
-     gStyle->SetOptFit(100);
-     fxs0->Draw("same");
-     Double_t chi2 = fxs0->GetChisquare();
-     cout<<"Chi^2 = "<<chi2<<endl;
-   }
-
- //Fit the Qi and Ri.
- if(fitvars == 1)
-   {
-     graph->Fit(fxs1,"");
-     gStyle->SetOptFit(100);
-     fxs1->Draw("same");
-     Double_t chi2 = fxs1->GetChisquare();
-     cout<<"Chi^2 = "<<chi2<<endl;
-   }
-
- //Fit the Ri, Qi and gamma.
- if(fitvars == 2)
-   {
-     graph->Fit(fxs2,"");
-     gStyle->SetOptFit(100);
-     fxs2->Draw("same");
-     Double_t chi2 = fxs2->GetChisquare();
-     cout<<"Chi^2 = "<<chi2<<endl;
-   }
- 
- //Plot the charge FF using the parameters determined by the SOG fit above. 
+ //Plot the charge FF using the parameters determined by the Minuit SOG fit above. 
  //Make a new canvas to plot data.
  TCanvas* c2=new TCanvas("c2");
  c2->SetGrid();
@@ -1329,4 +987,6 @@ if(fitvars == 1)
  //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
  fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q)|");
  fMFF->GetHistogram()->GetXaxis()->SetTitle("q (fm^{-2})");
+
+
 }

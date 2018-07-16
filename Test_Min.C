@@ -40,10 +40,12 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 //calculate chisquare
    Double_t chisq = 0;
    Double_t delta;
-   for (i=0;i<nbins; i++) {
-     delta  = (z[i]-func(x[i],par))/errorz[i];
-     chisq += delta*delta;
-   }
+   for (i=0;i<nbins; i++) 
+     {
+       //cout<<"Yo1"<<endl;
+       delta  = (z[i]-func(x[i],par))/errorz[i];
+       chisq += delta*delta;
+     }
    f = chisq;
 }
 
@@ -52,12 +54,12 @@ void Test_Min()
 {
 // The z values
    z[0]=0;
-   z[1]=1.;
-   z[2]=4.;
-   z[3]=9.;
-   z[4]=16.;
+   z[1]=1.1;
+   z[2]=4.2;
+   z[3]=8.7;
+   z[4]=15.9;
 // The errors on z values
-        Float_t error = 0.01;
+        Float_t error = 0.1;
    errorz[0]=error;
    errorz[1]=error;
    errorz[2]=error;
@@ -88,7 +90,7 @@ void Test_Min()
 // Set starting values and step sizes for parameters
    static Double_t vstart[4] = {3, 1 , 0.1 , 0.01};
    static Double_t step[4] = {0.1 , 0.1 , 0.01 , 0.001};
-   gMinuit->mnparm(0, "a1", vstart[0], step[0], 0,0,ierflg);
+   gMinuit->mnparm(0, "a1", vstart[0], step[0], 0.,0.,ierflg);
    gMinuit->mnparm(1, "a2", vstart[1], step[1], 0,0,ierflg);
    //gMinuit->mnparm(2, "a3", vstart[2], step[2], 0,0,ierflg);
    //gMinuit->mnparm(3, "a4", vstart[3], step[3], 0,0,ierflg);

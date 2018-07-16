@@ -20,6 +20,7 @@ Double_t func(float x,float y,Double_t *par)
 {
  Double_t value=( (par[0]*par[0])/(x*x)-1)/ ( par[1]+par[2]*y-par[3]*y*y);
  return value;
+ cout<<"!!!!!!!!!!!!!!!!!!!!!!! x = "<<x<<"   y = "<<y<<endl;
 }
 
 //______________________________________________________________________________
