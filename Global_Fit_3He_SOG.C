@@ -27,7 +27,7 @@ Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
-Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
+Double_t gamma = 0.84*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
 //Double_t E0 = 0.5084;                    //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
@@ -55,6 +55,10 @@ Double_t m = 2.;
 Double_t R[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
+Double_t Qicherr[12]={}; 
+Double_t Qimerr[12]={};
+Double_t Chi2[59]={};
+Double_t residual[59]={};
 
   //Make a function for the XS using the SOG parameterization that can be minimized to fit the measured cross sections.
   //This XS function fits only the Qi values.
@@ -128,16 +132,23 @@ Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.1148
     //calculate chisquare
     Double_t chisq = 0;
     Double_t delta;
+    Double_t res;
     for(Int_t i=0;i<nbins; i++) 
       {
 	delta  = (sigexp[i]-XS(E0[i],theta[i],par))/uncertainty[i];
 	chisq += delta*delta;
+	Chi2[i] = delta*delta;
+	residual[i] = sigexp[i] - XS(E0[i],theta[i],par); 
       }
     f = chisq;
   }
 
 void Global_Fit_3He_SOG() 
 {
+  //Define a new stopwatch.
+  TStopwatch *st=new TStopwatch();
+  st->Start(kTRUE);
+
   //Make a new canvas to plot data.
   //TCanvas* c1=new TCanvas("c1");
   //c1->SetGrid();
@@ -155,6 +166,7 @@ void Global_Fit_3He_SOG()
     {
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
       FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data.txt","r");
+      //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Low_Chi2_Only.txt","r");
     }
 
   //Read in data.
@@ -188,6 +200,56 @@ void Global_Fit_3He_SOG()
   
   cout<<"Number of lines = "<<nlines<<endl;
   fclose(fp);
+
+
+ if(userand == 1)
+   {
+     //Generate random R[i] values. 
+     Double_t d = 0.49;
+     Double_t step = 0.5;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand = new TF1("rand","x",0.,.01);
+     R[0] = rand->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand1 = new TF1("rand1","x",R[0]+d,R[0]+step);
+     R[1] = rand1->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand2 = new TF1("rand2","x",R[1]+d,R[1]+step);
+     R[2] = rand2->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand3 = new TF1("rand3","x",R[2]+d,R[2]+step);
+     R[3] = rand3->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand4 = new TF1("rand4","x",R[3]+d,R[3]+step);
+     R[4] = rand4->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand5 = new TF1("rand5","x",R[4]+d,R[4]+step);
+     R[5] = rand5->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand6 = new TF1("rand6","x",R[5]+d,R[5]+step);
+     R[6] = rand6->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand7 = new TF1("rand7","x",R[6]+d,R[6]+step);
+     R[7] = rand7->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand8 = new TF1("rand8","x",R[7]+d,R[7]+step);
+     R[8] = rand8->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand9 = new TF1("rand9","x",R[8]+d,R[8]+step);
+     R[9] = rand9->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand10 = new TF1("rand10","x",R[9]+d,R[9]+step);
+     R[10] = rand10->GetRandom();
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand11 = new TF1("rand11","x",R[10]+d,R[10]+step);
+     R[11] = rand11->GetRandom();
+   }
+
+  //Print the Ri used for the minimization. 
+  for(Int_t i=0;i<ngaus;i++)
+   {
+     cout<<"R["<<i<<"] = "<<R[i]<<endl;
+   }
   
   //Initiate Minuit for minimization.
   TMinuit *gMinuit = new TMinuit(24);  //initialize TMinuit with a maximum of 24 params
@@ -206,10 +268,14 @@ void Global_Fit_3He_SOG()
   for(Int_t i=0;i<ngaus;i++)
     {
       gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], 0.,1.,ierflg);
+      //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
+      //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.05,Qich[i]+0.05,ierflg);
     }
   for(Int_t i=0;i<ngaus;i++)
     {
       gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], 0.,1.,ierflg);
+      //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.001,Qim[i]+0.001,ierflg);
+      //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.05,Qim[i]+0.05,ierflg);
     }
   
   // Now ready for minimization step
@@ -224,11 +290,24 @@ void Global_Fit_3He_SOG()
   gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
   //gMinuit->mnprin(3,amin);
   
-  //Print the Ri used for the minimization. 
-  for(Int_t i=0;i<ngaus;i++)
-   {
-     cout<<"R["<<i<<"] = "<<R[i]<<endl;
-   }
+  //Print Chi^2 and residual for each data point. 
+  for(Int_t i=0;i<59;i++)
+    {
+      cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XS(E0,theta,par)["<<i<<"] = "<<sigexp[i]-residual[i]<<"   residual["<<i<<"] = "<<residual[i]<<endl;
+    }
+
+  //Create a plot of Chi^2 vs. theta.
+  TCanvas* c1=new TCanvas("c1");
+  c1->SetGrid();
+  TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 60, 0., 160., 60,0., 500.);
+  for(Int_t i=0;i<59;i++)
+    {
+      //hchi->SetBinContent(E0[i],Chi2[i],1.);
+      hchi->Fill(theta[i],Chi2[i]);
+    }
+  hchi->SetMarkerStyle(20);
+  hchi->SetMarkerSize(1);
+  hchi->Draw();
   
   Double_t xs2(Double_t *angle, Double_t *par)
   {
@@ -433,7 +512,7 @@ void Global_Fit_3He_SOG()
  TF1 *fxs0 = new TF1("fxs0", xs0, ymin, ymax, ngaus*2);
  TF1 *fxs1 = new TF1("fxs1", xs1, ymin, ymax, ngaus*3);
  TF1 *fxs2 = new TF1("fxs2", xs2, ymin, ymax, ngaus*3+1);
-
+ /*
  if(userand == 1)
    {
      //Generate random R[i] values. 
@@ -476,12 +555,13 @@ void Global_Fit_3He_SOG()
      TF1 *rand11 = new TF1("rand11","x",R[10]+d,R[10]+step);
      R[11] = rand11->GetRandom();
    }
-
+ */
+ /*
  for(Int_t i=0;i<ngaus;i++)
    {
      cout<<"R["<<i<<"] = "<<R[i]<<endl;
    }
- 
+ */
 
  //Plot the charge FF using the parameters determined by the Minuit SOG fit above. 
  //Make a new canvas to plot data.
@@ -498,9 +578,11 @@ void Global_Fit_3He_SOG()
    {
      for(Int_t i=0;i<ngaus;i++)
        {
-	 Qich[i] = fxs0->GetParameter(i);
+	 //Qich[i] = fxs0->GetParameter(i);
+	 //Qich[i] = gMinuit->GetParameter(i,1.,1.);
+	 gMinuit->GetParameter(i,Qich[i],Qicherr[i]);
 	 Qichtot = Qichtot + Qich[i];
-	 cout<<"Qich["<<i<<"] = "<<Qich[i]<<endl;
+	 cout<<"Qich["<<i<<"] = "<<Qich[i]<<"   Qicherr["<<i<<"] = "<<Qicherr[i]<<endl;
        }
      cout<<"Qichtot = "<<Qichtot<<endl;
      /*
@@ -513,9 +595,10 @@ void Global_Fit_3He_SOG()
 
      for(Int_t i=0;i<ngaus;i++)
        {
-	 Qim[i] = fxs0->GetParameter(ngaus+i);
+	 //Qim[i] = fxs0->GetParameter(ngaus+i);
+	 gMinuit->GetParameter(ngaus+i,Qim[i],Qimerr[i]);
 	 Qimtot = Qimtot + Qim[i];
-	 cout<<"Qim["<<i<<"] = "<<Qim[i]<<endl;
+	 cout<<"Qim["<<i<<"] = "<<Qim[i]<<"   Qimerr["<<i<<"] = "<<Qimerr[i]<<endl;
        }
      cout<<"Qimtot = "<<Qimtot<<endl;
      
@@ -988,5 +1071,7 @@ void Global_Fit_3He_SOG()
  fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q)|");
  fMFF->GetHistogram()->GetXaxis()->SetTitle("q (fm^{-2})");
 
-
+  st->Stop();
+  cout<<"*********************************************"<<endl;
+  cout<<"CPU time = "<<st->CpuTime()<<" s = "<<st->CpuTime()/60.<<" min   Real time = "<<st->RealTime()<<" s = "<<st->RealTime()/60.<<" min"<<endl;
 }
