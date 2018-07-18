@@ -16,10 +16,10 @@ void Calculate_XS()
   Double_t GeV2fm = 1.0/0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
   Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
   Double_t C = 299792458.0;                //Speed of light [m/s]. 
-  Double_t angle = 21.0*deg2rad;                   //Scattering angle [rad].
+  Double_t angle = 120.0*deg2rad;                   //Scattering angle [rad].
 
   Double_t alpha = 1.0/137.0;              //Fine structure constant.
-  Double_t E0 = 3.356;                     //Initial electron energy [GeV].
+  Double_t E0 = 0.3511;               //Initial electron energy [GeV].
   Double_t Ef = 0.0;                       //Final energy of the electron after scattering.
   Double_t EfH3 = 0.0;
   Double_t EfHe3 = 0.0;
@@ -102,17 +102,17 @@ void Calculate_XS()
     }
   
   //xFH3ch[i] = Q2H3;
-  Fch3H = exp(-(1.0/4.0)*Q2effH3*pow(gamma,2.0))*fabs(sumH3ch);
+  Fch3H = exp(-(1.0/4.0)*Q2effH3*pow(gamma,2.0))*sumH3ch;//Previously fabs(sumH) which I think was a mistake.
   
   //xFHe3ch[i] = Q2He3;
-  Fch3He = exp(-(1.0/4.0)*Q2effHe3*pow(gamma,2.0))*fabs(sumHe3ch);
+  Fch3He = exp(-(1.0/4.0)*Q2effHe3*pow(gamma,2.0))*sumHe3ch;//Previously fabs(sumH) which I think was a mistake.
   
   cout<<"Fch3He = "<<Fch3He<<endl;
 
   sumH3ch = 0.0;      //Reset sumH3ch.
   sumHe3ch = 0.0;     //Reset sumHe3ch.
   
-  
+  /*
   //Calculate magnetic FFs.
   EfH3 = E0/(1.0+2.0*E0*pow(sin(angle/2.0),2.0)/MtH3);
   EfHe3 = E0/(1.0+2.0*E0*pow(sin(angle/2.0),2.0)/MtHe3);
@@ -120,7 +120,7 @@ void Calculate_XS()
   Q2He3 = 4.0*E0*EfHe3*pow(sin(angle/2.0),2.0) * GeV2fm;
   Q2effH3 = pow( pow(Q2H3,0.5) * (1.0+(1.5*1*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.0,1.0/3.0))) ,2.0);   //Z=1
   Q2effHe3 = pow( pow(Q2He3,0.5) * (1.0+(1.5*2*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.0,1.0/3.0))) ,2.0);  //Z=2
-  
+  */
   //Calculate the sum part of the SOG paramaterization for H3 magnetic FF.
   for(Int_t j=0; j<12; j++)
     {
@@ -143,10 +143,10 @@ void Calculate_XS()
   
   //Calculate FFs.
   //xFH3m[i] = Q2H3;
-  Fm3H = exp(-(1.0/4.0)*Q2effH3*pow(gamma,2.0))*fabs(sumH3m);
+  Fm3H = exp(-(1.0/4.0)*Q2effH3*pow(gamma,2.0))*sumH3m;//Previously fabs(sumH) which I think was a mistake.
   
   //xFHe3m[i] = Q2He3;
-  Fm3He = exp(-(1.0/4.0)*Q2effHe3*pow(gamma,2.0))*fabs(sumHe3m);
+  Fm3He = exp(-(1.0/4.0)*Q2effHe3*pow(gamma,2.0))*sumHe3m;//Previously fabs(sumH) which I think was a mistake.
 
   cout<<"Fm3He = "<<Fm3He<<endl;
   
@@ -168,14 +168,15 @@ void Calculate_XS()
   cout<<"3He: Mott XS = "<<mottxs3He<<" fm^2"<<endl;
   
   //xcrosssectionH3[i] = Q2H3;
-  xs3H = fabs( mottxs3H*(1.0/etaH3) * (  (Q2effH3/q2_3H3)*pow(Fch3H,2.0) + (pow(muH3,2.0)*Q2effH3/(2.0*pow(MtH3,2.0)*GeV2fm)) * (Q2effH3/(2.0*q2_3H3) + pow(tan(angle/2.0),2.0)) * pow(Fm3H,2.0)  ) );
+  xs3H = mottxs3H*(1.0/etaH3) * (  (Q2effH3/q2_3H3)*pow(Fch3H,2.0) + (pow(muH3,2.0)*Q2effH3/(2.0*pow(MtH3,2.0)*GeV2fm)) * (Q2effH3/(2.0*q2_3H3) + pow(tan(angle/2.0),2.0)) * pow(Fm3H,2.0)  );//Previously fabs() of this whole expression. Probably was a mistake.
   //xcrosssectionHe3[i] = Q2He3;
-  xs3He = fabs( mottxs3He*(1.0/etaHe3) * (  (Q2effHe3/q2_3He3)*pow(Fch3He,2.0) + (pow(muHe3,2.0)*Q2effHe3/(2.0*pow(MtHe3,2.0)*GeV2fm)) * (Q2effHe3/(2.0*q2_3He3) + pow(tan(angle/2.0),2.0)) * pow(Fm3He,2.0)  ) );
+  xs3He = mottxs3He*(1.0/etaHe3) * (  (Q2effHe3/q2_3He3)*pow(Fch3He,2.0) + (pow(muHe3,2.0)*Q2effHe3/(2.0*pow(MtHe3,2.0)*GeV2fm)) * (Q2effHe3/(2.0*q2_3He3) + pow(tan(angle/2.0),2.0)) * pow(Fm3He,2.0)  ); //Previously fabs() of this whole expression. Probably was a mistake.
 
   //Calculate the charge and magnetic contributions to the XS.
-  xsch3He = fabs( mottxs3He*(1.0/etaHe3) * (  (Q2effHe3/q2_3He3)*pow(Fch3He,2.0)  ) );
-  xsm3He = fabs( mottxs3He*(1.0/etaHe3) * (  (pow(muHe3,2.0)*Q2effHe3/(2.0*pow(MtHe3,2.0)*GeV2fm)) * (Q2effHe3/(2.0*q2_3He3) + pow(tan(angle/2.0),2.0)) * pow(Fm3He,2.0)  ) );
+  xsch3He = mottxs3He*(1.0/etaHe3) * (  (Q2effHe3/q2_3He3)*pow(Fch3He,2.0)  );//Previously fabs() of this whole expression. Probably was a mistake.
+  xsm3He = mottxs3He*(1.0/etaHe3) * (  (pow(muHe3,2.0)*Q2effHe3/(2.0*pow(MtHe3,2.0)*GeV2fm)) * (Q2effHe3/(2.0*q2_3He3) + pow(tan(angle/2.0),2.0)) * pow(Fm3He,2.0)  );//Previously fabs() of this whole expression. Probably was a mistake.
 
-		 cout<<"3He: Charge contribution to XS = "<<xsch3He<<" fm^2/sr.   Magnetic contribution to XS = "<<xsm3He<<" fm^2/sr. Percent magnetic contribution = "<<100.*xsm3He/(xsch3He+xsm3He)<<"%."<<endl;
-		 cout<<"3He: XS = "<<xs3He<<" fm^2/sr = "<<xs3He*pow(10,4)<<" ub/sr"<<endl;
+  cout<<"3He: Charge contribution to XS = "<<xsch3He<<" fm^2/sr.   Magnetic contribution to XS = "<<xsm3He<<" fm^2/sr. Percent magnetic contribution = "<<100.*xsm3He/(xsch3He+xsm3He)<<"%."<<endl;
+  cout<<"3He: XS = "<<xs3He<<" fm^2/sr = "<<xs3He*pow(10,4)<<" ub/sr"<<endl;
+  cout<<"Fch3He = "<<Fch3He<<"   Fm3He = "<<Fm3He<<endl;
 }

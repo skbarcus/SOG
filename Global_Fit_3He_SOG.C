@@ -18,7 +18,7 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t alpha = 1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
-Int_t userand = 1;
+Int_t userand = 0;
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
@@ -44,11 +44,11 @@ Int_t nlines = 0;                        //Counts number of lines in the data fi
 Int_t ncols;                             //Set how many columns of data we have in the data file.
 char* str[1000];                          //Variable to read lines of the data file.
 Float_t thetatemp,qefftemp,sigexptemp,uncertaintytemp,E0temp;
-Float_t theta[100];                     //Angle in degrees.
-Float_t qeff[100];                      //q effective in fm^-1.
-Float_t sigexp[100];                    //Sigma experimental (cross section). Not sure on units yet.
-Float_t uncertainty[100];
-Float_t E0[100];
+Float_t theta[1000];                     //Angle in degrees.
+Float_t qeff[1000];                      //q effective in fm^-1.
+Float_t sigexp[1000];                    //Sigma experimental (cross section). Not sure on units yet.
+Float_t uncertainty[1000];
+Float_t E0[1000];
 
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
@@ -57,8 +57,9 @@ Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074
 Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t Qicherr[12]={}; 
 Double_t Qimerr[12]={};
-Double_t Chi2[59]={};
-Double_t residual[59]={};
+Double_t Chi2[177]={};
+Double_t residual[177]={};
+Double_t xsfit[177]={};
 
   //Make a function for the XS using the SOG parameterization that can be minimized to fit the measured cross sections.
   //This XS function fits only the Qi values.
@@ -120,14 +121,24 @@ Double_t residual[59]={};
     //}
     fitm = fitm * exp(-0.25*Q2eff*pow(gamma,2.0));   //For some reason had fabs(fitm).
 
-    val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
+    cout<<"fitch = "<<fitch<<"   fitm = "<<fitm<<endl;
+    for(Int_t i=0;i<2*ngaus;i++)
+      {
+	cout<<"par["<<i<<"] = "<<par[i]<<endl;
+      }
+    for(Int_t i=0;i<ngaus;i++)
+      {
+	cout<<"R["<<i<<"] = "<<R[i]<<endl;
+      }
+
+    val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + (pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
     return val;
   }
 
   //Create a Chi^2 function to minimize. 
   void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
   {
-    const Int_t nbins = 59;
+    const Int_t nbins = 177;
     //Int_t i;
     //calculate chisquare
     Double_t chisq = 0;
@@ -139,6 +150,8 @@ Double_t residual[59]={};
 	chisq += delta*delta;
 	Chi2[i] = delta*delta;
 	residual[i] = sigexp[i] - XS(E0[i],theta[i],par); 
+	xsfit[i] = XS(E0[i],theta[i],par);
+	//cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
       }
     f = chisq;
   }
@@ -193,7 +206,7 @@ void Global_Fit_3He_SOG()
   }
 
   //Print the data read from the file. 
-  for(int i=0; i<59; i++)
+  for(int i=0; i<(nlines-skip); i++)
     {
       cout<<"E0["<<i<<"] = "<<E0[i]<<"   theta["<<i<<"] = "<<theta[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   uncertainty["<<i<<"] = "<<uncertainty[i]<<endl;
     }
@@ -267,14 +280,16 @@ void Global_Fit_3He_SOG()
   //Set starting guesses for parameters. (Use Amroun's SOG parameters.)
   for(Int_t i=0;i<ngaus;i++)
     {
-      gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], 0.,1.,ierflg);
+      //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], 0.,1.,ierflg);
       //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
+      gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.000000001,Qich[i]+0.000000001,ierflg);
       //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.05,Qich[i]+0.05,ierflg);
     }
   for(Int_t i=0;i<ngaus;i++)
     {
-      gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], 0.,1.,ierflg);
+      //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], 0.,1.,ierflg);
       //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.001,Qim[i]+0.001,ierflg);
+      gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.000000001,Qim[i]+0.000000001,ierflg);
       //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.05,Qim[i]+0.05,ierflg);
     }
   
@@ -291,16 +306,26 @@ void Global_Fit_3He_SOG()
   //gMinuit->mnprin(3,amin);
   
   //Print Chi^2 and residual for each data point. 
-  for(Int_t i=0;i<59;i++)
+  for(Int_t i=0;i<(nlines-skip);i++)
     {
-      cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XS(E0,theta,par)["<<i<<"] = "<<sigexp[i]-residual[i]<<"   residual["<<i<<"] = "<<residual[i]<<endl;
+      cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XSfit(E0,theta,par)["<<i<<"] = "<<xsfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/xsfit[i]<<"   residual["<<i<<"] = "<<residual[i]<<endl;
     }
 
   //Create a plot of Chi^2 vs. theta.
   TCanvas* c1=new TCanvas("c1");
   c1->SetGrid();
-  TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 60, 0., 160., 60,0., 500.);
-  for(Int_t i=0;i<59;i++)
+  Double_t maxchi2 = 0.;
+  for(Int_t i=0;i<(nlines-skip);i++)
+    {
+      if(Chi2[i]>maxchi2)
+	{
+	  maxchi2 = Chi2[i];
+	  cout<<"maxchi2 = "<<maxchi2<<endl;
+	}
+    }
+
+  TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 100, 0., 160., 100,0., maxchi2+20);
+  for(Int_t i=0;i<(nlines-skip);i++)
     {
       //hchi->SetBinContent(E0[i],Chi2[i],1.);
       hchi->Fill(theta[i],Chi2[i]);
@@ -308,6 +333,29 @@ void Global_Fit_3He_SOG()
   hchi->SetMarkerStyle(20);
   hchi->SetMarkerSize(1);
   hchi->Draw();
+
+  //Create a plot of XSexp/XSfit.
+  TCanvas* cxsfit=new TCanvas("cxsfit");
+  cxsfit->SetGrid();
+
+  Double_t maxratio = 0.;
+  for(Int_t i=0;i<(nlines-skip);i++)
+    {
+      if(fabs(sigexp[i]/xsfit[i])>maxratio)
+	{
+	  maxratio = fabs(sigexp[i]/xsfit[i]);
+	  cout<<"Max sigexp/sigfit = "<<maxratio<<endl;
+	}
+    }
+
+  TH2D *hxsfit = new TH2D("hxsfit","Ratio of Experimental XS to XS from Fit vs. Scattering Angle" , 100, 0., 180., 100,-fabs(maxratio)+0.5, fabs(maxratio)+0.5);
+  for(Int_t i=0;i<(nlines-skip);i++)
+    {
+      hxsfit->Fill(theta[i],sigexp[i]/xsfit[i]);
+    }
+  hxsfit->SetMarkerStyle(20);
+  hxsfit->SetMarkerSize(1);
+  hxsfit->Draw();
   
   Double_t xs2(Double_t *angle, Double_t *par)
   {
