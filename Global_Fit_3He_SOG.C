@@ -27,7 +27,7 @@ Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
-Double_t gamma = 0.84*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
+Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
 //Double_t E0 = 0.5084;                    //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
@@ -96,6 +96,12 @@ Double_t xsfit[177]={};
     
     //if(par[0]+par[1]+par[2]+par[3]+par[4]+par[5]+par[6]+par[7]+par[8]+par[9]+par[10]+par[11] == 1.)
     //{
+    //cout<<"***************************************************************************"<<endl;
+    /*
+    for(Int_t i=0;i<2*ngaus;i++)
+      {
+	cout<<"par["<<i<<"] = "<<par[i]<<endl;
+	}*/
     //Define SOG for charge FF.
     for(Int_t i=0; i<ngaus; i++)
       { 
@@ -103,6 +109,7 @@ Double_t xsfit[177]={};
 	sumchtemp = (par[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );
 	
        fitch =  fitch + sumchtemp;
+       //cout<<"fitch["<<i<<"] = "<<fitch<<endl;
       }
     //}
     //fitch =  fitch * exp(-0.25*Q2eff*pow(gamma,2.0));
@@ -117,28 +124,37 @@ Double_t xsfit[177]={};
 	summtemp = (par[ngaus+i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );	
 
 	fitm = fitm + summtemp;
+	//cout<<"fitm["<<i<<"] = "<<fitm<<endl;
       }
     //}
     fitm = fitm * exp(-0.25*Q2eff*pow(gamma,2.0));   //For some reason had fabs(fitm).
-
+    /*
+    cout<<"E0 = "<<E0<<"   theta = "<<theta<<endl;
+    cout<<"Ef = "<<Ef<<"   Q2 = "<<Q2<<"   Q2eff = "<<Q2eff<<"   W = "<<W<<"   q2_3 = "<<q2_3<<"   eta = "<<eta<<endl;
+    cout<<"Mott XS = "<<mottxs<<endl;
     cout<<"fitch = "<<fitch<<"   fitm = "<<fitm<<endl;
+    */
+    /*  
     for(Int_t i=0;i<2*ngaus;i++)
       {
 	cout<<"par["<<i<<"] = "<<par[i]<<endl;
       }
+    */
+      /*
     for(Int_t i=0;i<ngaus;i++)
       {
 	cout<<"R["<<i<<"] = "<<R[i]<<endl;
       }
-
+    */
     val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + (pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
+    //cout<<"XS = "<<val<<endl;
     return val;
   }
 
   //Create a Chi^2 function to minimize. 
   void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
   {
-    const Int_t nbins = 177;
+    const Int_t nbins = 177;//177
     //Int_t i;
     //calculate chisquare
     Double_t chisq = 0;
@@ -180,6 +196,7 @@ void Global_Fit_3He_SOG()
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
       FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data.txt","r");
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Low_Chi2_Only.txt","r");
+      //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Short.txt","r");
     }
 
   //Read in data.
@@ -280,21 +297,21 @@ void Global_Fit_3He_SOG()
   //Set starting guesses for parameters. (Use Amroun's SOG parameters.)
   for(Int_t i=0;i<ngaus;i++)
     {
-      //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], 0.,1.,ierflg);
+      gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], 0.,1.,ierflg);
       //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
-      gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.000000001,Qich[i]+0.000000001,ierflg);
+      //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.000000000001,Qich[i]+0.000000000001,ierflg);
       //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.05,Qich[i]+0.05,ierflg);
     }
   for(Int_t i=0;i<ngaus;i++)
     {
-      //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], 0.,1.,ierflg);
+      gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], 0.,1.,ierflg);
       //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.001,Qim[i]+0.001,ierflg);
-      gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.000000001,Qim[i]+0.000000001,ierflg);
+      //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.000000000001,Qim[i]+0.000000000001,ierflg);
       //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.05,Qim[i]+0.05,ierflg);
     }
   
   // Now ready for minimization step
-  arglist[0] = 50000.;
+  arglist[0] = 500.;//50000.
   arglist[1] = 1.;
   cout<<"Sup1"<<endl;
   gMinuit->mnexcm("MIGRAD", arglist ,2,ierflg);
@@ -308,7 +325,7 @@ void Global_Fit_3He_SOG()
   //Print Chi^2 and residual for each data point. 
   for(Int_t i=0;i<(nlines-skip);i++)
     {
-      cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XSfit(E0,theta,par)["<<i<<"] = "<<xsfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/xsfit[i]<<"   residual["<<i<<"] = "<<residual[i]<<endl;
+      cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XSfit(E0,theta,par)["<<i<<"] = "<<xsfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/xsfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
     }
 
   //Create a plot of Chi^2 vs. theta.
@@ -324,7 +341,7 @@ void Global_Fit_3He_SOG()
 	}
     }
 
-  TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 100, 0., 160., 100,0., maxchi2+20);
+  TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 161, 0., 160., maxchi2+21,0., maxchi2+20);
   for(Int_t i=0;i<(nlines-skip);i++)
     {
       //hchi->SetBinContent(E0[i],Chi2[i],1.);
@@ -348,7 +365,7 @@ void Global_Fit_3He_SOG()
 	}
     }
 
-  TH2D *hxsfit = new TH2D("hxsfit","Ratio of Experimental XS to XS from Fit vs. Scattering Angle" , 100, 0., 180., 100,-fabs(maxratio)+0.5, fabs(maxratio)+0.5);
+  TH2D *hxsfit = new TH2D("hxsfit","Ratio of Experimental XS to XS from Fit vs. Scattering Angle" , 100, 0., 180., 100, 0., fabs(maxratio)+0.5);
   for(Int_t i=0;i<(nlines-skip);i++)
     {
       hxsfit->Fill(theta[i],sigexp[i]/xsfit[i]);

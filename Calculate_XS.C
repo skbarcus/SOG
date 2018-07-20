@@ -9,6 +9,91 @@
 #include <TLegend.h>
 #include <math.h>
 
+
+Double_t XS(float E0, float theta, Double_t *QHe3ch, Double_t *QHe3m)
+{
+  Double_t MtHe3 = 3.0160293*0.9315;
+  Double_t pi = 3.141592654;
+  Double_t deg2rad = pi/180.0;
+  Double_t GeV2fm = 1.0/0.0389;
+  Double_t alpha = 1.0/137.0;
+  Double_t Z = 2.;
+  Double_t A = 3.;
+  Int_t ngaus = 12;
+  Double_t R[12] = {0.1, 0.5, 0.9, 1.3, 1.6, 2.0, 2.4, 2.9, 3.4, 4.0, 4.6, 5.2};  //Radii [fm].
+  Double_t gamma = 0.8*pow(2.0/3.0,0.5); 
+  Double_t muHe3 = -2.1275*(3.0/2.0);
+
+  Double_t val = 0.;
+  Double_t mottxs = 0.;
+  Double_t fitch = 0.;
+  Double_t sumchtemp = 0.;
+  Double_t fitm = 0.;
+  Double_t summtemp = 0.;
+  
+  Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+  Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
+  Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=6 A=12
+  
+  Double_t W = E0 - Ef;
+  //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
+  Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2eff  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
+  Double_t eta = 1.0 + Q2eff/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2.
+  
+  Double_t Qtot = 1.0;
+  Double_t Qtemp = 0.;
+  
+  //Calculate Mott XS.
+  mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+  
+  //Define SOG for charge FF.
+  for(Int_t i=0; i<ngaus; i++)
+    { 
+      //Fit just the Qi values using predetermined R[i] values.
+      sumchtemp = (QHe3ch[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );
+      
+      fitch =  fitch + sumchtemp;
+      cout<<"fitch["<<i<<"] = "<<fitch<<endl;
+    }
+
+  fitch =  fitch * exp(-0.25*Q2eff*pow(gamma,2.0));
+
+  //Define SOG for magnetic FF.
+  for(Int_t i=0; i<ngaus; i++)
+    {
+      //Fit just the Qi values using predetermined R[i] values.
+      summtemp = (QHe3m[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );	
+      
+      fitm = fitm + summtemp;
+      cout<<"fitm["<<i<<"] = "<<fitm<<endl;
+    }
+
+  fitm = fitm * exp(-0.25*Q2eff*pow(gamma,2.0));   //For some reason had fabs(fitm).
+  
+  cout<<"E0 = "<<E0<<"   theta = "<<theta<<endl;
+  cout<<"Ef = "<<Ef<<"   Q2 = "<<Q2<<"   Q2eff = "<<Q2eff<<"   W = "<<W<<"   q2_3 = "<<q2_3<<"   eta = "<<eta<<endl;
+  cout<<"Mott XS = "<<mottxs<<endl;
+  cout<<"fitch = "<<fitch<<"   fitm = "<<fitm<<endl;
+  /*
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"R["<<i<<"] = "<<R[i]<<endl;
+    }
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"QHe3ch["<<i<<"] = "<<QHe3ch[i]<<endl;
+    }
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"QHe3m["<<i<<"] = "<<QHe3m[i]<<endl;
+    }
+  */
+  val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + (pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
+  return val;
+}
+
+
+
 void Calculate_XS() 
 {
   Double_t pi = 3.141592654;
@@ -16,10 +101,11 @@ void Calculate_XS()
   Double_t GeV2fm = 1.0/0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
   Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
   Double_t C = 299792458.0;                //Speed of light [m/s]. 
-  Double_t angle = 120.0*deg2rad;                   //Scattering angle [rad].
+  Double_t angle = 80.0*deg2rad;                   //Scattering angle [rad].
+  Double_t theta = 80.;
 
   Double_t alpha = 1.0/137.0;              //Fine structure constant.
-  Double_t E0 = 0.3511;               //Initial electron energy [GeV].
+  Double_t E0 = 0.4627;               //Initial electron energy [GeV].
   Double_t Ef = 0.0;                       //Final energy of the electron after scattering.
   Double_t EfH3 = 0.0;
   Double_t EfHe3 = 0.0;
@@ -179,4 +265,7 @@ void Calculate_XS()
   cout<<"3He: Charge contribution to XS = "<<xsch3He<<" fm^2/sr.   Magnetic contribution to XS = "<<xsm3He<<" fm^2/sr. Percent magnetic contribution = "<<100.*xsm3He/(xsch3He+xsm3He)<<"%."<<endl;
   cout<<"3He: XS = "<<xs3He<<" fm^2/sr = "<<xs3He*pow(10,4)<<" ub/sr"<<endl;
   cout<<"Fch3He = "<<Fch3He<<"   Fm3He = "<<Fm3He<<endl;
+
+  //cout<<XS(E0,theta,QHe3ch,QHe3m)<<endl;
+  //cout<<XS(E0,theta,5,5)<<endl;
 }
