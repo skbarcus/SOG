@@ -18,6 +18,7 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t alpha = 1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
+const Int_t datapts = 247;
 Int_t userand = 0;
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
@@ -57,9 +58,9 @@ Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074
 Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t Qicherr[12]={}; 
 Double_t Qimerr[12]={};
-Double_t Chi2[177]={};
-Double_t residual[177]={};
-Double_t xsfit[177]={};
+Double_t Chi2[datapts]={};
+Double_t residual[datapts]={};
+Double_t xsfit[datapts]={};
 
   //Make a function for the XS using the SOG parameterization that can be minimized to fit the measured cross sections.
   //This XS function fits only the Qi values.
@@ -154,7 +155,7 @@ Double_t xsfit[177]={};
   //Create a Chi^2 function to minimize. 
   void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
   {
-    const Int_t nbins = 177;//177
+    const Int_t nbins = datapts;//177
     //Int_t i;
     //calculate chisquare
     Double_t chisq = 0;
@@ -275,13 +276,21 @@ void Global_Fit_3He_SOG()
      R[11] = rand11->GetRandom();
    }
 
-  //Print the Ri used for the minimization. 
-  for(Int_t i=0;i<ngaus;i++)
+ //Add a constant to each value of Ri.
+ /* 
+ for(Int_t i=0;i<ngaus;i++)
+   {
+     R[i] = R[i] + 0.01;
+   }
+*/
+
+ //Print the Ri used for the minimization. 
+ for(Int_t i=0;i<ngaus;i++)
    {
      cout<<"R["<<i<<"] = "<<R[i]<<endl;
    }
-  
-  //Initiate Minuit for minimization.
+ 
+ //Initiate Minuit for minimization.
   TMinuit *gMinuit = new TMinuit(24);  //initialize TMinuit with a maximum of 24 params
   gMinuit->SetFCN(fcn);
 
@@ -797,62 +806,62 @@ void Global_Fit_3He_SOG()
  if(showgaus == 1)
    {
      //Plot individual Gaussians with their fit parameters. 
-     TF1 *g0 = new TF1("g0", fitg, yminFF, ymaxFF,2.);
+     TF1 *g0 = new TF1("g0", fitg, yminFF, ymaxFF+20,2.);
      g0->SetParameters(Qich[0],R[0]);
      g0->SetLineColor(1);
      g0->SetNpx(npdraw);
      g0->Draw("csame");
-     TF1 *g1 = new TF1("g1", fitg, yminFF, ymaxFF,2.);
+     TF1 *g1 = new TF1("g1", fitg, yminFF, ymaxFF+20,2.);
      g1->SetParameters(Qich[1],R[1]);
      g1->SetLineColor(2);
      g1->SetNpx(npdraw);
      g1->Draw("cSame");
-     TF1 *g2 = new TF1("g2", fitg, yminFF, ymaxFF,2.);
+     TF1 *g2 = new TF1("g2", fitg, yminFF, ymaxFF+20,2.);
      g2->SetParameters(Qich[2],R[2]);
      g2->SetLineColor(3);
      g2->SetNpx(npdraw);
      g2->Draw("cSame");
-     TF1 *g3 = new TF1("g3", fitg, yminFF, ymaxFF,2.);
+     TF1 *g3 = new TF1("g3", fitg, yminFF, ymaxFF+20,2.);
      g3->SetParameters(Qich[3],R[3]);
      g3->SetLineColor(4);
      g3->SetNpx(npdraw);
      g3->Draw("cSame");
-     TF1 *g4 = new TF1("g4", fitg, yminFF, ymaxFF,2.);
+     TF1 *g4 = new TF1("g4", fitg, yminFF, ymaxFF+20,2.);
      g4->SetParameters(Qich[4],R[4]);
      g4->SetLineColor(5);
      g4->SetNpx(npdraw);
      g4->Draw("cSame");
-     TF1 *g5 = new TF1("g5", fitg, yminFF, ymaxFF,2.);
+     TF1 *g5 = new TF1("g5", fitg, yminFF, ymaxFF+20,2.);
      g5->SetParameters(Qich[5],R[5]);
      g5->SetLineColor(6);
      g5->SetNpx(npdraw);
      g5->Draw("cSame");
-     TF1 *g6 = new TF1("g6", fitg, yminFF, ymaxFF,2.);
+     TF1 *g6 = new TF1("g6", fitg, yminFF, ymaxFF+20,2.);
      g6->SetParameters(Qich[6],R[6]);
      g6->SetLineColor(7);
      g6->SetNpx(npdraw);
      g6->Draw("cSame");
-     TF1 *g7 = new TF1("g7", fitg, yminFF, ymaxFF,2.);
+     TF1 *g7 = new TF1("g7", fitg, yminFF, ymaxFF+20,2.);
      g7->SetParameters(Qich[7],R[7]);
      g7->SetLineColor(8);
      g7->SetNpx(npdraw);
      g7->Draw("cSame");
-     TF1 *g8 = new TF1("g8", fitg, yminFF, ymaxFF,2.);
+     TF1 *g8 = new TF1("g8", fitg, yminFF, ymaxFF+20,2.);
      g8->SetParameters(Qich[8],R[8]);
      g8->SetLineColor(9);
      g8->SetNpx(npdraw);
      g8->Draw("cSame");
-     TF1 *g9 = new TF1("g9", fitg, yminFF, ymaxFF,2.);
+     TF1 *g9 = new TF1("g9", fitg, yminFF, ymaxFF+20,2.);
      g9->SetParameters(Qich[9],R[9]);
      g9->SetLineColor(46);
      g9->SetNpx(npdraw);
      g9->Draw("cSame");
-     TF1 *g10 = new TF1("g10", fitg, yminFF, ymaxFF,2.);
+     TF1 *g10 = new TF1("g10", fitg, yminFF, ymaxFF+20,2.);
      g10->SetParameters(Qich[10],R[10]);
      g10->SetLineColor(11);
      g10->SetNpx(npdraw);
      g10->Draw("cSame");
-     TF1 *g11 = new TF1("g11", fitg, yminFF, ymaxFF,2.);
+     TF1 *g11 = new TF1("g11", fitg, yminFF, ymaxFF+20,2.);
      g11->SetParameters(Qich[11],R[11]);
      g11->SetLineColor(12);
      g11->SetNpx(npdraw);
@@ -1134,7 +1143,7 @@ void Global_Fit_3He_SOG()
  c4->SetTitle("He3 Magnetic Form Factor");
  //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
  fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q)|");
- fMFF->GetHistogram()->GetXaxis()->SetTitle("q (fm^{-2})");
+ fMFF->GetHistogram()->GetXaxis()->SetTitle("q^2 (fm^{-2})");
 
   st->Stop();
   cout<<"*********************************************"<<endl;
