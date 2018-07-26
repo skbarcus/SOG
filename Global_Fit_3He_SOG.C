@@ -18,7 +18,7 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t alpha = 1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
-const Int_t datapts = 247;
+const Int_t datapts = 248;
 Int_t userand = 0;
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
@@ -782,15 +782,20 @@ void Global_Fit_3He_SOG()
     return fitch;
  }
 
- TF1 *fChFF = new TF1("fChFF",ChFF_Q2,yminFF,ymaxFF+20,1);
+ TF1 *fChFF = new TF1("fChFF",ChFF_Q2,yminFF,ymaxFF+54,1);
  //TF1 *fChFF = new TF1("fChFF",ChFF,yminFF,ymaxFF,1);
  cout<<fChFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
  fChFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
  fChFF->Draw("L");
  c2->SetTitle("Charge Form Factor");
  //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
- fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{Ch}(q)|");
+ fChFF->SetTitle("^{3}He Charge Form Factor");
+ fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
+ fChFF->GetHistogram()->GetYaxis()->CenterTitle(true);
+ fChFF->GetHistogram()->GetYaxis()->SetTitleOffset(1.3);
  fChFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+ fChFF->GetHistogram()->GetXaxis()->CenterTitle(true);
+ fChFF->GetHistogram()->GetXaxis()->SetTitleOffset(1.1);
 
  Double_t fitg(Double_t *Q, Double_t *par)
  {
@@ -954,7 +959,7 @@ void Global_Fit_3He_SOG()
       hChFF->GetEntries();
     }
   //hfit->SetFillColor(17);
-  hChFF->Draw("same");
+  //hChFF->Draw("same");
 
   auto legend = new TLegend(0.1,0.7,0.48,0.9);
   legend->AddEntry("fChFF","C12 Charge Form Factor","l");
@@ -971,7 +976,7 @@ void Global_Fit_3He_SOG()
   legend->AddEntry("g9","Gaussian 9","l");
   legend->AddEntry("g10","Gaussian 10","l");
   legend->AddEntry("g11","Gaussian 11","l");
-  legend->Draw();
+  //legend->Draw();
    
   //Inverse Fourier transform the C12 charge FF to get the charge distribution of C12.
   //Create arrays for real and complex inputs for inverse FFT. 
@@ -1136,14 +1141,20 @@ void Global_Fit_3He_SOG()
     return fitm;
  }
 
- TF1 *fMFF = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+20,1);
+ TF1 *fMFF = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
  cout<<fMFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
  fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
  fMFF->Draw("L");
  c4->SetTitle("He3 Magnetic Form Factor");
  //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
- fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q)|");
- fMFF->GetHistogram()->GetXaxis()->SetTitle("q^2 (fm^{-2})");
+ //fMFF->GetHistogram()->SetTitle("^{3}He Magnetic Form Factor");
+ fMFF->SetTitle("^{3}He Magnetic Form Factor");
+ fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
+ fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
+ fMFF->GetHistogram()->GetYaxis()->SetTitleOffset(1.3);
+ fMFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+ fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
+ fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(1.1);
 
   st->Stop();
   cout<<"*********************************************"<<endl;
