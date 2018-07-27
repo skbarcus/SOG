@@ -1156,6 +1156,17 @@ void Global_Fit_3He_SOG()
  fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
  fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(1.1);
 
+  //Now draw both FFs on the same plot for the GRC poster. 
+  TCanvas* c5=new TCanvas("c5");
+  c5->SetGrid();
+  c5->Divide(1,2);
+  c5->cd(1)->SetLogy();
+  c5->cd(1);
+  fChFF->Draw("L");
+  c5->cd(2);
+  c5->cd(2)->SetLogy();
+  fMFF->Draw("L");
+
   st->Stop();
   cout<<"*********************************************"<<endl;
   cout<<"CPU time = "<<st->CpuTime()<<" s = "<<st->CpuTime()/60.<<" min   Real time = "<<st->RealTime()<<" s = "<<st->RealTime()/60.<<" min"<<endl;
