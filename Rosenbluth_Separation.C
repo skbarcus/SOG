@@ -9,27 +9,7 @@
 #include <TLegend.h>
 #include <math.h>
 
-Int_t data_set = 0;        //Select which set of data points to use. Make code more clever later.
-
-//Sets of data from Alex's 3He high Q^2 paper.
-Double_t XS_Q2_55_1[2] = {2.77E-13,3.27E-15};        //fm^2/sr
-Double_t uncertainty_Q2_55_1[2] = {0.39E-13,0.13E-15};                //fm^2/sr
-Double_t E0_Q2_55_1[2] = {3.304, 0.9893};            //GeV
-Double_t theta_Q2_55_1[2] = {27.24, 140.31};         //degrees
-Double_t XS_Q2_60_8[2] = {2.14E-14,1.13E-15};        //fm^2/sr
-Double_t uncertainty_Q2_60_8[2] = {0.72E-14,0.80E-15};                //fm^2/sr
-Double_t E0_Q2_60_8[2] = {3.304, 1.052};             //GeV
-Double_t theta_Q2_60_8[2] = {28.86, 140.51};         //degrees
-
-Double_t XS_Q2_24_7[2] = {2.29E-9,2.80E-11};        //fm^2/sr
-Double_t uncertainty_Q2_24_7[2] = {0.12E-9,0.20E-11};                //fm^2/sr
-Double_t E0_Q2_24_7[2] = {3.304, 0.7391};             //GeV
-Double_t theta_Q2_24_7[2] = {17.52, 97.78};         //degrees
-
-Double_t XS_Q2_30_2[3] = {5.16E-10,3.95E-12,1.51E-12};        //fm^2/sr
-Double_t uncertainty_Q2_30_2[3] = {0.29E-10,0.38E-12,0.19E-12};                //fm^2/sr
-Double_t E0_Q2_30_2[3] = {3.304, 0.7391, 0.6878};             //GeV
-Double_t theta_Q2_30_2[3] = {19.5, 118.99, 139.99};         //degrees
+Double_t data_set = 55.1;        //Select which set of data points to use. Make code more clever later.
 
 Double_t pi = 3.141592654;
 Double_t deg2rad = pi/180.0;
@@ -46,28 +26,54 @@ Double_t MtH3 = 3.0160492*0.9315;       //Mass of trinucleon (H3 or He3) [GeV].
 Double_t MtHe3 = 3.0160293*0.9315;
 Double_t Q2 = 0.;                       //fm^-2
 
+Double_t XSexp[3] = {};
+Double_t XSuncertainty[3] = {};
+Double_t E0[3] = {};
+Double_t theta[3] = {};
 Double_t XSr[3] = {};
 Double_t epsilon[3] = {};
 Double_t uncertainty[3] = {};
 Double_t tau = 0.;
 
+//Create a function for fitting lines.
+Double_t fit_line(Double_t *x,Double_t *par) 
+{
+  return par[0]+par[1]*x[0];
+}
+
 void Rosenbluth_Separation() 
 {
-
-  if(data_set == 0)
-    {
-      Q2 = 55.1;             
+  //Sets of data from Alex's 3He high Q^2 paper.
+  if(data_set == 55.1)
+    {   
+      Double_t XSexp[2] = {2.77E-13,3.27E-15};                        //fm^2/sr
+      Double_t XSuncertainty[2] = {0.39E-13,0.13E-15};                //fm^2/sr
+      Double_t E0[2] = {3.304, 0.9893};                               //GeV
+      Double_t theta[2] = {27.24, 140.31};                            //degrees
+      Q2 = 55.1;     
     }
-  if(data_set == 1)
+  if(data_set == 60.8)
     {
+      Double_t XSexp[2] = {2.14E-14,1.13E-15};                        //fm^2/sr
+      Double_t XSuncertainty[2] = {0.72E-14,0.80E-15};                //fm^2/sr
+      Double_t E0[2] = {3.304, 1.052};                               //GeV
+      Double_t theta[2] = {28.86, 140.51};                            //degrees
       Q2 = 60.8;
     }
-  if(data_set == 2)
+  if(data_set == 24.7)
     {
+      Double_t XSexp[2] = {2.29E-9,2.80E-11};                        //fm^2/sr
+      Double_t XSuncertainty[2] = {0.12E-9,0.20E-11};                //fm^2/sr
+      Double_t E0[2] = {3.304, 0.7391};                               //GeV
+      Double_t theta[2] = {17.52, 97.78};                            //degrees
       Q2 = 24.7;
     }
-  if(data_set == 3)
+  if(data_set == 30.2)
     {
+      Double_t XSexp[3] = {5.16E-10,3.95E-12,1.51E-12};                        //fm^2/sr
+      Double_t XSuncertainty[3] = {0.29E-10,0.38E-12,0.19E-12};                //fm^2/sr
+      Double_t E0[3] = {3.304, 0.7391, 0.6878};                                //GeV
+      Double_t theta[3] = {19.5, 118.99, 139.99};                              //degrees
       Q2 = 30.2;
     }
   
@@ -96,49 +102,27 @@ void Rosenbluth_Separation()
     return val;
   }
   
-  Double_t XS_reduced(Double_t XSexp, Double_t E0, Double_t theta)
+  Double_t XS_reduced(Double_t XSexp, Double_t E0, Double_t theta, Double_t eps)
   {
     Double_t val = 0.; 
-    val = ( XSexp / MottXS(E0,theta) ) * (1+tau);
+    val = ( XSexp / MottXS(E0,theta) ) * eps*(1+tau);
     return val;
   }
   
-  for(Int_t i=0.;i<3;i++)
+  for(Int_t i=0.;i<sizeof(XSexp)/sizeof(double);i++)
     {
-      if(data_set == 0)
-	{
-	  XSr[i] = XS_reduced(XS_Q2_55_1[i],E0_Q2_55_1[i],theta_Q2_55_1[i]);
-	  epsilon[i] = Calc_Epsilon(theta_Q2_55_1[i]); 
-	  uncertainty[i] = uncertainty_Q2_55_1[i]/MottXS(E0_Q2_55_1[i],theta_Q2_55_1[i]) * (1+tau);
-	}
-
-      if(data_set == 1)
-	{
-	  XSr[i] = XS_reduced(XS_Q2_60_8[i],E0_Q2_60_8[i],theta_Q2_60_8[i]);
-	  epsilon[i] = Calc_Epsilon(theta_Q2_60_8[i]); 
-	  uncertainty[i] = uncertainty_Q2_60_8[i]/MottXS(E0_Q2_60_8[i],theta_Q2_60_8[i]) * (1+tau);
-	}
-
-      if(data_set == 2)
-	{
-	  XSr[i] = XS_reduced(XS_Q2_24_7[i],E0_Q2_24_7[i],theta_Q2_24_7[i]);
-	  epsilon[i] = Calc_Epsilon(theta_Q2_24_7[i]); 
-	  uncertainty[i] = uncertainty_Q2_24_7[i]/MottXS(E0_Q2_24_7[i],theta_Q2_24_7[i]) * (1+tau);
-	}
-
-      if(data_set == 3)
-	{
-	  XSr[i] = XS_reduced(XS_Q2_30_2[i],E0_Q2_30_2[i],theta_Q2_30_2[i]);
-	  epsilon[i] = Calc_Epsilon(theta_Q2_30_2[i]); 
-	  uncertainty[i] = uncertainty_Q2_30_2[i]/MottXS(E0_Q2_30_2[i],theta_Q2_30_2[i]) * (1+tau);
-	}
+	  epsilon[i] = Calc_Epsilon(theta[i]);
+	  XSr[i] = XS_reduced(XSexp[i],E0[i],theta[i],epsilon[i]); 
+	  uncertainty[i] = XSuncertainty[i]/MottXS(E0[i],theta[i]) * epsilon[i]*(1+tau);
+	
       cout<<"XSr["<<i<<"] = "<<XSr[i]<<"   epsilon["<<i<<"] = "<<epsilon[i]<<endl;
     }
 
   //Make Rosenbluth separation plot.
   TCanvas* c1=new TCanvas("c1");
   c1->SetGrid();
-  TGraphErrors *graph = new TGraphErrors(2,epsilon,XSr,0,uncertainty);
+  //Number of points in the graph is determined by the length of the XSexp array.
+  TGraphErrors *graph = new TGraphErrors(sizeof(XSexp)/sizeof(double),epsilon,XSr,0,uncertainty);
   //Draw the new TGraph called graph on the canvas. 
   graph->Draw("");
   graph->SetLineWidth(1);
@@ -148,5 +132,11 @@ void Rosenbluth_Separation()
   graph->SetMarkerSize(0.4);
   graph->SetMarkerStyle(20);
   graph->SetTitle("Rosenbluth Separation Plot; #\epsilon; #\sigma_{r}");
-  
+
+  TF1 *func_line = new TF1("func_line",fit_line,0,1,2);
+  graph->Fit("func_line","R M");
+
+  Double_t GE2 = func_line->GetParameter(1);
+  Double_t GM2 = func_line->GetParameter(0)/tau;
+  cout<<"GE^2 = "<<GE2<<"   GM^2 = "<<GM2<<"   GM2/GE2 = "<<GM2/GE2<<endl;
 }
