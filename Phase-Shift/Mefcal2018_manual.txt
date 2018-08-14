@@ -1,0 +1,41 @@
+Mefcal2018 manual
+-----------------
+
+Syntax:
+
+mefcal2018 inputfilename	generates outputfile: inputfilename.out
+
+ 
+Input (free format):
+
+iz,amass	charge and mass number target
+
+rk,model,nq	cut-off radius, model for charge distribution, number of FB coefficients
+		model=0: give nq FB coefficients
+		model=1: give c,z,w of three-parameter Fermi distribution
+		model=2: give ground-state charge distribution from 0 to rk in 0.1 fm steps
+		oher models, such as Gauss still to be added
+
+e,ewidth	energy and width of beam (e<0: stop)
+		if ewidth<0 no correction for solid angle and energy-width contributions,
+		(skip next 2 input lines)
+			several of these parameters are specific for the Nikhef set-up
+			in practice only dthe (see below) is important
+
+deng,disp	energy acceptation (Mev) and energy dispersion on target (mrad/Mev)
+
+tardik,dthe,dphi,witar
+		tardik = target thickness (g/cm2)
+		horizontal acceptance of spectrometer (deg)
+		vertical acceptance of spectrometer (deg)
+		target angle (deg)
+			= -2 effective thickness given, no correction
+			= -1 target in reflection
+			= 0 target in transmission
+			> 0 target angle fixed to witar
+
+wimi,wima,dwc	minimum and maximum scattering angle and angle step
+
+go back to e,ewidth input		
+		
+

@@ -19,8 +19,8 @@ Double_t alpha = 1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 Int_t loops = 1;
-const Int_t datapts = 248;
-Int_t userand = 2;
+const Int_t datapts = 246;
+Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
@@ -201,7 +201,8 @@ void Global_Fit_3He_SOG()
   if(usedifmin == 1)
     {
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
-      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data.txt","r");
+      //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data.txt","r");
+      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Removed_Bad_Chi2.txt","r");
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Low_Chi2_Only.txt","r");
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Short.txt","r");
     }
@@ -332,6 +333,49 @@ void Global_Fit_3He_SOG()
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand11 = new TF1("rand11","x",5.,6.);
      R[11] = TMath::Nint(rand11->GetRandom())/10.+R[10];
+   }
+
+ if(userand == 3)
+   {
+     //Generate random R[i] values. 
+     Double_t d = 0.49;
+     Double_t step = 0.5;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand = new TF1("rand","x",0.,.01);
+     R[0] = 0.1;//0.1;//0.1;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand1 = new TF1("rand1","x",3.,4.);
+     R[1] = 0.5;//0.5;//0.5;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand2 = new TF1("rand2","x",3.,4.);
+     R[2] = 0.9;//0.9;//0.9;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand3 = new TF1("rand3","x",3.,4.);
+     R[3] = 1.3;//1.3;//1.3;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand4 = new TF1("rand4","x",3.,4.);
+     R[4] = 1.5;//1.6;//1.5;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand5 = new TF1("rand5","x",3.,4.);
+     R[5] = 1.9;//2.1;//1.9;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand6 = new TF1("rand6","x",3.,4.);
+     R[6] = 2.3;//2.4;//2.3;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand7 = new TF1("rand7","x",5.,6.);
+     R[7] = 2.8;//2.9;//2.8;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand8 = new TF1("rand8","x",5.,6.);
+     R[8] = 3.1;//3.4;//3.1;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand9 = new TF1("rand9","x",5.,6.);
+     R[9] = 3.8;//3.8;//3.8;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand10 = new TF1("rand10","x",5.,6.);
+     R[10] = 4.3;//4.6;//4.3;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand11 = new TF1("rand11","x",5.,6.);
+     R[11] = 5.;//5.;//5.;
    }
 
  //Add a constant to each value of Ri.
@@ -908,7 +952,8 @@ void Global_Fit_3He_SOG()
 
  TF1 *fChFF = new TF1("fChFF",ChFF_Q2,yminFF,ymaxFF+54,1);
  //TF1 *fChFF = new TF1("fChFF",ChFF,yminFF,ymaxFF,1);
- cout<<fChFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
+ //cout<<fChFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
+ cout<<"Qichtot = "<<Qichtot<<endl;
  fChFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
  fChFF->Draw("L");
  c2->SetTitle("Charge Form Factor");
@@ -1301,7 +1346,8 @@ void Global_Fit_3He_SOG()
      }
      
      TF1 *fMFF = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
-     cout<<fMFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
+     //cout<<fMFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
+     cout<<"Qimtot = "<<Qimtot<<endl;
      fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
      fMFF->Draw("L");
      c4->SetTitle("He3 Magnetic Form Factor");
@@ -1319,6 +1365,8 @@ void Global_Fit_3He_SOG()
      fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
      fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
      
+     cout<<"Chi^2 = "<<amin<<"   Reduced Chi^2 = "<<amin<<"/("<<datapts<<" - "<<2*ngaus<<" - 1) = "<<amin/(datapts-2*ngaus-1)<<endl;
+
      //Now draw both FFs on the same plot for the GRC poster. 
      TCanvas* c5=new TCanvas("c5");
      c5->SetGrid();
