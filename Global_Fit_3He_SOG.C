@@ -18,11 +18,14 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t alpha = 1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
+Int_t loops = 1;
 const Int_t datapts = 248;
-Int_t userand = 0;
+Int_t userand = 2;
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
+Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
+Int_t showplots = 1;
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -54,8 +57,11 @@ Float_t E0[1000];
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
 Double_t R[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
+Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
+Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
+Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t Qicherr[12]={}; 
 Double_t Qimerr[12]={};
 Double_t Chi2[datapts]={};
@@ -223,24 +229,33 @@ void Global_Fit_3He_SOG()
       }
   }
 
-  //Print the data read from the file. 
-  for(int i=0; i<(nlines-skip); i++)
-    {
-      cout<<"E0["<<i<<"] = "<<E0[i]<<"   theta["<<i<<"] = "<<theta[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   uncertainty["<<i<<"] = "<<uncertainty[i]<<endl;
+  //Print the data read from the file.
+  if(showplots == 1)
+    { 
+      for(int i=0; i<(nlines-skip); i++)
+	{
+	  cout<<"E0["<<i<<"] = "<<E0[i]<<"   theta["<<i<<"] = "<<theta[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   uncertainty["<<i<<"] = "<<uncertainty[i]<<endl;
+	}
+      
+      cout<<"Number of lines = "<<nlines<<endl;
     }
-  
-  cout<<"Number of lines = "<<nlines<<endl;
   fclose(fp);
 
+  //Create an output file to store fit results.
+ std::ofstream output ("Ri_Chi2.txt", std::ofstream::out);
+ output<<"FCN    Qichtot    Qimtot  R[0]  R[1]  R[2]  R[3]  R[4]  R[5]  R[6]  R[7]  R[8]  R[9]  R[10]  R[11]  Q0ch    Q1ch    Q2ch    Q3ch    Q4ch    Q5ch    Q6ch    Q7ch    Q8ch    Q9ch    Q10ch    Q11ch    Q0m    Q1m    Q2m    Q3m    Q4m    Q5m    Q6m    Q7m    Q8m    Q9m    Q10m    Q11m"<<endl;
 
+ //Begin loop over fit with different Ri values each time.
+ for(Int_t q=0;q<loops;q++)
+   {
  if(userand == 1)
    {
      //Generate random R[i] values. 
-     Double_t d = 0.49;
+     Double_t d = 0.25;//0.49
      Double_t step = 0.5;
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand = new TF1("rand","x",0.,.01);
-     R[0] = rand->GetRandom();
+     R[0] = 0.1;//rand->GetRandom();
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand1 = new TF1("rand1","x",R[0]+d,R[0]+step);
      R[1] = rand1->GetRandom();
@@ -276,6 +291,49 @@ void Global_Fit_3He_SOG()
      R[11] = rand11->GetRandom();
    }
 
+ if(userand == 2)
+   {
+     //Generate random R[i] values. 
+     Double_t d = 0.49;
+     Double_t step = 0.5;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand = new TF1("rand","x",0.,.01);
+     R[0] = 0.1;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand1 = new TF1("rand1","x",3.,4.);
+     R[1] = TMath::Nint(rand1->GetRandom())/10.+R[0];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand2 = new TF1("rand2","x",3.,4.);
+     R[2] = TMath::Nint(rand2->GetRandom())/10.+R[1];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand3 = new TF1("rand3","x",3.,4.);
+     R[3] = TMath::Nint(rand3->GetRandom())/10.+R[2];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand4 = new TF1("rand4","x",3.,4.);
+     R[4] = TMath::Nint(rand4->GetRandom())/10.+R[3];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand5 = new TF1("rand5","x",3.,4.);
+     R[5] = TMath::Nint(rand5->GetRandom())/10.+R[4];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand6 = new TF1("rand6","x",3.,4.);
+     R[6] = TMath::Nint(rand6->GetRandom())/10.+R[5];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand7 = new TF1("rand7","x",5.,6.);
+     R[7] = TMath::Nint(rand7->GetRandom())/10.+R[6];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand8 = new TF1("rand8","x",5.,6.);
+     R[8] = TMath::Nint(rand8->GetRandom())/10.+R[7];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand9 = new TF1("rand9","x",5.,6.);
+     R[9] = TMath::Nint(rand9->GetRandom())/10.+R[8];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand10 = new TF1("rand10","x",5.,6.);
+     R[10] = TMath::Nint(rand10->GetRandom())/10.+R[9];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand11 = new TF1("rand11","x",5.,6.);
+     R[11] = TMath::Nint(rand11->GetRandom())/10.+R[10];
+   }
+
  //Add a constant to each value of Ri.
  /* 
  for(Int_t i=0;i<ngaus;i++)
@@ -285,11 +343,13 @@ void Global_Fit_3He_SOG()
 */
 
  //Print the Ri used for the minimization. 
- for(Int_t i=0;i<ngaus;i++)
+ if(showplots == 1)
    {
-     cout<<"R["<<i<<"] = "<<R[i]<<endl;
+     for(Int_t i=0;i<ngaus;i++)
+       {
+	 cout<<"R["<<i<<"] = "<<R[i]<<endl;
+       }
    }
- 
  //Initiate Minuit for minimization.
   TMinuit *gMinuit = new TMinuit(24);  //initialize TMinuit with a maximum of 24 params
   gMinuit->SetFCN(fcn);
@@ -322,50 +382,61 @@ void Global_Fit_3He_SOG()
   // Now ready for minimization step
   arglist[0] = 500.;//50000.
   arglist[1] = 1.;
-  cout<<"Sup1"<<endl;
+  //cout<<"Sup1"<<endl;
   gMinuit->mnexcm("MIGRAD", arglist ,2,ierflg);
-  cout<<"Sup2"<<endl;
+  //cout<<"Sup2"<<endl;
   // Print results
   Double_t amin,edm,errdef;
   Int_t nvpar,nparx,icstat;
   gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
   //gMinuit->mnprin(3,amin);
   
-  //Print Chi^2 and residual for each data point. 
-  for(Int_t i=0;i<(nlines-skip);i++)
-    {
-      cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XSfit(E0,theta,par)["<<i<<"] = "<<xsfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/xsfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
-    }
-
-  //Create a plot of Chi^2 vs. theta.
-  TCanvas* c1=new TCanvas("c1");
-  c1->SetGrid();
-  Double_t maxchi2 = 0.;
-  for(Int_t i=0;i<(nlines-skip);i++)
-    {
-      if(Chi2[i]>maxchi2)
+  //Print Chi^2 and residual for each data point.
+  if(showplots == 1)
+    { 
+      for(Int_t i=0;i<(nlines-skip);i++)
 	{
-	  maxchi2 = Chi2[i];
-	  cout<<"maxchi2 = "<<maxchi2<<endl;
+	  cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XSfit(E0,theta,par)["<<i<<"] = "<<xsfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/xsfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
 	}
     }
 
-  TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 161, 0., 160., maxchi2+21,0., maxchi2+20);
-  for(Int_t i=0;i<(nlines-skip);i++)
+  Double_t maxchi2 = 0.;
+  Double_t total_chi2 = 0.;
+  if(showplots == 1)
     {
-      //hchi->SetBinContent(E0[i],Chi2[i],1.);
+      //Create a plot of Chi^2 vs. theta.
+      TCanvas* c1=new TCanvas("c1");
+      c1->SetGrid();
+
+      for(Int_t i=0;i<(nlines-skip);i++)
+	{
+	  //Store max chi2.
+	  if(Chi2[i]>maxchi2)
+	    {
+	      maxchi2 = Chi2[i];
+	      cout<<"maxchi2 = "<<maxchi2<<endl;
+	    }
+	  //Sum all the individual points' chi2 (should match fcn output value).
+	  total_chi2 = total_chi2 + Chi2[i];
+	}
+      cout<<"Total Chi^2 = "<<total_chi2<<endl;
+      
+      TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 161, 0., 160., maxchi2+21,0., maxchi2+20);
+      for(Int_t i=0;i<(nlines-skip);i++)
+	{
+	  //hchi->SetBinContent(E0[i],Chi2[i],1.);
       hchi->Fill(theta[i],Chi2[i]);
-    }
-  hchi->SetMarkerStyle(20);
-  hchi->SetMarkerSize(1);
-  hchi->Draw();
-
-  //Create a plot of XSexp/XSfit.
-  TCanvas* cxsfit=new TCanvas("cxsfit");
-  cxsfit->SetGrid();
-
-  Double_t maxratio = 0.;
-  for(Int_t i=0;i<(nlines-skip);i++)
+	}
+      hchi->SetMarkerStyle(20);
+      hchi->SetMarkerSize(1);
+      hchi->Draw();
+      
+      //Create a plot of XSexp/XSfit.
+      TCanvas* cxsfit=new TCanvas("cxsfit");
+      cxsfit->SetGrid();
+      
+      Double_t maxratio = 0.;
+      for(Int_t i=0;i<(nlines-skip);i++)
     {
       if(fabs(sigexp[i]/xsfit[i])>maxratio)
 	{
@@ -373,15 +444,16 @@ void Global_Fit_3He_SOG()
 	  cout<<"Max sigexp/sigfit = "<<maxratio<<endl;
 	}
     }
-
-  TH2D *hxsfit = new TH2D("hxsfit","Ratio of Experimental XS to XS from Fit vs. Scattering Angle" , 100, 0., 180., 100, 0., fabs(maxratio)+0.5);
-  for(Int_t i=0;i<(nlines-skip);i++)
-    {
+      
+      TH2D *hxsfit = new TH2D("hxsfit","Ratio of Experimental XS to XS from Fit vs. Scattering Angle" , 100, 0., 180., 100, 0., fabs(maxratio)+0.5);
+      for(Int_t i=0;i<(nlines-skip);i++)
+	{
       hxsfit->Fill(theta[i],sigexp[i]/xsfit[i]);
-    }
-  hxsfit->SetMarkerStyle(20);
-  hxsfit->SetMarkerSize(1);
-  hxsfit->Draw();
+	}
+      hxsfit->SetMarkerStyle(20);
+      hxsfit->SetMarkerSize(1);
+      hxsfit->Draw();
+    }//End showplots.  
   
   Double_t xs2(Double_t *angle, Double_t *par)
   {
@@ -639,15 +711,17 @@ void Global_Fit_3He_SOG()
 
  //Plot the charge FF using the parameters determined by the Minuit SOG fit above. 
  //Make a new canvas to plot data.
- TCanvas* c2=new TCanvas("c2");
- c2->SetGrid();
- c2->SetLogy();
-
+ if(showplots == 1)
+   {
+     TCanvas* c2=new TCanvas("c2");
+     c2->SetGrid();
+     c2->SetLogy();
+   }
  //Set Qi and R[i] = to the corresponding fit parameters.
 
  Double_t  Qichtot = 0.;
  Double_t  Qimtot = 0.;
-
+ 
  if(fitvars == 0)
    {
      for(Int_t i=0;i<ngaus;i++)
@@ -656,9 +730,15 @@ void Global_Fit_3He_SOG()
 	 //Qich[i] = gMinuit->GetParameter(i,1.,1.);
 	 gMinuit->GetParameter(i,Qich[i],Qicherr[i]);
 	 Qichtot = Qichtot + Qich[i];
-	 cout<<"Qich["<<i<<"] = "<<Qich[i]<<"   Qicherr["<<i<<"] = "<<Qicherr[i]<<endl;
+	 if(showplots == 1)
+	   {
+	     cout<<"Qich["<<i<<"] = "<<Qich[i]<<"   Qicherr["<<i<<"] = "<<Qicherr[i]<<endl;
+	   }
        }
-     cout<<"Qichtot = "<<Qichtot<<endl;
+     if(showplots == 1)
+       {
+	 cout<<"Qichtot = "<<Qichtot<<endl;
+       }
      /*
      for(Int_t i=0;i<ngaus;i++)
        {
@@ -672,16 +752,25 @@ void Global_Fit_3He_SOG()
 	 //Qim[i] = fxs0->GetParameter(ngaus+i);
 	 gMinuit->GetParameter(ngaus+i,Qim[i],Qimerr[i]);
 	 Qimtot = Qimtot + Qim[i];
-	 cout<<"Qim["<<i<<"] = "<<Qim[i]<<"   Qimerr["<<i<<"] = "<<Qimerr[i]<<endl;
+	 if(showplots == 1)
+	   {
+	     cout<<"Qim["<<i<<"] = "<<Qim[i]<<"   Qimerr["<<i<<"] = "<<Qimerr[i]<<endl;
+	   }
        }
-     cout<<"Qimtot = "<<Qimtot<<endl;
-     
-     for(Int_t i=0;i<ngaus;i++)
+     if(showplots == 1)
        {
-	 cout<<"R["<<i<<"] = "<<R[i]<<endl;
+	 cout<<"Qimtot = "<<Qimtot<<endl;
+       }     
+
+     if(showplots == 1)
+       {
+	 for(Int_t i=0;i<ngaus;i++)
+	   {
+	     cout<<"R["<<i<<"] = "<<R[i]<<endl;
+	   }
+	 
+	 cout<<"Gamma = "<<gamma<<endl;
        }
-     
-     cout<<"Gamma = "<<gamma<<endl;
    }
 
  if(fitvars == 1)
@@ -731,7 +820,17 @@ void Global_Fit_3He_SOG()
      //If fit gamma too need to redefine gamma to the fit parameter.
      gamma = fxs2->GetParameter(3*ngaus);
    }
- 
+
+ //Fill text file with fcn (chi2), Qichtot, Qimtot, Ri, Qich, Qim.
+ output<<amin<<" "<<Qichtot<<" "<<Qimtot<<" "<<R[0]<<" "<<R[1]<<" "<<R[2]<<" "<<R[3]<<" "<<R[4]<<" "<<R[5]<<" "<<R[6]<<" "<<R[7]<<" "<<R[8]<<" "<<R[9]<<" "<<R[10]<<" "<<R[11]<<" "<<Qich[0]<<" "<<Qich[1]<<" "<<Qich[2]<<" "<<Qich[3]<<" "<<Qich[4]<<" "<<Qich[5]<<" "<<Qich[6]<<" "<<Qich[7]<<" "<<Qich[8]<<" "<<Qich[9]<<" "<<Qich[10]<<" "<<Qich[11]<<" "<<Qim[0]<<" "<<Qim[1]<<" "<<Qim[2]<<" "<<Qim[3]<<" "<<Qim[4]<<" "<<Qim[5]<<" "<<Qim[6]<<" "<<Qim[7]<<" "<<Qim[8]<<" "<<Qim[9]<<" "<<Qim[10]<<" "<<Qim[11]<<endl;
+
+
+}//End loop over minimization for different Ri values.
+ //Close output file.
+ output.close();
+
+ if(showplots == 1)
+   {
  //Plot Charge FF Fch(Q) fm^-1.
  Double_t ChFF(Double_t *Q, Double_t *par)
  {
@@ -782,6 +881,31 @@ void Global_Fit_3He_SOG()
     return fitch;
  }
 
+//Plot Amroun's charge FF. No idea whay I can't just redefine Qi from ChFF_Q2.
+ Double_t ChFF_Q2_Amroun(Double_t *Q2, Double_t *par)
+ {
+   Double_t fitch = 0.;
+   Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	//Use SOG fit for C12 Qi coefficients and R[i] values. 
+	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+
+	//Convert to fm. Not sure I need to do this.
+	//sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0]*GeV2fm,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0]*GeV2fm,0.5)*R[i])/(pow(Q2[0]*GeV2fm,0.5)*R[i])) );
+	sumchtemp = (Qich_Amroun[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+    //Convert to fm. Not sure I need to do this.
+    //fitch = fitch * exp(-0.25*Q2[0]*GeV2fm*pow(gamma,2.0));
+    fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    fitch = fabs(fitch);
+    return fitch;
+ }
+
  TF1 *fChFF = new TF1("fChFF",ChFF_Q2,yminFF,ymaxFF+54,1);
  //TF1 *fChFF = new TF1("fChFF",ChFF,yminFF,ymaxFF,1);
  cout<<fChFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
@@ -792,10 +916,15 @@ void Global_Fit_3He_SOG()
  fChFF->SetTitle("^{3}He Charge Form Factor");
  fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
  fChFF->GetHistogram()->GetYaxis()->CenterTitle(true);
- fChFF->GetHistogram()->GetYaxis()->SetTitleOffset(1.3);
+ fChFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+ fChFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+ fChFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
  fChFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
  fChFF->GetHistogram()->GetXaxis()->CenterTitle(true);
- fChFF->GetHistogram()->GetXaxis()->SetTitleOffset(1.1);
+ fChFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+ fChFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+ fChFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+}//End showplots.
 
  Double_t fitg(Double_t *Q, Double_t *par)
  {
@@ -926,7 +1055,8 @@ void Global_Fit_3He_SOG()
 
 
 
-
+ if(fft == 1)
+   {
 
   //Fill a new histogram with data using the fit function. This will then be inverse Fourier transformed to obtain the charge distribution.
   TH1 *hChFF = new TH1D("hChFF", "hChFF", n+1, yminFF, ymaxFF);
@@ -1088,86 +1218,159 @@ void Global_Fit_3He_SOG()
   hH3chFFback->GetYaxis()->SetTitle("Fch(Q)");
   hH3chFFback->Draw("");
   */
+   }//End fft.
 
-
-
- //Plot the magnetic FF using the parameters determined by the SOG fit above. 
- //Make a new canvas to plot data.
- TCanvas* c4=new TCanvas("c4");
- c4->SetGrid();
- c4->SetLogy();
-
- //Plot magnetic FF(Q) fm^-1.
- Double_t MFF(Double_t *Q, Double_t *par)
- {
-   Double_t fitm = 0.;
-   Double_t summtemp = 0.;
-
-    //Define SOG for magnetic FF.
-    for(Int_t i=0; i<ngaus; i++)
-      { 	
-	//Use SOG fit for C12 Qi coefficients and R[i] values. 
-	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-
-	summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(Q[0]*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(Q[0]*R[i])/(Q[0]*R[i])) );
-	
-	fitm = fitm + summtemp;
-      }
-    
-    fitm = fitm * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
-    fitm = fabs(fitm);
-    return fitm;
- }
-
- //Plot magnetic FF(Q^2) fm^-2.
- Double_t MFF_Q2(Double_t *Q2, Double_t *par)
- {
-   Double_t fitm = 0.;
-   Double_t summtemp = 0.;
-
-    //Define SOG for magnetic FF.
-    for(Int_t i=0; i<ngaus; i++)
-      { 	
-	//Use SOG fit for C12 Qi coefficients and R[i] values. 
-	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-
-	summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	
-	fitm = fitm + summtemp;
-      }
-    
-    fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
-    fitm = fabs(fitm);
-    return fitm;
- }
-
- TF1 *fMFF = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
- cout<<fMFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
- fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
- fMFF->Draw("L");
- c4->SetTitle("He3 Magnetic Form Factor");
- //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
- //fMFF->GetHistogram()->SetTitle("^{3}He Magnetic Form Factor");
- fMFF->SetTitle("^{3}He Magnetic Form Factor");
- fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
- fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
- fMFF->GetHistogram()->GetYaxis()->SetTitleOffset(1.3);
- fMFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
- fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
- fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(1.1);
-
-  //Now draw both FFs on the same plot for the GRC poster. 
-  TCanvas* c5=new TCanvas("c5");
-  c5->SetGrid();
-  c5->Divide(1,2);
-  c5->cd(1)->SetLogy();
-  c5->cd(1);
-  fChFF->Draw("L");
-  c5->cd(2);
-  c5->cd(2)->SetLogy();
-  fMFF->Draw("L");
-
+ if(showplots == 1)
+   {
+     //Plot the magnetic FF using the parameters determined by the SOG fit above. 
+     //Make a new canvas to plot data.
+     TCanvas* c4=new TCanvas("c4");
+     c4->SetGrid();
+     c4->SetLogy();
+     
+     //Plot magnetic FF(Q) fm^-1.
+     Double_t MFF(Double_t *Q, Double_t *par)
+     {
+       Double_t fitm = 0.;
+       Double_t summtemp = 0.;
+       
+       //Define SOG for magnetic FF.
+       for(Int_t i=0; i<ngaus; i++)
+	 { 	
+	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
+	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(Q[0]*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(Q[0]*R[i])/(Q[0]*R[i])) );
+	   
+	   fitm = fitm + summtemp;
+	 }
+       
+       fitm = fitm * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+       fitm = fabs(fitm);
+       return fitm;
+     }
+     
+     //Plot magnetic FF(Q^2) fm^-2.
+     Double_t MFF_Q2(Double_t *Q2, Double_t *par)
+     {
+       Double_t fitm = 0.;
+       Double_t summtemp = 0.;
+       
+       //Define SOG for magnetic FF.
+       for(Int_t i=0; i<ngaus; i++)
+	 { 	
+	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
+	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   fitm = fitm + summtemp;
+	 }
+       
+       fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
+       fitm = fabs(fitm);
+       return fitm;
+     }
+     
+     //Reset Ri to equal Amroun's values.
+     for(Int_t i=0;i<12;i++)
+       {
+	 R[i] = R_Amroun[i];
+       }
+     
+     //Define Amroun's FF. Not sure why I can't just change Qi in MFF_Q2.
+     Double_t MFF_Q2_Amroun(Double_t *Q2, Double_t *par)
+     {
+       Double_t fitm = 0.;
+       Double_t summtemp = 0.;
+       
+       //Define SOG for magnetic FF.
+       for(Int_t i=0; i<ngaus; i++)
+	 { 	
+	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
+	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   summtemp = (Qim_Amroun[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   fitm = fitm + summtemp;
+	 }
+       
+       fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
+       fitm = fabs(fitm);
+       return fitm;
+     }
+     
+     TF1 *fMFF = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
+     cout<<fMFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
+     fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+     fMFF->Draw("L");
+     c4->SetTitle("He3 Magnetic Form Factor");
+     //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
+     //fMFF->GetHistogram()->SetTitle("^{3}He Magnetic Form Factor");
+     fMFF->SetTitle("^{3}He Magnetic Form Factor");
+     fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
+     fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
+     fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+     fMFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+     fMFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
+     fMFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+     fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
+     fMFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+     fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+     fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+     
+     //Now draw both FFs on the same plot for the GRC poster. 
+     TCanvas* c5=new TCanvas("c5");
+     c5->SetGrid();
+     c5->Divide(1,2);
+     c5->cd(1)->SetLogy();
+     c5->cd(1);
+     fChFF->Draw("L");
+     //cout<<fChFF->Eval(35)<<endl;
+     //Now add Amroun's fit to the plot for comparison.
+     /*for(Int_t i=0;i<ngaus;i++)
+       {
+       Qich[i] = Qich_Amroun[i];
+       }*/
+     //Qich[0] = 2;
+     TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,yminFF,ymaxFF+54,1);
+     //cout<<fChFF_Amroun->Eval(35)<<endl;
+     fChFF_Amroun->SetNpx(npdraw);
+     fChFF_Amroun->SetLineColor(4);
+     fChFF_Amroun->Draw("L same");
+     auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
+     ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
+     ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
+     ChFF_leg->Draw();
+     
+     c5->cd(2);
+     c5->cd(2)->SetLogy();
+     //cout<<fMFF->Eval(35)<<endl;
+     fMFF->Draw("L");
+     
+     //Now add Amroun's fit to the plot for comparison.
+     /*for(Int_t i=0;i<ngaus;i++)
+       {
+       Qim[i] = Qim_Amroun[i];
+       }*/
+     TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,yminFF,ymaxFF+54,1);
+     //cout<<fMFF_Amroun->Eval(30)<<endl;
+     fMFF_Amroun->SetNpx(npdraw);
+     fMFF_Amroun->SetLineColor(4);
+     fMFF_Amroun->Draw("L same");
+     auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
+     MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
+     MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
+     MFF_leg->Draw();
+   }//End showplots.
+ 
   st->Stop();
   cout<<"*********************************************"<<endl;
   cout<<"CPU time = "<<st->CpuTime()<<" s = "<<st->CpuTime()/60.<<" min   Real time = "<<st->RealTime()<<" s = "<<st->RealTime()/60.<<" min"<<endl;
 }
+/*
+int main()
+{
+  Global_Fit_3He_SOG();
+}
+*/
