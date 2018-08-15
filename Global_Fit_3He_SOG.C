@@ -15,16 +15,17 @@ Double_t deg2rad = pi/180.0;
 Double_t GeV2fm = 1./0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
 Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
 Double_t C = 299792458.0;                //Speed of light [m/s]. 
-Double_t alpha = 1.0/137.0;              //Fine structure constant.
+Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 Int_t loops = 1;
-const Int_t datapts = 246;
-Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
+const Int_t datapts = 248;//248
+Int_t userand = 0;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
+Int_t Amroun_Qi = 1;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 1;
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
@@ -53,6 +54,7 @@ Float_t qeff[1000];                      //q effective in fm^-1.
 Float_t sigexp[1000];                    //Sigma experimental (cross section). Not sure on units yet.
 Float_t uncertainty[1000];
 Float_t E0[1000];
+Float_t Q2[datapts];
 
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
@@ -84,7 +86,7 @@ Double_t xsfit[datapts]={};
     Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
     Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
     Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=6 A=12
-                
+
     Double_t W = E0 - Ef;
     //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
     Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2eff  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
@@ -161,13 +163,14 @@ Double_t xsfit[datapts]={};
   //Create a Chi^2 function to minimize. 
   void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
   {
-    const Int_t nbins = datapts;//177
+    //const Int_t nbins = datapts;//177
     //Int_t i;
     //calculate chisquare
     Double_t chisq = 0;
     Double_t delta;
     Double_t res;
-    for(Int_t i=0;i<nbins; i++) 
+    for(Int_t i=0;i<datapts;i++) 
+    //for(Int_t i=0;i<226;i++) 
       {
 	delta  = (sigexp[i]-XS(E0[i],theta[i],par))/uncertainty[i];
 	chisq += delta*delta;
@@ -201,8 +204,9 @@ void Global_Fit_3He_SOG()
   if(usedifmin == 1)
     {
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_640.txt","r");
-      //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data.txt","r");
-      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Removed_Bad_Chi2.txt","r");
+      FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data.txt","r");
+      //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_No_New.txt","r");
+      //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Removed_Bad_Chi2.txt","r");
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Low_Chi2_Only.txt","r");
       //FILE *fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Amroun_3He_Data_Short.txt","r");
     }
@@ -226,6 +230,9 @@ void Global_Fit_3He_SOG()
 	theta[nlines-skip] = thetatemp;
 	sigexp[nlines-skip] = sigexptemp;
         uncertainty[nlines-skip] = uncertaintytemp; 
+
+	Q2[nlines-skip] = 4 * E0[nlines-skip] * (E0[nlines-skip]/(1.0+2.0*E0[nlines-skip]*pow(sin(theta[nlines-skip]*deg2rad/2.0),2.0)/MtHe3)) * pow(sin(theta[nlines-skip]*deg2rad/2.0),2.) * GeV2fm;
+
 	nlines++;
       }
   }
@@ -235,7 +242,7 @@ void Global_Fit_3He_SOG()
     { 
       for(int i=0; i<(nlines-skip); i++)
 	{
-	  cout<<"E0["<<i<<"] = "<<E0[i]<<"   theta["<<i<<"] = "<<theta[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   uncertainty["<<i<<"] = "<<uncertainty[i]<<endl;
+	  cout<<"E0["<<i<<"] = "<<E0[i]<<"   theta["<<i<<"] = "<<theta[i]<<"   Q^2["<<i<<"] = "<<Q2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   uncertainty["<<i<<"] = "<<uncertainty[i]<<endl;
 	}
       
       cout<<"Number of lines = "<<nlines<<endl;
@@ -468,12 +475,173 @@ void Global_Fit_3He_SOG()
       TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 161, 0., 160., maxchi2+21,0., maxchi2+20);
       for(Int_t i=0;i<(nlines-skip);i++)
 	{
-	  //hchi->SetBinContent(E0[i],Chi2[i],1.);
-      hchi->Fill(theta[i],Chi2[i]);
+	  //hchi->Fill(theta[i],Chi2[i]);
 	}
       hchi->SetMarkerStyle(20);
       hchi->SetMarkerSize(1);
+      gStyle->SetOptStat(0);
       hchi->Draw();
+
+      //Plot 59 Amroun data points.
+      for (Int_t i=0;i<59;i++) 
+	{
+	  TMarker *m1 = new TMarker(theta[i], Chi2[i], 20);
+	  m1->SetMarkerColor(2);
+	  m1->SetMarkerSize(1);
+	  m1->Draw();
+	}
+
+      //Plot 118 Collard 1965 (Amroun ref 5) data points.
+      for (Int_t i=59;i<177;i++) 
+	{
+	  TMarker *m2 = new TMarker(theta[i], Chi2[i], 20);
+	  m2->SetMarkerColor(4);
+	  m2->SetMarkerSize(1);
+	  m2->Draw();
+	}
+
+      //Plot 22 Szlata 1977 (Amroun ref 8) data points.
+      for (Int_t i=177;i<199;i++) 
+	{
+	  TMarker *m3 = new TMarker(theta[i], Chi2[i], 20);
+	  m3->SetMarkerColor(3);
+	  m3->SetMarkerSize(1);
+	  m3->Draw();
+	}
+
+      //Plot 27 Dunn 1983 (Amroun ref 10) data points.
+      for (Int_t i=199;i<226;i++) 
+	{
+	  TMarker *m4 = new TMarker(theta[i], Chi2[i], 20);
+	  m4->SetMarkerColor(6);
+	  m4->SetMarkerSize(1);
+	  m4->Draw();
+	}
+
+      //Plot 16 (skipping 2) JLab data points.
+      for (Int_t i=226;i<242;i++) 
+	{
+	  TMarker *m5 = new TMarker(theta[i], Chi2[i], 20);
+	  m5->SetMarkerColor(1);
+	  m5->SetMarkerSize(1);
+	  m5->Draw();
+	}
+
+      //Plot 5 Nakagawa 2001 data points.
+      for (Int_t i=242;i<247;i++) 
+	{
+	  TMarker *m6 = new TMarker(theta[i], Chi2[i], 20);
+	  m6->SetMarkerColor(7);
+	  m6->SetMarkerSize(1);
+	  m6->Draw();
+	}
+
+      //Plot my data point.
+      for (Int_t i=247;i<248;i++) 
+	{
+	  TMarker *m7 = new TMarker(theta[i], Chi2[i], 20);
+	  m7->SetMarkerColor(kOrange+7);
+	  m7->SetMarkerSize(1);
+	  m7->Draw();
+	}
+
+      //auto legend1 = new TLegend(0.1,0.7,0.48,0.9); //Places legend in upper left corner of histogram.
+      auto legend1 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
+      legend1->AddEntry(m2,"Collard 1965","p");
+      legend1->AddEntry(m3,"Szlata 1977","p");
+      legend1->AddEntry(m4,"Dunn 1983","p");
+      legend1->AddEntry(m1,"Amroun 1994","p");
+      legend1->AddEntry(m6,"Nakagawa 2001","p");
+      legend1->AddEntry(m5,"Camsonne 2016","p");
+      legend1->AddEntry(m7,"Current Analysis, Ye 2018","p");
+      legend1->Draw();
+
+      //Create a plot of Chi^2 vs. Q^2.
+      TCanvas* cQ2=new TCanvas("cQ2");
+      cQ2->SetGrid();
+
+      TH2D *hQ2 = new TH2D("hQ2","\Chi^{2} vs. Q^{2}" , datapts+1, 0., 70., maxchi2+21,0., maxchi2+20);
+      for(Int_t i=0;i<datapts;i++)
+	{
+	  //hQ2->Fill(Q2[i],Chi2[i]);
+	}
+      hQ2->SetMarkerStyle(20);
+      hQ2->SetMarkerSize(1);
+      gStyle->SetOptStat(0);
+      hQ2->Draw("p");
+
+      //Plot 59 Amroun data points.
+      for (Int_t i=0;i<59;i++) 
+	{
+	  TMarker *m1 = new TMarker(Q2[i], Chi2[i], 20);
+	  m1->SetMarkerColor(2);
+	  m1->SetMarkerSize(1);
+	  m1->Draw();
+	}
+
+      //Plot 118 Collard 1965 (Amroun ref 5) data points.
+      for (Int_t i=59;i<177;i++) 
+	{
+	  TMarker *m2 = new TMarker(Q2[i], Chi2[i], 20);
+	  m2->SetMarkerColor(4);
+	  m2->SetMarkerSize(1);
+	  m2->Draw();
+	}
+
+      //Plot 22 Szlata 1977 (Amroun ref 8) data points.
+      for (Int_t i=177;i<199;i++) 
+	{
+	  TMarker *m3 = new TMarker(Q2[i], Chi2[i], 20);
+	  m3->SetMarkerColor(3);
+	  m3->SetMarkerSize(1);
+	  m3->Draw();
+	}
+
+      //Plot 27 Dunn 1983 (Amroun ref 10) data points.
+      for (Int_t i=199;i<226;i++) 
+	{
+	  TMarker *m4 = new TMarker(Q2[i], Chi2[i], 20);
+	  m4->SetMarkerColor(6);
+	  m4->SetMarkerSize(1);
+	  m4->Draw();
+	}
+
+      //Plot 16 (skipping 2) JLab data points.
+      for (Int_t i=226;i<242;i++) 
+	{
+	  TMarker *m5 = new TMarker(Q2[i], Chi2[i], 20);
+	  m5->SetMarkerColor(1);
+	  m5->SetMarkerSize(1);
+	  m5->Draw();
+	}
+
+      //Plot 5 Nakagawa 2001 data points.
+      for (Int_t i=242;i<247;i++) 
+	{
+	  TMarker *m6 = new TMarker(Q2[i], Chi2[i], 20);
+	  m6->SetMarkerColor(7);
+	  m6->SetMarkerSize(1);
+	  m6->Draw();
+	}
+
+      //Plot my data point.
+      for (Int_t i=247;i<248;i++) 
+	{
+	  TMarker *m7 = new TMarker(Q2[i], Chi2[i], 20);
+	  m7->SetMarkerColor(kOrange+7);
+	  m7->SetMarkerSize(1);
+	  m7->Draw();
+	}
+
+      auto legend2 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
+      legend2->AddEntry(m2,"Collard 1965","p");
+      legend2->AddEntry(m3,"Szlata 1977","p");
+      legend2->AddEntry(m4,"Dunn 1983","p");
+      legend2->AddEntry(m1,"Amroun 1994","p");
+      legend2->AddEntry(m6,"Nakagawa 2001","p");
+      legend2->AddEntry(m5,"Camsonne 2016","p");
+      legend2->AddEntry(m7,"Current Analysis, Ye 2018","p");
+      legend2->Draw();
       
       //Create a plot of XSexp/XSfit.
       TCanvas* cxsfit=new TCanvas("cxsfit");
@@ -492,11 +660,177 @@ void Global_Fit_3He_SOG()
       TH2D *hxsfit = new TH2D("hxsfit","Ratio of Experimental XS to XS from Fit vs. Scattering Angle" , 100, 0., 180., 100, 0., fabs(maxratio)+0.5);
       for(Int_t i=0;i<(nlines-skip);i++)
 	{
-      hxsfit->Fill(theta[i],sigexp[i]/xsfit[i]);
+	  //hxsfit->Fill(theta[i],sigexp[i]/xsfit[i]);
 	}
       hxsfit->SetMarkerStyle(20);
       hxsfit->SetMarkerSize(1);
+      gStyle->SetOptStat(0);
       hxsfit->Draw();
+
+      //Plot 59 Amroun data points.
+      for (Int_t i=0;i<59;i++) 
+	{
+	  TMarker *m1 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
+	  m1->SetMarkerColor(2);
+	  m1->SetMarkerSize(1);
+	  m1->Draw();
+	}
+
+      //Plot 118 Collard 1965 (Amroun ref 5) data points.
+      for (Int_t i=59;i<177;i++) 
+	{
+	  TMarker *m2 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
+	  m2->SetMarkerColor(4);
+	  m2->SetMarkerSize(1);
+	  m2->Draw();
+	}
+
+      //Plot 22 Szlata 1977 (Amroun ref 8) data points.
+      for (Int_t i=177;i<199;i++) 
+	{
+	  TMarker *m3 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
+	  m3->SetMarkerColor(3);
+	  m3->SetMarkerSize(1);
+	  m3->Draw();
+	}
+
+      //Plot 27 Dunn 1983 (Amroun ref 10) data points.
+      for (Int_t i=199;i<226;i++) 
+	{
+	  TMarker *m4 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
+	  m4->SetMarkerColor(6);
+	  m4->SetMarkerSize(1);
+	  m4->Draw();
+	}
+
+      //Plot 16 (skipping 2) JLab data points.
+      for (Int_t i=226;i<242;i++) 
+	{
+	  TMarker *m5 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
+	  m5->SetMarkerColor(1);
+	  m5->SetMarkerSize(1);
+	  m5->Draw();
+	}
+
+      //Plot 5 Nakagawa 2001 data points.
+      for (Int_t i=242;i<247;i++) 
+	{
+	  TMarker *m6 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
+	  m6->SetMarkerColor(7);
+	  m6->SetMarkerSize(1);
+	  m6->Draw();
+	}
+
+      //Plot my data point.
+      for (Int_t i=247;i<248;i++) 
+	{
+	  TMarker *m7 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
+	  m7->SetMarkerColor(kOrange+7);
+	  m7->SetMarkerSize(1);
+	  m7->Draw();
+	}
+
+      auto legend3 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
+      legend3->AddEntry(m2,"Collard 1965","p");
+      legend3->AddEntry(m3,"Szlata 1977","p");
+      legend3->AddEntry(m4,"Dunn 1983","p");
+      legend3->AddEntry(m1,"Amroun 1994","p");
+      legend3->AddEntry(m6,"Nakagawa 2001","p");
+      legend3->AddEntry(m5,"Camsonne 2016","p");
+      legend3->AddEntry(m7,"Current Analysis, Ye 2018","p");
+      legend3->Draw();
+
+      //Plot ratio of fit to experiment vs Q^2 instead of theta.
+TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs. q" , 1000, 0., 10., 100, 0., fabs(maxratio)+0.5);
+      for(Int_t i=0;i<(datapts);i++)
+	{
+	  //hxsfit->Fill(theta[i],sigexp[i]/xsfit[i]);
+	}
+      hxsfitQ2->SetMarkerStyle(20);
+      hxsfitQ2->SetMarkerSize(1);
+      gStyle->SetOptStat(0);
+      hxsfitQ2->Draw();
+
+      //Plot 59 Amroun data points.
+      for (Int_t i=0;i<59;i++) 
+	{
+	  //TMarker *m1 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
+	  TMarker *m1 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
+	  m1->SetMarkerColor(2);
+	  m1->SetMarkerSize(1);
+	  m1->Draw();
+	}
+
+      //Plot 118 Collard 1965 (Amroun ref 5) data points.
+      for (Int_t i=59;i<177;i++) 
+	{
+	  //TMarker *m2 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
+	  TMarker *m2 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
+	  m2->SetMarkerColor(4);
+	  m2->SetMarkerSize(1);
+	  m2->Draw();
+	}
+
+      //Plot 22 Szlata 1977 (Amroun ref 8) data points.
+      for (Int_t i=177;i<199;i++) 
+	{
+	  //TMarker *m3 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
+	  TMarker *m3 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
+	  m3->SetMarkerColor(3);
+	  m3->SetMarkerSize(1);
+	  m3->Draw();
+	}
+
+      //Plot 27 Dunn 1983 (Amroun ref 10) data points.
+      for (Int_t i=199;i<226;i++) 
+	{
+	  //TMarker *m4 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
+	  TMarker *m4 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
+	  m4->SetMarkerColor(6);
+	  m4->SetMarkerSize(1);
+	  m4->Draw();
+	}
+
+      //Plot 16 (skipping 2) JLab data points.
+      for (Int_t i=226;i<242;i++) 
+	{
+	  //TMarker *m5 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
+	  TMarker *m5 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
+	  m5->SetMarkerColor(1);
+	  m5->SetMarkerSize(1);
+	  m5->Draw();
+	}
+
+      //Plot 5 Nakagawa 2001 data points.
+      for (Int_t i=242;i<247;i++) 
+	{
+	  //TMarker *m6 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
+	  TMarker *m6 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
+	  m6->SetMarkerColor(7);
+	  m6->SetMarkerSize(1);
+	  m6->Draw();
+	}
+
+      //Plot my data point.
+      for (Int_t i=247;i<248;i++) 
+	{
+	  //TMarker *m7 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
+	  TMarker *m7 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
+	  m7->SetMarkerColor(kOrange+7);
+	  m7->SetMarkerSize(1);
+	  m7->Draw();
+	}
+
+      auto legend4 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
+      legend4->AddEntry(m2,"Collard 1965","p");
+      legend4->AddEntry(m3,"Szlata 1977","p");
+      legend4->AddEntry(m4,"Dunn 1983","p");
+      legend4->AddEntry(m1,"Amroun 1994","p");
+      legend4->AddEntry(m6,"Nakagawa 2001","p");
+      legend4->AddEntry(m5,"Camsonne 2016","p");
+      legend4->AddEntry(m7,"Current Analysis, Ye 2018","p");
+      legend4->Draw();
+
     }//End showplots.  
   
   Double_t xs2(Double_t *angle, Double_t *par)
@@ -814,6 +1148,16 @@ void Global_Fit_3He_SOG()
 	   }
 	 
 	 cout<<"Gamma = "<<gamma<<endl;
+       }
+   }
+
+ //Overrides fitted Qi. 
+ if(Amroun_Qi == 1)
+   {
+     for(Int_t i=0;i<ngaus;i++)
+       {
+	 Qich[i] = Qich_Amroun[i];
+	 Qim[i] = Qim_Amroun[i];
        }
    }
 
