@@ -10,6 +10,10 @@
 #include <math.h>
 #include "TMinuit.h"
 
+#include <TMath.h>
+#include "Math/IFunction.h"
+#include <cmath>
+
 Double_t pi = 3.141592654;
 Double_t deg2rad = pi/180.0;
 Double_t GeV2fm = 1./0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
@@ -19,16 +23,17 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 Int_t loops = 1;
-const Int_t datapts = 248;//248
-Int_t userand = 0;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
+const Int_t datapts = 246;//248
+Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
-Int_t Amroun_Qi = 1;                     //1 = Override fitted Qi and use Amroun's values.
+Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 1;
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
+Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
@@ -64,123 +69,170 @@ Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074
 Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
+Double_t av[12] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t Qicherr[12]={}; 
 Double_t Qimerr[12]={};
 Double_t Chi2[datapts]={};
 Double_t residual[datapts]={};
 Double_t xsfit[datapts]={};
+Double_t Chi2_FB[datapts]={};
+Double_t residual_FB[datapts]={};
+Double_t FBfit[datapts]={};
 
   //Make a function for the XS using the SOG parameterization that can be minimized to fit the measured cross sections.
   //This XS function fits only the Qi values.
-  Double_t XS(float E0, float theta, Double_t *par)
-  {
-    //Double_t value=( (par[0]*par[0])/(x*x)-1)/ ( par[1]+par[2]*y-par[3]*y*y);
-    //Double_t value = par[0] * x*x + par[1];
-    Double_t val = 0.;
-    Double_t mottxs = 0.;
-    Double_t fitch = 0.;
-    Double_t sumchtemp = 0.;
-    Double_t fitm = 0.;
-    Double_t summtemp = 0.;
-    
-    Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
-    Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
-    Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=6 A=12
-
-    Double_t W = E0 - Ef;
-    //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
-    Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2eff  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
-    Double_t eta = 1.0 + Q2eff/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2.
-
-    Double_t Qtot = 1.0;
-    Double_t Qtemp = 0.;
-    /*
+Double_t XS(float E0, float theta, Double_t *par)
+{
+  //Double_t value=( (par[0]*par[0])/(x*x)-1)/ ( par[1]+par[2]*y-par[3]*y*y);
+  //Double_t value = par[0] * x*x + par[1];
+  Double_t val = 0.;
+  Double_t mottxs = 0.;
+  Double_t fitch = 0.;
+  Double_t sumchtemp = 0.;
+  Double_t fitm = 0.;
+  Double_t summtemp = 0.;
+  
+  Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+  Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
+  Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
+  
+  Double_t W = E0 - Ef;
+  //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
+  Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2eff  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
+  Double_t eta = 1.0 + Q2eff/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2.
+  
+  Double_t Qtot = 1.0;
+  Double_t Qtemp = 0.;
+  /*
     for(Int_t i=0;i++,ngaus)
-      {
-	Qtemp = Qtemp + par[i];
-      }*/
-
-    //Calculate Mott XS.
-    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
-    
-    //if(par[0]+par[1]+par[2]+par[3]+par[4]+par[5]+par[6]+par[7]+par[8]+par[9]+par[10]+par[11] == 1.)
-    //{
-    //cout<<"***************************************************************************"<<endl;
-    /*
+    {
+    Qtemp = Qtemp + par[i];
+    }*/
+  
+  //Calculate Mott XS.
+  mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+  
+  //if(par[0]+par[1]+par[2]+par[3]+par[4]+par[5]+par[6]+par[7]+par[8]+par[9]+par[10]+par[11] == 1.)
+  //{
+  //cout<<"***************************************************************************"<<endl;
+  /*
     for(Int_t i=0;i<2*ngaus;i++)
-      {
-	cout<<"par["<<i<<"] = "<<par[i]<<endl;
-	}*/
-    //Define SOG for charge FF.
-    for(Int_t i=0; i<ngaus; i++)
-      { 
-	//Fit just the Qi values using predetermined R[i] values.
-	sumchtemp = (par[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );
+    {
+    cout<<"par["<<i<<"] = "<<par[i]<<endl;
+    }*/
+  //Define SOG for charge FF.
+  for(Int_t i=0; i<ngaus; i++)
+    { 
+      //Fit just the Qi values using predetermined R[i] values.
+      sumchtemp = (par[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );
 	
-       fitch =  fitch + sumchtemp;
-       //cout<<"fitch["<<i<<"] = "<<fitch<<endl;
+      fitch =  fitch + sumchtemp;
+      //cout<<"fitch["<<i<<"] = "<<fitch<<endl;
+    }
+  //}
+  //fitch =  fitch * exp(-0.25*Q2eff*pow(gamma,2.0));
+  fitch =  fitch * exp(-0.25*Q2eff*pow(gamma,2.0));
+  
+  //if(par[ngaus+0]+par[ngaus+1]+par[ngaus+2]+par[ngaus+3]+par[ngaus+4]+par[ngaus+5]+par[ngaus+6]+par[ngaus+7]+par[ngaus+8]+par[ngaus+9]+par[ngaus+10]+par[ngaus+11] == 1.)
+  //{
+  //Define SOG for magnetic FF.
+  for(Int_t i=0; i<ngaus; i++)
+    {
+      //Fit just the Qi values using predetermined R[i] values.
+      summtemp = (par[ngaus+i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );	
+      
+      fitm = fitm + summtemp;
+      //cout<<"fitm["<<i<<"] = "<<fitm<<endl;
       }
-    //}
-    //fitch =  fitch * exp(-0.25*Q2eff*pow(gamma,2.0));
-    fitch =  fitch * exp(-0.25*Q2eff*pow(gamma,2.0));
-   
-    //if(par[ngaus+0]+par[ngaus+1]+par[ngaus+2]+par[ngaus+3]+par[ngaus+4]+par[ngaus+5]+par[ngaus+6]+par[ngaus+7]+par[ngaus+8]+par[ngaus+9]+par[ngaus+10]+par[ngaus+11] == 1.)
-    //{
-    //Define SOG for magnetic FF.
-    for(Int_t i=0; i<ngaus; i++)
-      {
-	//Fit just the Qi values using predetermined R[i] values.
-	summtemp = (par[ngaus+i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2eff,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2eff,0.5)*R[i])/(pow(Q2eff,0.5)*R[i])) );	
-
-	fitm = fitm + summtemp;
-	//cout<<"fitm["<<i<<"] = "<<fitm<<endl;
-      }
-    //}
-    fitm = fitm * exp(-0.25*Q2eff*pow(gamma,2.0));   //For some reason had fabs(fitm).
-    /*
+  //}
+  fitm = fitm * exp(-0.25*Q2eff*pow(gamma,2.0));   //For some reason had fabs(fitm).
+  /*
     cout<<"E0 = "<<E0<<"   theta = "<<theta<<endl;
     cout<<"Ef = "<<Ef<<"   Q2 = "<<Q2<<"   Q2eff = "<<Q2eff<<"   W = "<<W<<"   q2_3 = "<<q2_3<<"   eta = "<<eta<<endl;
     cout<<"Mott XS = "<<mottxs<<endl;
     cout<<"fitch = "<<fitch<<"   fitm = "<<fitm<<endl;
-    */
-    /*  
-    for(Int_t i=0;i<2*ngaus;i++)
+  */
+  /*  
+      for(Int_t i=0;i<2*ngaus;i++)
       {
-	cout<<"par["<<i<<"] = "<<par[i]<<endl;
+      cout<<"par["<<i<<"] = "<<par[i]<<endl;
       }
-    */
-      /*
+  */
+  /*
     for(Int_t i=0;i<ngaus;i++)
-      {
-	cout<<"R["<<i<<"] = "<<R[i]<<endl;
-      }
-    */
-    val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + (pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
-    //cout<<"XS = "<<val<<endl;
-    return val;
-  }
+    {
+    cout<<"R["<<i<<"] = "<<R[i]<<endl;
+    }
+  */
+  val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + (pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
+  //cout<<"XS = "<<val<<endl;
+  return val;
+}
 
-  //Create a Chi^2 function to minimize. 
-  void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
-  {
-    //const Int_t nbins = datapts;//177
-    //Int_t i;
-    //calculate chisquare
-    Double_t chisq = 0;
-    Double_t delta;
-    Double_t res;
-    for(Int_t i=0;i<datapts;i++) 
+Double_t FB(float E0, float theta, Double_t *par)
+{
+  Double_t val = 0.;
+
+  Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+  Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
+  Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
+  Double_t FB_sum = 0.;
+  Double_t FB_temp = 0.;
+  Double_t R_FB = 5.;  //fm
+
+  for(Int_t i=1; i<(nFB+1); i++)
+    {
+      FB_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::cyl_bessel_j(1,pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_sum = FB_sum + FB_temp;
+    }
+
+  val = FB_sum;
+  return val;
+}
+
+//Create a Chi^2 function to minimize. 
+void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
+{
+  //const Int_t nbins = datapts;//177
+  //Int_t i;
+  //calculate chisquare
+  Double_t chisq = 0;
+  Double_t delta;
+  Double_t res;
+  for(Int_t i=0;i<datapts;i++) 
     //for(Int_t i=0;i<226;i++) 
-      {
-	delta  = (sigexp[i]-XS(E0[i],theta[i],par))/uncertainty[i];
-	chisq += delta*delta;
-	Chi2[i] = delta*delta;
-	residual[i] = sigexp[i] - XS(E0[i],theta[i],par); 
-	xsfit[i] = XS(E0[i],theta[i],par);
-	//cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
-      }
-    f = chisq;
-  }
+    {
+      delta  = (sigexp[i]-XS(E0[i],theta[i],par))/uncertainty[i];
+      chisq += delta*delta;
+      Chi2[i] = delta*delta;
+      residual[i] = sigexp[i] - XS(E0[i],theta[i],par); 
+      xsfit[i] = XS(E0[i],theta[i],par);
+      //cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
+    }
+  f = chisq;
+}
+
+//Create a Chi^2 function to minimize with the Fourrier-Bessel series. 
+void fcn_FB(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
+{
+  //const Int_t nbins = datapts;//177
+  //Int_t i;
+  //calculate chisquare
+  Double_t chisq = 0;
+  Double_t delta;
+  Double_t res;
+  for(Int_t i=0;i<datapts;i++) 
+    //for(Int_t i=0;i<226;i++) 
+    {
+      delta  = (sigexp[i]-FB(E0[i],theta[i],par))/uncertainty[i];
+      chisq += delta*delta;
+      Chi2_FB[i] = delta*delta;
+      residual_FB[i] = sigexp[i] - FB(E0[i],theta[i],par); 
+      FBfit[i] = FB(E0[i],theta[i],par);
+      //cout<<"FBfit["<<i<<"] = "<<FBfit[i]<<endl;
+    }
+  f = chisq;
+}
 
 void Global_Fit_3He_SOG() 
 {
@@ -453,6 +505,7 @@ void Global_Fit_3He_SOG()
 
   Double_t maxchi2 = 0.;
   Double_t total_chi2 = 0.;
+  Double_t maxQ2 = 0.;
   if(showplots == 1)
     {
       //Create a plot of Chi^2 vs. theta.
@@ -471,6 +524,17 @@ void Global_Fit_3He_SOG()
 	  total_chi2 = total_chi2 + Chi2[i];
 	}
       cout<<"Total Chi^2 = "<<total_chi2<<endl;
+
+      //Find max Q^2 for things like FB fitting.
+      for(Int_t i=0;i<(datapts);i++)
+	{
+	  //Store max chi2.
+	  if(Q2[i]>maxQ2)
+	    {
+	      maxQ2 = Q2[i];
+	      cout<<"maxQ2 = "<<maxQ2<<endl;
+	    }
+	}
       
       TH2D *hchi = new TH2D("hchi","\Chi^{2} vs. Scattering Angle" , 161, 0., 160., maxchi2+21,0., maxchi2+20);
       for(Int_t i=0;i<(nlines-skip);i++)
@@ -482,8 +546,8 @@ void Global_Fit_3He_SOG()
       gStyle->SetOptStat(0);
       hchi->Draw();
 
-      //Plot 59 Amroun data points.
-      for (Int_t i=0;i<59;i++) 
+      //Plot 59 Amroun data points. Removed two points without energy listed.
+      for (Int_t i=0;i<57;i++) 
 	{
 	  TMarker *m1 = new TMarker(theta[i], Chi2[i], 20);
 	  m1->SetMarkerColor(2);
@@ -492,7 +556,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=59;i<177;i++) 
+      for (Int_t i=57;i<175;i++) 
 	{
 	  TMarker *m2 = new TMarker(theta[i], Chi2[i], 20);
 	  m2->SetMarkerColor(4);
@@ -501,7 +565,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=177;i<199;i++) 
+      for (Int_t i=175;i<197;i++) 
 	{
 	  TMarker *m3 = new TMarker(theta[i], Chi2[i], 20);
 	  m3->SetMarkerColor(3);
@@ -510,7 +574,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=199;i<226;i++) 
+      for (Int_t i=197;i<224;i++) 
 	{
 	  TMarker *m4 = new TMarker(theta[i], Chi2[i], 20);
 	  m4->SetMarkerColor(6);
@@ -519,7 +583,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=226;i<242;i++) 
+      for (Int_t i=224;i<240;i++) 
 	{
 	  TMarker *m5 = new TMarker(theta[i], Chi2[i], 20);
 	  m5->SetMarkerColor(1);
@@ -528,7 +592,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=242;i<247;i++) 
+      for (Int_t i=240;i<245;i++) 
 	{
 	  TMarker *m6 = new TMarker(theta[i], Chi2[i], 20);
 	  m6->SetMarkerColor(7);
@@ -537,7 +601,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot my data point.
-      for (Int_t i=247;i<248;i++) 
+      for (Int_t i=245;i<246;i++) 
 	{
 	  TMarker *m7 = new TMarker(theta[i], Chi2[i], 20);
 	  m7->SetMarkerColor(kOrange+7);
@@ -570,8 +634,8 @@ void Global_Fit_3He_SOG()
       gStyle->SetOptStat(0);
       hQ2->Draw("p");
 
-      //Plot 59 Amroun data points.
-      for (Int_t i=0;i<59;i++) 
+      //Plot 59 Amroun data points. Removed two points without energy listed.
+      for (Int_t i=0;i<57;i++) 
 	{
 	  TMarker *m1 = new TMarker(Q2[i], Chi2[i], 20);
 	  m1->SetMarkerColor(2);
@@ -580,7 +644,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=59;i<177;i++) 
+      for (Int_t i=57;i<175;i++) 
 	{
 	  TMarker *m2 = new TMarker(Q2[i], Chi2[i], 20);
 	  m2->SetMarkerColor(4);
@@ -589,7 +653,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=177;i<199;i++) 
+      for (Int_t i=175;i<197;i++) 
 	{
 	  TMarker *m3 = new TMarker(Q2[i], Chi2[i], 20);
 	  m3->SetMarkerColor(3);
@@ -598,7 +662,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=199;i<226;i++) 
+      for (Int_t i=197;i<224;i++) 
 	{
 	  TMarker *m4 = new TMarker(Q2[i], Chi2[i], 20);
 	  m4->SetMarkerColor(6);
@@ -607,7 +671,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=226;i<242;i++) 
+      for (Int_t i=224;i<240;i++) 
 	{
 	  TMarker *m5 = new TMarker(Q2[i], Chi2[i], 20);
 	  m5->SetMarkerColor(1);
@@ -616,7 +680,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=242;i<247;i++) 
+      for (Int_t i=240;i<245;i++) 
 	{
 	  TMarker *m6 = new TMarker(Q2[i], Chi2[i], 20);
 	  m6->SetMarkerColor(7);
@@ -625,7 +689,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot my data point.
-      for (Int_t i=247;i<248;i++) 
+      for (Int_t i=245;i<246;i++) 
 	{
 	  TMarker *m7 = new TMarker(Q2[i], Chi2[i], 20);
 	  m7->SetMarkerColor(kOrange+7);
@@ -667,8 +731,8 @@ void Global_Fit_3He_SOG()
       gStyle->SetOptStat(0);
       hxsfit->Draw();
 
-      //Plot 59 Amroun data points.
-      for (Int_t i=0;i<59;i++) 
+      //Plot 59 Amroun data points. Removed two points without energy listed.
+      for (Int_t i=0;i<57;i++) 
 	{
 	  TMarker *m1 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m1->SetMarkerColor(2);
@@ -677,7 +741,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=59;i<177;i++) 
+      for (Int_t i=57;i<175;i++) 
 	{
 	  TMarker *m2 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m2->SetMarkerColor(4);
@@ -686,7 +750,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=177;i<199;i++) 
+      for (Int_t i=175;i<197;i++) 
 	{
 	  TMarker *m3 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m3->SetMarkerColor(3);
@@ -695,7 +759,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=199;i<226;i++) 
+      for (Int_t i=197;i<224;i++) 
 	{
 	  TMarker *m4 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m4->SetMarkerColor(6);
@@ -704,7 +768,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=226;i<242;i++) 
+      for (Int_t i=224;i<240;i++) 
 	{
 	  TMarker *m5 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m5->SetMarkerColor(1);
@@ -713,7 +777,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=242;i<247;i++) 
+      for (Int_t i=240;i<245;i++) 
 	{
 	  TMarker *m6 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m6->SetMarkerColor(7);
@@ -722,7 +786,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot my data point.
-      for (Int_t i=247;i<248;i++) 
+      for (Int_t i=245;i<246;i++) 
 	{
 	  TMarker *m7 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m7->SetMarkerColor(kOrange+7);
@@ -752,7 +816,7 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
       hxsfitQ2->Draw();
 
       //Plot 59 Amroun data points.
-      for (Int_t i=0;i<59;i++) 
+      for (Int_t i=0;i<57;i++) 
 	{
 	  //TMarker *m1 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m1 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -762,7 +826,7 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=59;i<177;i++) 
+      for (Int_t i=57;i<175;i++) 
 	{
 	  //TMarker *m2 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m2 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -772,7 +836,7 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=177;i<199;i++) 
+      for (Int_t i=175;i<197;i++) 
 	{
 	  //TMarker *m3 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m3 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -782,7 +846,7 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=199;i<226;i++) 
+      for (Int_t i=197;i<224;i++) 
 	{
 	  //TMarker *m4 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m4 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -792,7 +856,7 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
 	}
 
       //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=226;i<242;i++) 
+      for (Int_t i=224;i<240;i++) 
 	{
 	  //TMarker *m5 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m5 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -802,7 +866,7 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=242;i<247;i++) 
+      for (Int_t i=240;i<245;i++) 
 	{
 	  //TMarker *m6 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m6 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -812,7 +876,7 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
 	}
 
       //Plot my data point.
-      for (Int_t i=247;i<248;i++) 
+      for (Int_t i=245;i<246;i++) 
 	{
 	  //TMarker *m7 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m7 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -1756,13 +1820,59 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
      MFF_leg->Draw();
    }//End showplots.
  
-  st->Stop();
-  cout<<"*********************************************"<<endl;
-  cout<<"CPU time = "<<st->CpuTime()<<" s = "<<st->CpuTime()/60.<<" min   Real time = "<<st->RealTime()<<" s = "<<st->RealTime()/60.<<" min"<<endl;
+
+
+
+ //Initiate Minuit for minimization of Fourrier-Bessel fit.
+ gSystem->Load("libMathMore");            //Needed to use cyl_bessel_j() function.
+ TMinuit *gMinuit_FB = new TMinuit(nFB);  //initialize TMinuit with a maximum of 24 params
+ gMinuit_FB->SetFCN(fcn_FB);
+ 
+ Double_t arglist_FB[10];
+ Int_t ierflg_FB = 0;
+ 
+ arglist_FB[0] = 1.;
+ gMinuit_FB->mnexcm("SET ERR", arglist_FB ,1,ierflg_FB);
+ 
+ //Set step sizes.
+ static Double_t stepsize_FB[4] = {0.1 , 0.1 , 0.01 , 0.001};
+ 
+ //Set starting guesses for parameters. (Use Amroun's SOG parameters.)
+ for(Int_t i=0;i<nFB;i++)
+   {
+     gMinuit_FB->mnparm(i, Form("av%d",i+1), av[i], stepsize_FB[0], 0.,1.,ierflg_FB);
+     //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
+   }
+ 
+ // Now ready for minimization step
+ arglist_FB[0] = 500.;//50000.
+ arglist_FB[1] = 1.;
+ //cout<<"Sup1"<<endl;
+ gMinuit_FB->mnexcm("MIGRAD", arglist_FB , 2, ierflg_FB);
+ //cout<<"Sup2"<<endl;
+ // Print results
+ Double_t amin_FB,edm_FB,errdef_FB;
+ Int_t nvpar_FB,nparx_FB,icstat_FB;
+ gMinuit_FB->mnstat(amin_FB, edm_FB, errdef_FB, nvpar_FB, nparx_FB, icstat_FB);
+ //gMinuit_FB->mnprin(3,amin_FB);
+ 
+ 
+   if(showplots == 1)
+     { 
+       for(Int_t i=0;i<(nlines-skip);i++)
+	 {
+	   cout<<"Chi2_FB["<<i<<"] = "<<Chi2_FB[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   FB(E0,theta,par)["<<i<<"] = "<<FBfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/FBfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
+	 }
+     }
+ 
+ 
+ st->Stop();
+ cout<<"*********************************************"<<endl;
+ cout<<"CPU time = "<<st->CpuTime()<<" s = "<<st->CpuTime()/60.<<" min   Real time = "<<st->RealTime()<<" s = "<<st->RealTime()/60.<<" min"<<endl;
 }
 /*
-int main()
-{
+  int main()
+  {
   Global_Fit_3He_SOG();
-}
+  }
 */

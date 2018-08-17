@@ -1,0 +1,8 @@
+Amroun 1994 3He Data
+Energy (GeV)  Theta (Degrees)  Sigma Experimental  Uncertainties
+0.0586	60	6.613E-3	1.403E-4
+0.0897	60	2.413E-3	4.635E-5
+0.10978	60	1.417E-3	2.555E-5
+0.14196	60	6.656E-4	1.200E-5
+0.1747	60	3.225E-4	5.814E-6
+0.2017	60	1.852E-4	3.339E-6
