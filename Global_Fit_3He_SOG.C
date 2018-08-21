@@ -31,6 +31,7 @@ Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi,
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 1;
+Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
@@ -179,14 +180,24 @@ Double_t FB(float E0, float theta, Double_t *par)
   Double_t FB_sum = 0.;
   Double_t FB_temp = 0.;
   Double_t R_FB = 5.;  //fm
+  Double_t mottxs = 0.;
+  Double_t tau = 0;
 
+  //Calculate Mott XS.
+  mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/GeV2fm;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+  //cout<<"MottXS = "<<mottxs<<endl;
+  //Calculate tau.
+  tau = Q2eff/(4*pow(MtHe3,2.)*GeV2fm);
+
+  //Calculate Ge.
   for(Int_t i=1; i<(nFB+1); i++)
     {
-      FB_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::cyl_bessel_j(1,pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
       FB_sum = FB_sum + FB_temp;
     }
 
-  val = FB_sum;
+  //val = FB_sum;
+  val = pow(Z,2.) * mottxs * pow(FB_sum,2.)/(1+tau);
   return val;
 }
 
@@ -1821,50 +1832,50 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
    }//End showplots.
  
 
-
-
- //Initiate Minuit for minimization of Fourrier-Bessel fit.
- gSystem->Load("libMathMore");            //Needed to use cyl_bessel_j() function.
- TMinuit *gMinuit_FB = new TMinuit(nFB);  //initialize TMinuit with a maximum of 24 params
- gMinuit_FB->SetFCN(fcn_FB);
- 
- Double_t arglist_FB[10];
- Int_t ierflg_FB = 0;
- 
- arglist_FB[0] = 1.;
- gMinuit_FB->mnexcm("SET ERR", arglist_FB ,1,ierflg_FB);
- 
- //Set step sizes.
- static Double_t stepsize_FB[4] = {0.1 , 0.1 , 0.01 , 0.001};
- 
- //Set starting guesses for parameters. (Use Amroun's SOG parameters.)
- for(Int_t i=0;i<nFB;i++)
+ if(useFB == 1)
    {
-     gMinuit_FB->mnparm(i, Form("av%d",i+1), av[i], stepsize_FB[0], 0.,1.,ierflg_FB);
-     //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
+     //Initiate Minuit for minimization of Fourrier-Bessel fit.
+     gSystem->Load("libMathMore");            //Needed to use cyl_bessel_j() function.
+     TMinuit *gMinuit_FB = new TMinuit(nFB);  //initialize TMinuit with a maximum of 24 params
+     gMinuit_FB->SetFCN(fcn_FB);
+     
+     Double_t arglist_FB[10];
+     Int_t ierflg_FB = 0;
+     
+     arglist_FB[0] = 1.;
+     gMinuit_FB->mnexcm("SET ERR", arglist_FB ,1,ierflg_FB);
+     
+     //Set step sizes.
+     static Double_t stepsize_FB[4] = {0.1 , 0.1 , 0.01 , 0.001};
+     
+     //Set starting guesses for parameters. (Use Amroun's SOG parameters.)
+     for(Int_t i=0;i<nFB;i++)
+       {
+	 gMinuit_FB->mnparm(i, Form("av%d",i+1), av[i], stepsize_FB[3], 0.,1.,ierflg_FB);
+	 //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
+       }
+     
+     // Now ready for minimization step
+     arglist_FB[0] = 500.;//50000.
+     arglist_FB[1] = 1.;
+     //cout<<"Sup1"<<endl;
+     gMinuit_FB->mnexcm("MIGRAD", arglist_FB , 2, ierflg_FB);
+     //cout<<"Sup2"<<endl;
+     // Print results
+     Double_t amin_FB,edm_FB,errdef_FB;
+     Int_t nvpar_FB,nparx_FB,icstat_FB;
+     gMinuit_FB->mnstat(amin_FB, edm_FB, errdef_FB, nvpar_FB, nparx_FB, icstat_FB);
+     //gMinuit_FB->mnprin(3,amin_FB);
+     
+     
+     if(showplots == 1)
+       { 
+	 for(Int_t i=0;i<(nlines-skip);i++)
+	   {
+	     cout<<"Chi2_FB["<<i<<"] = "<<Chi2_FB[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   FB(E0,theta,par)["<<i<<"] = "<<FBfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/FBfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
+	   }
+       }
    }
- 
- // Now ready for minimization step
- arglist_FB[0] = 500.;//50000.
- arglist_FB[1] = 1.;
- //cout<<"Sup1"<<endl;
- gMinuit_FB->mnexcm("MIGRAD", arglist_FB , 2, ierflg_FB);
- //cout<<"Sup2"<<endl;
- // Print results
- Double_t amin_FB,edm_FB,errdef_FB;
- Int_t nvpar_FB,nparx_FB,icstat_FB;
- gMinuit_FB->mnstat(amin_FB, edm_FB, errdef_FB, nvpar_FB, nparx_FB, icstat_FB);
- //gMinuit_FB->mnprin(3,amin_FB);
- 
- 
-   if(showplots == 1)
-     { 
-       for(Int_t i=0;i<(nlines-skip);i++)
-	 {
-	   cout<<"Chi2_FB["<<i<<"] = "<<Chi2_FB[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   FB(E0,theta,par)["<<i<<"] = "<<FBfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/FBfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
-	 }
-     }
- 
  
  st->Stop();
  cout<<"*********************************************"<<endl;

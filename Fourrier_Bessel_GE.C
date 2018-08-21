@@ -14,11 +14,12 @@
 #include "Math/IFunction.h"
 #include <cmath>
 
-Double_t pi = 3.141592654;
+Double_t pi = TMath::Pi();
 Double_t deg2rad = pi/180.0;
 Double_t GeV2fm = 1./0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
 Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
 Double_t C = 299792458.0;                //Speed of light [m/s]. 
+Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
@@ -59,7 +60,15 @@ Float_t qeff[1000];                      //q effective in fm^-1.
 Float_t sigexp[1000];                    //Sigma experimental (cross section). Not sure on units yet.
 Float_t uncertainty[1000];
 Float_t E0[1000];
+Float_t Ef_arr[datapts];
 Float_t Q2_arr[datapts];
+Float_t Q_arr[datapts];
+Float_t Q2eff_arr[datapts];
+Float_t Qeff_arr[datapts];
+Float_t mottxs_arr[datapts];
+Float_t tau_arr[datapts];
+Float_t sig_red[datapts];                //Sig_exp/sig_mott * (1+tau)/Z^2
+Float_t ratio[datapts];
 
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
@@ -70,6 +79,8 @@ Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.1148
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t av[12] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
+Double_t av_retzlaff[12] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
+Double_t averr[12] ={};
 Double_t Qicherr[12]={}; 
 Double_t Qimerr[12]={};
 Double_t Chi2[datapts]={};
@@ -89,14 +100,25 @@ Double_t FB(float E0, float theta, Double_t *par)
   Double_t FB_sum = 0.;
   Double_t FB_temp = 0.;
   Double_t R_FB = 5.;  //fm
+  Double_t mottxs = 0.;
+  Double_t tau = 0;
 
+  //Calculate Mott XS.
+  mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/GeV2fm;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+  //cout<<"MottXS = "<<mottxs<<endl;
+  //Calculate tau.
+  tau = Q2eff/(4*pow(MtHe3,2.)*GeV2fm);
+
+  //Calculate Ge.
   for(Int_t i=1; i<(nFB+1); i++)
     {
-      FB_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::cyl_bessel_j(1,pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      //FB_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( i*pi/R_FB * ROOT::Math::cyl_bessel_j(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
       FB_sum = FB_sum + FB_temp;
     }
 
-  val = FB_sum;
+  //val = FB_sum;
+  val = pow(Z,2.) * mottxs * pow(FB_sum,2.)/(1+tau);
   return val;
 }
 
@@ -173,7 +195,16 @@ void Fourrier_Bessel_GE()
         uncertainty[nlines-skip] = uncertaintytemp; 
 
 	Q2_arr[nlines-skip] = 4 * E0[nlines-skip] * (E0[nlines-skip]/(1.0+2.0*E0[nlines-skip]*pow(sin(theta[nlines-skip]*deg2rad/2.0),2.0)/MtHe3)) * pow(sin(theta[nlines-skip]*deg2rad/2.0),2.) * GeV2fm;
+	Q_arr[nlines-skip] = pow(Q2_arr[nlines-skip],0.5);
+	Ef_arr[nlines-skip] = E0[nlines-skip]/(1.0+2.0*E0[nlines-skip]*pow(sin(theta[nlines-skip]*deg2rad/2.0),2.0)/MtHe3);
+	Q2eff_arr[nlines-skip] = pow( pow(Q2_arr[nlines-skip],0.5) * (1.0+(1.5*Z*alpha)/(E0[nlines-skip]*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);
+	Qeff_arr[nlines-skip] = pow(Q2eff_arr[nlines-skip],2.);
+	mottxs_arr[nlines-skip] = (  (pow(Z,2.)*(Ef_arr[nlines-skip]/E0[nlines-skip])) * (pow(alpha,2.0)/(4.0*pow(E0[nlines-skip],2.0)*pow(sin(theta[nlines-skip]*deg2rad/2.0),4.0)))*pow(cos(theta[nlines-skip]*deg2rad/2.0),2.0)  ) * 1.0/GeV2fm;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7. 
+	tau_arr[nlines-skip] = Q2_arr[nlines-skip]/(4*pow(MtHe3,2.)*GeV2fm);
+	sig_red[nlines-skip] = sigexp[nlines-skip]/mottxs_arr[nlines-skip] * (1+tau_arr[nlines-skip])/pow(Z,2.);
 
+	//cout<<"MottXS = "<<mottxs_arr[nlines-skip]<<endl;
+	cout<<"Q2_arr = "<<Q2_arr[nlines-skip]<<"   Q_arr = "<<Q_arr[nlines-skip]<<endl;
 	nlines++;
       }
   }
@@ -226,8 +257,15 @@ void Fourrier_Bessel_GE()
    { 
      for(Int_t i=0;i<(nlines-skip);i++)
        {
-	 cout<<"Chi2_FB["<<i<<"] = "<<Chi2_FB[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   FB(E0,theta,par)["<<i<<"] = "<<FBfit[i]<<"   XSexp/FBfit = "<<sigexp[i]/FBfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
+	 cout<<"Chi2_FB["<<i<<"] = "<<Chi2_FB[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   FB_XS(E0,theta,par)["<<i<<"] = "<<FBfit[i]<<"   XSexp/FB_XS_fit = "<<sigexp[i]/FBfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
        }
+   }
+ 
+ //Fill av[i] with the fitted coefficients. 
+ for(Int_t i=0;i<nFB;i++)
+   {
+     gMinuit->GetParameter(i,av[i],averr[i]);
+     cout<<"av["<<i<<"] = "<<av[i]<<"   averr["<<i<<"] = "<<averr[i]<<endl;
    }
  
  //Plot FB fit of GE from Retzlaff 1984.
@@ -237,24 +275,75 @@ void Fourrier_Bessel_GE()
    Double_t FB_sum = 0.;
    Double_t FB_temp = 0.;
    Double_t R_FB = 5.;  //fm
+   Double_t mottxs = 0.;
+   Double_t tau = 0;
+   /*
+   //Calculate Mott XS.
+   mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+   
+   //Calculate tau.
+   tau = Q2[0]/(4*pow(MtHe3,2.));
+   */
 
+   //Calculate Ge.
    for(Int_t i=1; i<(nFB+1); i++)
      {
-       FB_temp = ( -4 * av[i-1] * sin( pow(Q2[0],0.5) * R_FB ) ) / ( pow(Q2[0],0.5) * i * ROOT::Math::cyl_bessel_j(1,pi) * (Q2[0] - pow(i*pi/R_FB,2.))  );
+       FB_temp = ( -4 * av[i-1] * sin( pow(Q2[0],0.5) * R_FB ) ) / ( pow(Q2[0],0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2[0] - pow(i*pi/R_FB,2.))  );
        FB_sum = FB_sum + FB_temp;
      }
    
-   val = FB_sum;
+   //val = FB_sum;                 //If want just GE.
+   val = FB_sum * FB_sum;        //If want GE^2.
+   return val;
+ }
+
+ Double_t FB_Q_retzlaff(Double_t *Q, Double_t *par)
+ {
+   Double_t val = 0.;
+   Double_t FB_sum = 0.;
+   Double_t FB_temp = 0.;
+   Double_t R_FB = 5.;  //fm
+
+   //Calculate Ge.
+   for(Int_t i=1; i<(nFB+1); i++)
+     {
+       //FB_temp = ( -4 * av_retzlaff[i-1] * sin( Q[0] * R_FB ) ) / ( Q[0] * i * ROOT::Math::cyl_bessel_j(1,i*pi) * (pow(Q[0],2.) - pow(i*pi/R_FB,2.))  );
+       FB_temp = ( -4 * av_retzlaff[i-1] * sin( Q[0] * R_FB ) ) / ( Q[0] * i * ROOT::Math::sph_bessel(1,i*pi) * (pow(Q[0],2.) - pow(i*pi/R_FB,2.))  );
+       //FB_temp = ( -4 * av_retzlaff[i-1] * sin( Q[0] * R_FB ) ) / ( i*pi/R_FB * ROOT::Math::cyl_bessel_j(1,i*pi) * (pow(Q[0],2.) - pow(i*pi/R_FB,2.))  );
+       FB_sum = FB_sum + FB_temp;
+       //FB_temp = 0;
+     }
+   
+   val = FB_sum;                 //If want just GE.
+   //val = FB_sum * FB_sum;        //If want GE^2.
    return val;
  }
 
  TCanvas* c1=new TCanvas("c1");
  c1->SetGrid();
- c1->SetLogy();
+ //c1->SetLogy();
+
+ graph = new TGraph(nlines-skip,Q2_arr,sig_red);
+ //Draw the new TGraph called graph on the canvas. 
+ graph->GetXaxis()->SetLimits(0.,8.);
+ graph->SetMinimum(0);
+ graph->SetMaximum(1.);
+ //graph->SetLineWidth(3);
+ //graph->SetLineColor(4);
+ graph->SetFillColor(0);
+ graph->SetMarkerStyle(20);
+ graph->SetTitle("Main Title; X Axis Title; Y Axis Title");
+ c1->Update();
+ graph->Draw("ap");
+ c1->Update();
+ //graph_expected.SetFillColor(kYellow);
+ //graph_expected.DrawClone("E3AL"); // E3 draws the band
+ //leg.AddEntry(graph,"Experimental Cross Section Data");
+  
 
  TF1 *FB_func = new TF1("FB_func",FB_Q2,yminFF,ymaxFF+54,1);
  FB_func->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
- FB_func->Draw("L");
+ FB_func->Draw("same L");
 
  //Plot FB fit of rho from Retzlaff 1984.
  Double_t rho_r(Double_t *r, Double_t *par)
@@ -266,20 +355,71 @@ void Fourrier_Bessel_GE()
    for(Int_t i=1; i<(nFB+1); i++)
      {
        
-       rho_temp = av[i-1] * ROOT::Math::cyl_bessel_j(0,(i*pi/R_FB)*r[0]);
+       rho_temp = av[i-1] * ROOT::Math::sph_bessel(0,(i*pi/R_FB)*r[0]);
        rho_sum = rho_sum + rho_temp;
-       //cout<<i<<"   "<<rho_sum<<endl;
+       //cout<<i<<"   rho_temp = "<<rho_temp<<"   rho_sum = "<<rho_sum<<endl;
      }
    val = rho_sum;
    return val;
  }
 
- TCanvas* c1=new TCanvas("c2");
+ TCanvas* c2=new TCanvas("c2");
  c2->SetGrid();
 
  TF1 *rho_func = new TF1("rho_func",rho_r,0.,5.,1);
  rho_func->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
  rho_func->Draw("L");
+ cout<<rho_func->Eval(5.)<<endl;
+
+ for(Int_t i=0; i<datapts; i++)
+   {
+     //cout<<"MottXS = "<<mottxs_arr[i]<<endl;
+     cout<<"sig_red["<<i<<"] = "<<sig_red[i]<<"   GE^2["<<i<<"] = "<<FB_func->Eval(Q2_arr[i])<<endl;
+   }
+ //Check that Root plots the Bessel functions correctly.
+ /*
+ TCanvas* c_bessel=new TCanvas("c3");
+ c_bessel->SetGrid();
+ TF1 *j0 = new TF1("j0","ROOT::Math::cyl_bessel_j(0,x)",0.,5.);
+ //TF1 *j0 = new TF1("j0","sin(x)",0.,5.);
+ TF1 *j1 = new TF1("j1","ROOT::Math::cyl_bessel_j(1,x)",0.,5.);
+ j0->Draw();
+ j1->Draw("same");
+ */
+
+ TCanvas* c3=new TCanvas("c3");
+ c3->SetGrid();
+ /*
+ TH1 *hratio = new TH1D("hratio", "hratio", 1000, 0., 5.);
+ for(Int_t i=0;i<datapts;i++)
+   {
+     hratio->Fill(sigexp[i]/FBfit[i]);
+   }
+ hratio->Draw();
+ */
+ for(Int_t i=0;i<datapts;i++)
+   {
+     ratio[i] = sigexp[i]/FBfit[i];
+   }
+
+ graph1 = new TGraph(nlines-skip,Q_arr,ratio);
+ //Draw the new TGraph called graph on the canvas. 
+ graph1->GetXaxis()->SetLimits(0.,2.);
+ graph1->SetMinimum(0.6);
+ graph1->SetMaximum(1.4);
+ //graph1->SetLineWidth(3);
+ //graph1->SetLineColor(4);
+ graph1->SetFillColor(0);
+ graph1->SetMarkerStyle(20);
+ graph1->SetTitle("Ratio of X to FB XS Fit; q; Ratio of X to FB XS Fit");
+ graph1->Draw("ap");
+
+ TCanvas* c4=new TCanvas("c4");
+ c4->SetGrid();
+ //c4->SetLogy();
+ TF1 *FB_func_retzlaff = new TF1("FB_func_retzlaff",FB_Q_retzlaff,0.,8.,1);
+ FB_func_retzlaff->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+ FB_func_retzlaff->Draw("L");
 
  st->Stop();
  cout<<"*********************************************"<<endl;
