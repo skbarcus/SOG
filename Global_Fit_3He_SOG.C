@@ -14,11 +14,15 @@
 #include "Math/IFunction.h"
 #include <cmath>
 
+#include "Math/Functor.h"
+#include "Math/RichardsonDerivator.h"
+
 Double_t pi = 3.141592654;
 Double_t deg2rad = pi/180.0;
 Double_t GeV2fm = 1./0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
 Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
 Double_t C = 299792458.0;                //Speed of light [m/s]. 
+Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
@@ -31,7 +35,8 @@ Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi,
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 1;
-Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
+Int_t useFB = 0;                         //Turn on Fourier Bessel fit.
+Int_t useFB_GM = 0;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
@@ -70,7 +75,7 @@ Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074
 Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
-Double_t av[12] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
+Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t Qicherr[12]={}; 
 Double_t Qimerr[12]={};
 Double_t Chi2[datapts]={};
@@ -177,11 +182,14 @@ Double_t FB(float E0, float theta, Double_t *par)
   Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
   Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
   Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
-  Double_t FB_sum = 0.;
-  Double_t FB_temp = 0.;
+  Double_t FB_GE_sum = 0.;
+  Double_t FB_GE_temp = 0.;
+  Double_t FB_GM_sum = 0.;
+  Double_t FB_GM_temp = 0.;
   Double_t R_FB = 5.;  //fm
   Double_t mottxs = 0.;
   Double_t tau = 0;
+  Double_t rho = E0/MtHe3;
 
   //Calculate Mott XS.
   mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/GeV2fm;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
@@ -189,15 +197,29 @@ Double_t FB(float E0, float theta, Double_t *par)
   //Calculate tau.
   tau = Q2eff/(4*pow(MtHe3,2.)*GeV2fm);
 
-  //Calculate Ge.
+  //Calculate GE.
   for(Int_t i=1; i<(nFB+1); i++)
     {
-      FB_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
-      FB_sum = FB_sum + FB_temp;
+      FB_GE_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_GE_sum = FB_GE_sum + FB_GE_temp;
+    }
+
+  //Calculate GM.
+  for(Int_t i=1; i<(nFB+1); i++)
+    {
+      FB_GM_temp = ( -4 * par[i-1+nFB] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_GM_sum = FB_GM_sum + FB_GM_temp;
     }
 
   //val = FB_sum;
-  val = pow(Z,2.) * mottxs * pow(FB_sum,2.)/(1+tau);
+  if(useFB_GM == 0)
+    {
+      val = pow(Z,2.) * mottxs * pow(FB_GE_sum,2.)/(1+tau); //Just GE (GM=0).
+    }
+  if(useFB_GM == 1)
+    {
+      val = pow(Z,2.) * mottxs * (   (  pow(FB_GE_sum,2.)+tau*pow(FB_GM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_GM_sum,2.)*pow(1/(1+rho),2.)*pow(1/tan(theta*deg2rad),2.)  );  //Try to fit GE and GM.
+    }
   return val;
 }
 
@@ -1830,13 +1852,112 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
      MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
      MFF_leg->Draw();
    }//End showplots.
+
+ //Plot the charge density from I. Sick. 
+ TCanvas* crho=new TCanvas("crho");
+ crho->SetGrid();
+
+ Double_t rho_ch(Double_t *r, Double_t *par)
+ {
+   Double_t rho = 0;
+   Double_t rho_temp = 0;
+   
+   for(Int_t i=0;i<ngaus;i++)
+     {
+       rho_temp = Qich[i]/( 1+2*pow(R[i],2.)/pow(gamma,2.) ) * (  exp( -pow((r[0]-R[i]),2.)/pow(gamma,2.) ) + exp( -pow((r[0]+R[i]),2.)/pow(gamma,2.) )  );
+       rho = rho + rho_temp;
+     }
+
+   rho = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho; //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+
+   return rho;
+ }
+
+ //Create a function that can be integrated to check that the normilaization to Ze is correct.
+ Double_t rho_ch_int(Double_t *r, Double_t *par)
+ {
+   Double_t rho_int = 0;
+   Double_t rho_int_temp = 0;
+   
+   for(Int_t i=0;i<ngaus;i++)
+     {
+       rho_int_temp = Qich[i]/( 1+2*pow(R[i],2.)/pow(gamma,2.) ) * (  exp( -pow((r[0]-R[i]),2.)/pow(gamma,2.) ) + exp( -pow((r[0]+R[i]),2.)/pow(gamma,2.) )  );
+       rho_int = rho_int + rho_int_temp;
+     }
+
+   rho_int = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_int * 4*pi*pow(r[0],2.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+
+   return rho_int;
+ }
+
+ //Create a function to calculate rms radius.
+ Double_t rho_rms(Double_t *r, Double_t *par)
+ {
+   Double_t rho_rms = 0;
+   Double_t rho_rms_temp = 0;
+   
+   for(Int_t i=0;i<ngaus;i++)
+     {
+       rho_rms_temp = Qich[i]/( 1+2*pow(R[i],2.)/pow(gamma,2.) ) * (  exp( -pow((r[0]-R[i]),2.)/pow(gamma,2.) ) + exp( -pow((r[0]+R[i]),2.)/pow(gamma,2.) )  );
+       rho_rms = rho_rms + rho_rms_temp;
+     }
+
+   rho_rms = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_rms * 4*pi*pow(r[0],4.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+
+   return rho_rms;
+ }
+ 
+ TF1 *frho_ch = new TF1("frho_ch",rho_ch,0.,4.,1);
+ frho_ch->SetNpx(npdraw);
+ frho_ch->SetLineColor(2);
+ frho_ch->Draw();
+
+ TF1 *frho_ch_int = new TF1("frho_ch_int",rho_ch_int,0.,4.,1);
+ frho_ch_int->SetNpx(npdraw);
+ frho_ch_int->SetLineColor(4);
+ //frho_ch_int->Draw("same");
+
+ TF1 *frho_rms = new TF1("frho_rms",rho_rms,0.,4.,1);
+
+ cout<<"Integral of frho_ch_int = "<<frho_ch_int->Integral(0.0,10.)<<"e."<<endl;
+ //Calculate rms radius of nucleus. rms radius = int(rho(r) * r^2 dr).
+ //cout<<"rms radius = "<<frho_ch_int->Integral(0.0,10.)*e/(4*pi)<<endl;
+ cout<<"Integral of frho_ch = "<<frho_ch->Integral(0.0,10.)<<"e."<<endl;
+ //cout<<"rms radius = "<<pow(frho_rms->Integral(0.0,10.)*e,0.5)<<endl;
+ cout<<"rms radius = "<<pow( frho_rms->Integral(0.0,10.)/frho_ch_int->Integral(0.0,10.) ,0.5)<<endl; //I think this is the correct rms formulation.
+ //cout<<""<<frho_ch->Integral(0.,10.)<<endl;
+   
+ Double_t myfunc(Double_t Q2) 
+ {
+   Double_t fitch = 0.;
+   Double_t sumchtemp = 0.;
+   
+   //Define SOG for charge FF.
+   for(Int_t i=0; i<ngaus; i++)
+     {
+       sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R[i])/(pow(Q2,0.5)*R[i])) );
+       fitch = fitch + sumchtemp;
+     }
+   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
+   //fitch = fabs(fitch);
+   return fitch;
+ }
+ cout<<"myfunc(~0) = "<<myfunc(0.0000001)<<endl;
+ double x0 = 0.002;
+ ROOT::Math::Functor1D f1D(&myfunc);
+ 
+ ROOT::Math::RichardsonDerivator rd;
+ rd.SetFunction(f1D);
+ cout<<"First Derivative:   "<<rd.Derivative1(x0)<<"   -6*dGe(0)/dQ^2 = "<<-6*rd.Derivative1(x0)<<endl;
+ //std::cout << "Second Derivative:  " << rd.Derivative2(x0) << std::endl;
+ //std::cout << "Third Derivative:   " << rd.Derivative3(x0) << std::endl;
  
 
  if(useFB == 1)
    {
      //Initiate Minuit for minimization of Fourrier-Bessel fit.
      gSystem->Load("libMathMore");            //Needed to use cyl_bessel_j() function.
-     TMinuit *gMinuit_FB = new TMinuit(nFB);  //initialize TMinuit with a maximum of 24 params
+     TMinuit *gMinuit_FB = new TMinuit(2*nFB);  //initialize TMinuit with a maximum number of parameters.
      gMinuit_FB->SetFCN(fcn_FB);
      
      Double_t arglist_FB[10];
@@ -1848,11 +1969,21 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
      //Set step sizes.
      static Double_t stepsize_FB[4] = {0.1 , 0.1 , 0.01 , 0.001};
      
-     //Set starting guesses for parameters. (Use Amroun's SOG parameters.)
+     //Set starting guesses for parameters. (Use Retzlaff's FB parameters.)
+     //GE
      for(Int_t i=0;i<nFB;i++)
        {
 	 gMinuit_FB->mnparm(i, Form("av%d",i+1), av[i], stepsize_FB[3], 0.,1.,ierflg_FB);
 	 //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
+       }
+     if(useFB_GM == 1)
+       {
+	 //GM (Guess that Retzlaff's GE FB parameters are close enough.) Doesn't seem to really work.
+	 for(Int_t i=nFB;i<2*nFB;i++)
+	   {
+	     gMinuit_FB->mnparm(i, Form("av%d",i+1), av[i-nFB], stepsize_FB[3], 0.,1.,ierflg_FB);
+	     //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
+	   }
        }
      
      // Now ready for minimization step
