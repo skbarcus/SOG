@@ -35,8 +35,8 @@ Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi,
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 1;
-Int_t useFB = 0;                         //Turn on Fourier Bessel fit.
-Int_t useFB_GM = 0;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
+Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
+Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
@@ -76,6 +76,7 @@ Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.1148
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
+Double_t averr[24] = {};
 Double_t Qicherr[12]={}; 
 Double_t Qimerr[12]={};
 Double_t Chi2[datapts]={};
@@ -214,11 +215,13 @@ Double_t FB(float E0, float theta, Double_t *par)
   //val = FB_sum;
   if(useFB_GM == 0)
     {
-      val = pow(Z,2.) * mottxs * pow(FB_GE_sum,2.)/(1+tau); //Just GE (GM=0).
+      //val = pow(Z,2.) * mottxs * pow(FB_GE_sum,2.)/(1+tau); //Just GE (GM=0). This was for the recoil proton being measure.
+      val = mottxs * pow(FB_GE_sum,2.)/(1+tau);
     }
   if(useFB_GM == 1)
     {
-      val = pow(Z,2.) * mottxs * (   (  pow(FB_GE_sum,2.)+tau*pow(FB_GM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_GM_sum,2.)*pow(1/(1+rho),2.)*pow(1/tan(theta*deg2rad),2.)  );  //Try to fit GE and GM.
+      //val = pow(Z,2.) * mottxs * (   (  pow(FB_GE_sum,2.)+tau*pow(FB_GM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_GM_sum,2.)*pow(1/(1+rho),2.)*pow(1/tan(theta*deg2rad),2.)  );  //Try to fit GE and GM. This was for the recoil proton being measure.
+      val = mottxs * (   (  pow(FB_GE_sum,2.)+tau*pow(FB_GM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_GM_sum,2.)*pow(tan(theta*deg2rad/2.),2.)  );
     }
   return val;
 }
@@ -1998,15 +2001,84 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
      gMinuit_FB->mnstat(amin_FB, edm_FB, errdef_FB, nvpar_FB, nparx_FB, icstat_FB);
      //gMinuit_FB->mnprin(3,amin_FB);
      
-     
+     //Set av and averr to the fitted parameters.
+     if(useFB_GM == 0)
+       {
+	 for(Int_t i=0;i<nFB;i++)
+	   {
+	     gMinuit_FB->GetParameter(i,av[i],averr[i]);
+	   }
+       }
+     if(useFB_GM == 1)
+       {
+	 for(Int_t i=0;i<2*nFB;i++)
+	   {
+	     gMinuit_FB->GetParameter(i,av[i],averr[i]);
+	   }
+       }
+
      if(showplots == 1)
        { 
 	 for(Int_t i=0;i<(nlines-skip);i++)
 	   {
 	     cout<<"Chi2_FB["<<i<<"] = "<<Chi2_FB[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   FB(E0,theta,par)["<<i<<"] = "<<FBfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/FBfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
 	   }
-       }
-   }
+
+	 //Plot GE and GM for FB fits.
+	 //Calculate GE.
+	 Double_t FB_GE(Double_t *Q2, Double_t *par)
+	 {
+	   Double_t FB_GE_temp = 0;
+	   Double_t FB_GE_sum = 0;
+	   Double_t R_FB = 5.;
+
+	   for(Int_t i=1; i<(nFB+1); i++)
+	     {
+	       FB_GE_temp = ( -4 * av[i-1] * sin( pow(Q2[0],0.5) * R_FB ) ) / ( pow(Q2[0],0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2[0] - pow(i*pi/R_FB,2.))  );
+	       FB_GE_sum = FB_GE_sum + FB_GE_temp;
+	       //cout<<"av["<<i-1<<"] = "<<av[i-1]<<endl;
+	     }
+	   return FB_GE_sum;
+	 }
+
+	 //Calculate GM.
+	 Double_t FB_GM(Double_t *Q2, Double_t *par)
+	 {
+	   Double_t FB_GM_temp = 0;
+	   Double_t FB_GM_sum = 0;
+	   Double_t R_FB = 5.;
+
+	   for(Int_t i=1; i<(nFB+1); i++)
+	     {
+	       FB_GM_temp = ( -4 * av[i-1+nFB] * sin( pow(Q2[0],0.5) * R_FB ) ) / ( pow(Q2[0],0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2[0] - pow(i*pi/R_FB,2.))  );
+	       FB_GM_sum = FB_GM_sum + FB_GM_temp;
+	     }
+	   return FB_GM_sum;
+	 }
+
+	 //Plot the FB GE. 
+	 TCanvas* cFB_GE=new TCanvas("cFB_GE");
+	 cFB_GE->SetGrid();
+	 cFB_GE->SetLogy();
+
+	 TF1 *fFB_GE = new TF1("fFB_GE",FB_GE,yminFF,ymaxFF+54,1);
+	 fFB_GE->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+	 fFB_GE->Draw("L");
+
+	 if(useFB_GM == 1)
+	   {
+	     //Plot the FB GM. 
+	     TCanvas* cFB_GM=new TCanvas("cFB_GM");
+	     cFB_GM->SetGrid();
+	     cFB_GM->SetLogy();
+	     
+	     TF1 *fFB_GM = new TF1("fFB_GM",FB_GM,yminFF,ymaxFF+54,1);
+	     fFB_GM->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+	     fFB_GM->Draw("L");
+	   }
+
+       }//End showplots.
+   }//End use FB.
  
  st->Stop();
  cout<<"*********************************************"<<endl;
