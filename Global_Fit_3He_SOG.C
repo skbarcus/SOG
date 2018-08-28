@@ -67,6 +67,14 @@ Float_t uncertainty[1000];
 Float_t E0[1000];
 Float_t Q2[datapts];
 
+Int_t Amroun_pts = 57;
+Int_t Collard_pts = 118;
+Int_t Szlata_pts = 22;
+Int_t Dunn_pts = 27;
+Int_t Camsonne_pts = 16;
+Int_t Nakagawa_pts = 5;
+Int_t my_pts = 1;
+
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
 Double_t R[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
@@ -241,7 +249,7 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
       delta  = (sigexp[i]-XS(E0[i],theta[i],par))/uncertainty[i];
       chisq += delta*delta;
       Chi2[i] = delta*delta;
-      residual[i] = sigexp[i] - XS(E0[i],theta[i],par); 
+      residual[i] = (sigexp[i] - XS(E0[i],theta[i],par))/sigexp[i]; 
       xsfit[i] = XS(E0[i],theta[i],par);
       //cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
     }
@@ -263,7 +271,7 @@ void fcn_FB(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
       delta  = (sigexp[i]-FB(E0[i],theta[i],par))/uncertainty[i];
       chisq += delta*delta;
       Chi2_FB[i] = delta*delta;
-      residual_FB[i] = sigexp[i] - FB(E0[i],theta[i],par); 
+      residual_FB[i] = (sigexp[i] - FB(E0[i],theta[i],par))/sigexp[i]; 
       FBfit[i] = FB(E0[i],theta[i],par);
       //cout<<"FBfit["<<i<<"] = "<<FBfit[i]<<endl;
     }
@@ -535,7 +543,7 @@ void Global_Fit_3He_SOG()
     { 
       for(Int_t i=0;i<(nlines-skip);i++)
 	{
-	  cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XSfit(E0,theta,par)["<<i<<"] = "<<xsfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/xsfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
+	  cout<<"Chi2["<<i<<"] = "<<Chi2[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   XSfit(E0,theta,par)["<<i<<"] = "<<xsfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/xsfit[i]<<"   residual["<<i<<"] = "<<residual[i]<<endl;
 	}
     }
 
@@ -841,7 +849,7 @@ void Global_Fit_3He_SOG()
       legend3->Draw();
 
       //Plot ratio of fit to experiment vs Q^2 instead of theta.
-TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs. q" , 1000, 0., 10., 100, 0., fabs(maxratio)+0.5);
+      TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs. q" , 1000, 0., 10., 100, 0., fabs(maxratio)+0.5);
       for(Int_t i=0;i<(datapts);i++)
 	{
 	  //hxsfit->Fill(theta[i],sigexp[i]/xsfit[i]);
@@ -930,6 +938,100 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
       legend4->AddEntry(m5,"Camsonne 2016","p");
       legend4->AddEntry(m7,"Current Analysis, Ye 2018","p");
       legend4->Draw();
+
+      //Plot residual of fit to experiment vs Q.
+      TCanvas* cresidual=new TCanvas("cresidual");
+      cresidual->SetGrid();
+
+      TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Experimental XS to XS from SOG Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, -4., 4.);
+      for(Int_t i=0;i<(datapts);i++)
+	{
+	  //hxsresidualQ2->Fill(theta[i],sigexp[i]/xsfit[i]);
+	}
+      hxsresidualQ2->SetMarkerStyle(20);
+      hxsresidualQ2->SetMarkerSize(1);
+      gStyle->SetOptStat(0);
+      hxsresidualQ2->Draw();
+
+      //Plot 59 Amroun data points.
+      for (Int_t i=0;i<57;i++) 
+	{
+	  //TMarker *m1 = new TMarker(Q2[i], residual[i], 20);
+	  TMarker *m1 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	  m1->SetMarkerColor(2);
+	  m1->SetMarkerSize(1);
+	  m1->Draw();
+	}
+
+      //Plot 118 Collard 1965 (Amroun ref 5) data points.
+      for (Int_t i=57;i<175;i++) 
+	{
+	  //TMarker *m2 = new TMarker(Q2[i], residual[i], 20);
+	  TMarker *m2 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	  m2->SetMarkerColor(4);
+	  m2->SetMarkerSize(1);
+	  m2->Draw();
+	}
+
+      //Plot 22 Szlata 1977 (Amroun ref 8) data points.
+      for (Int_t i=175;i<197;i++) 
+	{
+	  //TMarker *m3 = new TMarker(Q2[i], residual[i], 20);
+	  TMarker *m3 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	  m3->SetMarkerColor(3);
+	  m3->SetMarkerSize(1);
+	  m3->Draw();
+	}
+
+      //Plot 27 Dunn 1983 (Amroun ref 10) data points.
+      for (Int_t i=197;i<224;i++) 
+	{
+	  //TMarker *m4 = new TMarker(Q2[i], residual[i], 20);
+	  TMarker *m4 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	  m4->SetMarkerColor(6);
+	  m4->SetMarkerSize(1);
+	  m4->Draw();
+	}
+
+      //Plot 16 (skipping 2) JLab data points.
+      for (Int_t i=224;i<240;i++) 
+	{
+	  //TMarker *m5 = new TMarker(Q2[i], residual[i], 20);
+	  TMarker *m5 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	  m5->SetMarkerColor(1);
+	  m5->SetMarkerSize(1);
+	  m5->Draw();
+	}
+
+      //Plot 5 Nakagawa 2001 data points.
+      for (Int_t i=240;i<245;i++) 
+	{
+	  //TMarker *m6 = new TMarker(Q2[i], residual[i], 20);
+	  TMarker *m6 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	  m6->SetMarkerColor(7);
+	  m6->SetMarkerSize(1);
+	  m6->Draw();
+	}
+
+      //Plot my data point.
+      for (Int_t i=245;i<246;i++) 
+	{
+	  //TMarker *m7 = new TMarker(Q2[i], residual[i], 20);
+	  TMarker *m7 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	  m7->SetMarkerColor(kOrange+7);
+	  m7->SetMarkerSize(1);
+	  m7->Draw();
+	}
+
+      auto legend5 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
+      legend5->AddEntry(m2,"Collard 1965","p");
+      legend5->AddEntry(m3,"Szlata 1977","p");
+      legend5->AddEntry(m4,"Dunn 1983","p");
+      legend5->AddEntry(m1,"Amroun 1994","p");
+      legend5->AddEntry(m6,"Nakagawa 2001","p");
+      legend5->AddEntry(m5,"Camsonne 2016","p");
+      legend5->AddEntry(m7,"Current Analysis, Ye 2018","p");
+      legend5->Draw();
 
     }//End showplots.  
   
@@ -1951,7 +2053,7 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
  
  ROOT::Math::RichardsonDerivator rd;
  rd.SetFunction(f1D);
- cout<<"First Derivative:   "<<rd.Derivative1(x0)<<"   -6*dGe(0)/dQ^2 = "<<-6*rd.Derivative1(x0)<<endl;
+ cout<<"First Derivative:   "<<rd.Derivative1(x0)<<"   -6*dGe(0)/dQ^2 = "<<-6*rd.Derivative1(x0)<<"   rms radius = "<<pow(-6*rd.Derivative1(x0),0.5)<<endl;
  //std::cout << "Second Derivative:  " << rd.Derivative2(x0) << std::endl;
  //std::cout << "Third Derivative:   " << rd.Derivative3(x0) << std::endl;
  
@@ -2021,9 +2123,103 @@ TH2D *hxsfitQ2 = new TH2D("hxsfitQ2","Ratio of Experimental XS to XS from Fit vs
        { 
 	 for(Int_t i=0;i<(nlines-skip);i++)
 	   {
-	     cout<<"Chi2_FB["<<i<<"] = "<<Chi2_FB[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   FB(E0,theta,par)["<<i<<"] = "<<FBfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/FBfit[i]<<endl;//"   residual["<<i<<"] = "<<residual[i]<<endl;
+	     cout<<"Chi2_FB["<<i<<"] = "<<Chi2_FB[i]<<"   sigexp["<<i<<"] = "<<sigexp[i]<<"   FB(E0,theta,par)["<<i<<"] = "<<FBfit[i]<<"   XSexp/XSfit = "<<sigexp[i]/FBfit[i]<<"   residual_FB["<<i<<"] = "<<residual_FB[i]<<endl;
 	   }
 
+	 //Plot residual of FB fit to experiment vs Q.
+	 TCanvas* cresidual_FB=new TCanvas("cresidual_FB");
+	 cresidual_FB->SetGrid();
+	 
+	 TH2D *hxsresidualQ2_FB = new TH2D("hxsresidualQ2_FB","Residual of Experimental XS to XS from FB Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, -4., 4.);
+	 for(Int_t i=0;i<(datapts);i++)
+	   {
+	     //hxsresidualQ2->Fill(theta[i],sigexp[i]/xsfit[i]);
+	   }
+	 hxsresidualQ2_FB->SetMarkerStyle(20);
+	 hxsresidualQ2_FB->SetMarkerSize(1);
+	 gStyle->SetOptStat(0);
+	 hxsresidualQ2_FB->Draw();
+	 
+	 //Plot 59 Amroun data points.
+	 for (Int_t i=0;i<57;i++) 
+	   {
+	     //TMarker *m1 = new TMarker(Q2[i], residual[i], 20);
+	     TMarker *m1 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
+	     m1->SetMarkerColor(2);
+	     m1->SetMarkerSize(1);
+	     m1->Draw();
+	   }
+	 
+	 //Plot 118 Collard 1965 (Amroun ref 5) data points.
+	 for (Int_t i=57;i<175;i++) 
+	   {
+	     //TMarker *m2 = new TMarker(Q2[i], residual[i], 20);
+	     TMarker *m2 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
+	     m2->SetMarkerColor(4);
+	     m2->SetMarkerSize(1);
+	     m2->Draw();
+	   }
+	 
+	 //Plot 22 Szlata 1977 (Amroun ref 8) data points.
+	 for (Int_t i=175;i<197;i++) 
+	   {
+	     //TMarker *m3 = new TMarker(Q2[i], residual[i], 20);
+	     TMarker *m3 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
+	     m3->SetMarkerColor(3);
+	     m3->SetMarkerSize(1);
+	     m3->Draw();
+	   }
+	 
+	 //Plot 27 Dunn 1983 (Amroun ref 10) data points.
+	 for (Int_t i=197;i<224;i++) 
+	   {
+	     //TMarker *m4 = new TMarker(Q2[i], residual[i], 20);
+	     TMarker *m4 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
+	     m4->SetMarkerColor(6);
+	     m4->SetMarkerSize(1);
+	     m4->Draw();
+	   }
+	 
+	 //Plot 16 (skipping 2) JLab data points.
+	 for (Int_t i=224;i<240;i++) 
+	   {
+	     //TMarker *m5 = new TMarker(Q2[i], residual[i], 20);
+	     TMarker *m5 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
+	     m5->SetMarkerColor(1);
+	     m5->SetMarkerSize(1);
+	     m5->Draw();
+	   }
+	 
+	 //Plot 5 Nakagawa 2001 data points.
+	 for (Int_t i=240;i<245;i++) 
+	   {
+	     //TMarker *m6 = new TMarker(Q2[i], residual[i], 20);
+	     TMarker *m6 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
+	     m6->SetMarkerColor(7);
+	     m6->SetMarkerSize(1);
+	     m6->Draw();
+	   }
+	 
+	 //Plot my data point.
+	 for (Int_t i=245;i<246;i++) 
+	   {
+	     //TMarker *m7 = new TMarker(Q2[i], residual[i], 20);
+	     TMarker *m7 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
+	     m7->SetMarkerColor(kOrange+7);
+	     m7->SetMarkerSize(1);
+	     m7->Draw();
+	   }
+	 
+	 auto legend6 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
+	 legend6->AddEntry(m2,"Collard 1965","p");
+	 legend6->AddEntry(m3,"Szlata 1977","p");
+	 legend6->AddEntry(m4,"Dunn 1983","p");
+	 legend6->AddEntry(m1,"Amroun 1994","p");
+	 legend6->AddEntry(m6,"Nakagawa 2001","p");
+	 legend6->AddEntry(m5,"Camsonne 2016","p");
+	 legend6->AddEntry(m7,"Current Analysis, Ye 2018","p");
+	 legend6->Draw();
+	 
 	 //Plot GE and GM for FB fits.
 	 //Calculate GE.
 	 Double_t FB_GE(Double_t *Q2, Double_t *par)
