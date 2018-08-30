@@ -527,7 +527,7 @@ void Global_Fit_3He_SOG()
     }
   
   // Now ready for minimization step
-  arglist[0] = 500.;//50000.
+  arglist[0] = 50000.;//50000.
   arglist[1] = 1.;
   //cout<<"Sup1"<<endl;
   gMinuit->mnexcm("MIGRAD", arglist ,2,ierflg);
@@ -591,7 +591,7 @@ void Global_Fit_3He_SOG()
       hchi->Draw();
 
       //Plot 59 Amroun data points. Removed two points without energy listed.
-      for (Int_t i=0;i<57;i++) 
+      for (Int_t i=0;i<Amroun_pts;i++) 
 	{
 	  TMarker *m1 = new TMarker(theta[i], Chi2[i], 20);
 	  m1->SetMarkerColor(2);
@@ -600,7 +600,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=57;i<175;i++) 
+      for (Int_t i=Amroun_pts;i<(Amroun_pts+Collard_pts);i++) 
 	{
 	  TMarker *m2 = new TMarker(theta[i], Chi2[i], 20);
 	  m2->SetMarkerColor(4);
@@ -609,7 +609,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=175;i<197;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts);i<(Amroun_pts+Collard_pts+Szlata_pts);i++) 
 	{
 	  TMarker *m3 = new TMarker(theta[i], Chi2[i], 20);
 	  m3->SetMarkerColor(3);
@@ -618,7 +618,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=197;i<224;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i++) 
 	{
 	  TMarker *m4 = new TMarker(theta[i], Chi2[i], 20);
 	  m4->SetMarkerColor(6);
@@ -626,8 +626,8 @@ void Global_Fit_3He_SOG()
 	  m4->Draw();
 	}
 
-      //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=224;i<240;i++) 
+      //Plot 16 (skipping 2) JLab (Camsonne) data points.
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i++) 
 	{
 	  TMarker *m5 = new TMarker(theta[i], Chi2[i], 20);
 	  m5->SetMarkerColor(1);
@@ -636,7 +636,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=240;i<245;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i++) 
 	{
 	  TMarker *m6 = new TMarker(theta[i], Chi2[i], 20);
 	  m6->SetMarkerColor(7);
@@ -645,7 +645,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot my data point.
-      for (Int_t i=245;i<246;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i++) 
 	{
 	  TMarker *m7 = new TMarker(theta[i], Chi2[i], 20);
 	  m7->SetMarkerColor(kOrange+7);
@@ -679,7 +679,7 @@ void Global_Fit_3He_SOG()
       hQ2->Draw("p");
 
       //Plot 59 Amroun data points. Removed two points without energy listed.
-      for (Int_t i=0;i<57;i++) 
+      for (Int_t i=0;i<Amroun_pts;i++) 
 	{
 	  TMarker *m1 = new TMarker(Q2[i], Chi2[i], 20);
 	  m1->SetMarkerColor(2);
@@ -688,7 +688,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=57;i<175;i++) 
+      for (Int_t i=Amroun_pts;i<(Amroun_pts+Collard_pts);i++) 
 	{
 	  TMarker *m2 = new TMarker(Q2[i], Chi2[i], 20);
 	  m2->SetMarkerColor(4);
@@ -697,7 +697,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=175;i<197;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts);i<(Amroun_pts+Collard_pts+Szlata_pts);i++) 
 	{
 	  TMarker *m3 = new TMarker(Q2[i], Chi2[i], 20);
 	  m3->SetMarkerColor(3);
@@ -706,7 +706,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=197;i<224;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i++) 
 	{
 	  TMarker *m4 = new TMarker(Q2[i], Chi2[i], 20);
 	  m4->SetMarkerColor(6);
@@ -715,7 +715,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=224;i<240;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i++) 
 	{
 	  TMarker *m5 = new TMarker(Q2[i], Chi2[i], 20);
 	  m5->SetMarkerColor(1);
@@ -724,7 +724,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=240;i<245;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i++) 
 	{
 	  TMarker *m6 = new TMarker(Q2[i], Chi2[i], 20);
 	  m6->SetMarkerColor(7);
@@ -733,7 +733,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot my data point.
-      for (Int_t i=245;i<246;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i++) 
 	{
 	  TMarker *m7 = new TMarker(Q2[i], Chi2[i], 20);
 	  m7->SetMarkerColor(kOrange+7);
@@ -776,7 +776,7 @@ void Global_Fit_3He_SOG()
       hxsfit->Draw();
 
       //Plot 59 Amroun data points. Removed two points without energy listed.
-      for (Int_t i=0;i<57;i++) 
+      for (Int_t i=0;i<Amroun_pts;i++) 
 	{
 	  TMarker *m1 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m1->SetMarkerColor(2);
@@ -785,7 +785,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=57;i<175;i++) 
+      for (Int_t i=Amroun_pts;i<(Amroun_pts+Collard_pts);i++) 
 	{
 	  TMarker *m2 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m2->SetMarkerColor(4);
@@ -794,7 +794,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=175;i<197;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts);i<(Amroun_pts+Collard_pts+Szlata_pts);i++) 
 	{
 	  TMarker *m3 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m3->SetMarkerColor(3);
@@ -803,7 +803,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=197;i<224;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i++) 
 	{
 	  TMarker *m4 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m4->SetMarkerColor(6);
@@ -812,7 +812,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=224;i<240;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i++) 
 	{
 	  TMarker *m5 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m5->SetMarkerColor(1);
@@ -821,7 +821,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=240;i<245;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i++) 
 	{
 	  TMarker *m6 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m6->SetMarkerColor(7);
@@ -830,7 +830,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot my data point.
-      for (Int_t i=245;i<246;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i++) 
 	{
 	  TMarker *m7 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
 	  m7->SetMarkerColor(kOrange+7);
@@ -860,7 +860,7 @@ void Global_Fit_3He_SOG()
       hxsfitQ2->Draw();
 
       //Plot 59 Amroun data points.
-      for (Int_t i=0;i<57;i++) 
+      for (Int_t i=0;i<Amroun_pts;i++) 
 	{
 	  //TMarker *m1 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m1 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -870,7 +870,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=57;i<175;i++) 
+      for (Int_t i=Amroun_pts;i<(Amroun_pts+Collard_pts);i++) 
 	{
 	  //TMarker *m2 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m2 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -880,7 +880,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=175;i<197;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts);i<(Amroun_pts+Collard_pts+Szlata_pts);i++) 
 	{
 	  //TMarker *m3 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m3 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -890,7 +890,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=197;i<224;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i++) 
 	{
 	  //TMarker *m4 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m4 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -900,7 +900,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=224;i<240;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i++) 
 	{
 	  //TMarker *m5 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m5 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -910,7 +910,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=240;i<245;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i++) 
 	{
 	  //TMarker *m6 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m6 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -920,7 +920,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot my data point.
-      for (Int_t i=245;i<246;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i++) 
 	{
 	  //TMarker *m7 = new TMarker(Q2[i], sigexp[i]/xsfit[i], 20);
 	  TMarker *m7 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
@@ -954,7 +954,7 @@ void Global_Fit_3He_SOG()
       hxsresidualQ2->Draw();
 
       //Plot 59 Amroun data points.
-      for (Int_t i=0;i<57;i++) 
+      for (Int_t i=0;i<Amroun_pts;i++) 
 	{
 	  //TMarker *m1 = new TMarker(Q2[i], residual[i], 20);
 	  TMarker *m1 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
@@ -964,7 +964,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 118 Collard 1965 (Amroun ref 5) data points.
-      for (Int_t i=57;i<175;i++) 
+      for (Int_t i=Amroun_pts;i<(Amroun_pts+Collard_pts);i++) 
 	{
 	  //TMarker *m2 = new TMarker(Q2[i], residual[i], 20);
 	  TMarker *m2 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
@@ -974,7 +974,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-      for (Int_t i=175;i<197;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts);i<(Amroun_pts+Collard_pts+Szlata_pts);i++) 
 	{
 	  //TMarker *m3 = new TMarker(Q2[i], residual[i], 20);
 	  TMarker *m3 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
@@ -984,7 +984,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-      for (Int_t i=197;i<224;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i++) 
 	{
 	  //TMarker *m4 = new TMarker(Q2[i], residual[i], 20);
 	  TMarker *m4 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
@@ -994,7 +994,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 16 (skipping 2) JLab data points.
-      for (Int_t i=224;i<240;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i++) 
 	{
 	  //TMarker *m5 = new TMarker(Q2[i], residual[i], 20);
 	  TMarker *m5 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
@@ -1004,7 +1004,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot 5 Nakagawa 2001 data points.
-      for (Int_t i=240;i<245;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i++) 
 	{
 	  //TMarker *m6 = new TMarker(Q2[i], residual[i], 20);
 	  TMarker *m6 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
@@ -1014,7 +1014,7 @@ void Global_Fit_3He_SOG()
 	}
 
       //Plot my data point.
-      for (Int_t i=245;i<246;i++) 
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i++) 
 	{
 	  //TMarker *m7 = new TMarker(Q2[i], residual[i], 20);
 	  TMarker *m7 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
@@ -2141,7 +2141,7 @@ void Global_Fit_3He_SOG()
 	 hxsresidualQ2_FB->Draw();
 	 
 	 //Plot 59 Amroun data points.
-	 for (Int_t i=0;i<57;i++) 
+	 for (Int_t i=0;i<Amroun_pts;i++) 
 	   {
 	     //TMarker *m1 = new TMarker(Q2[i], residual[i], 20);
 	     TMarker *m1 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
@@ -2151,7 +2151,7 @@ void Global_Fit_3He_SOG()
 	   }
 	 
 	 //Plot 118 Collard 1965 (Amroun ref 5) data points.
-	 for (Int_t i=57;i<175;i++) 
+	 for (Int_t i=Amroun_pts;i<(Amroun_pts+Collard_pts);i++) 
 	   {
 	     //TMarker *m2 = new TMarker(Q2[i], residual[i], 20);
 	     TMarker *m2 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
@@ -2161,7 +2161,7 @@ void Global_Fit_3He_SOG()
 	   }
 	 
 	 //Plot 22 Szlata 1977 (Amroun ref 8) data points.
-	 for (Int_t i=175;i<197;i++) 
+	 for (Int_t i=(Amroun_pts+Collard_pts);i<(Amroun_pts+Collard_pts+Szlata_pts);i++) 
 	   {
 	     //TMarker *m3 = new TMarker(Q2[i], residual[i], 20);
 	     TMarker *m3 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
@@ -2171,7 +2171,7 @@ void Global_Fit_3He_SOG()
 	   }
 	 
 	 //Plot 27 Dunn 1983 (Amroun ref 10) data points.
-	 for (Int_t i=197;i<224;i++) 
+	 for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i++) 
 	   {
 	     //TMarker *m4 = new TMarker(Q2[i], residual[i], 20);
 	     TMarker *m4 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
@@ -2181,7 +2181,7 @@ void Global_Fit_3He_SOG()
 	   }
 	 
 	 //Plot 16 (skipping 2) JLab data points.
-	 for (Int_t i=224;i<240;i++) 
+	 for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i++) 
 	   {
 	     //TMarker *m5 = new TMarker(Q2[i], residual[i], 20);
 	     TMarker *m5 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
@@ -2191,7 +2191,7 @@ void Global_Fit_3He_SOG()
 	   }
 	 
 	 //Plot 5 Nakagawa 2001 data points.
-	 for (Int_t i=240;i<245;i++) 
+	 for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i++) 
 	   {
 	     //TMarker *m6 = new TMarker(Q2[i], residual[i], 20);
 	     TMarker *m6 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
@@ -2201,7 +2201,7 @@ void Global_Fit_3He_SOG()
 	   }
 	 
 	 //Plot my data point.
-	 for (Int_t i=245;i<246;i++) 
+	 for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i++) 
 	   {
 	     //TMarker *m7 = new TMarker(Q2[i], residual[i], 20);
 	     TMarker *m7 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
