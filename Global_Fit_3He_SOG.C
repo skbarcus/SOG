@@ -527,10 +527,11 @@ void Global_Fit_3He_SOG()
     }
   
   // Now ready for minimization step
-  arglist[0] = 50000.;//50000.
+  arglist[0] = 10000.;//50000.
   arglist[1] = 1.;
   //cout<<"Sup1"<<endl;
   gMinuit->mnexcm("MIGRAD", arglist ,2,ierflg);
+  gMinuit->mnimpr(); //Check for other minima to see if we're trapped in a local minima.
   //cout<<"Sup2"<<endl;
   // Print results
   Double_t amin,edm,errdef;
