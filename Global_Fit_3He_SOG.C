@@ -37,6 +37,8 @@ Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun
 Int_t showplots = 1;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
+Int_t improve = 0;                       //1 = use mnimpr() to check for other minima around the one MIGRAD finds.
+Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter errors. With ERRordef=30, npar=24, 10000 calls took about 1.5 hours and gave results only slightly different from intial parameter errors given. Several pars were hitting limits.  
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
@@ -504,8 +506,8 @@ void Global_Fit_3He_SOG()
   Double_t arglist[10];
   Int_t ierflg = 0;
 
-  arglist[0] = 1.;
-  gMinuit->mnexcm("SET ERR", arglist ,1,ierflg);
+  arglist[0] = 30.; //1 is for simple chi^2. For multiparameter errors this needs to be increased. 30 adds ~ 1 min.
+  gMinuit->mnexcm("SET ERR", arglist ,1,ierflg); //Set the ERRordef or UP. 
   
   //Set step sizes.
   static Double_t stepsize[4] = {0.001 , 0.1 , 0.01 , 0.001};
@@ -527,11 +529,21 @@ void Global_Fit_3He_SOG()
     }
   
   // Now ready for minimization step
-  arglist[0] = 10000.;//50000.
-  arglist[1] = 1.;
+  arglist[0] = 10000.;//Max calls. 50000.
+  arglist[1] = 0.1;//Tolerance for convergance. 1 seems to give the same results as 0.1.
   //cout<<"Sup1"<<endl;
-  gMinuit->mnexcm("MIGRAD", arglist ,2,ierflg);
-  gMinuit->mnimpr(); //Check for other minima to see if we're trapped in a local minima.
+  gMinuit->mnexcm("MIGRAD", arglist , 2, ierflg);
+  if(improve == 1)
+    {
+      gMinuit->mnimpr(); //Check for other minima to see if we're trapped in a local minima.
+    }
+
+  //Implement MINOS to calculate multiparameter errors. arglist[0] is giving # of calls again.
+  if(MINOS == 1)
+    {
+      gMinuit->mnexcm("MINOS", arglist, 1, ierflg);
+    }
+
   //cout<<"Sup2"<<endl;
   // Print results
   Double_t amin,edm,errdef;
@@ -1912,7 +1924,7 @@ void Global_Fit_3He_SOG()
      fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
      fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
      
-     cout<<"Chi^2 = "<<amin<<"   Reduced Chi^2 = "<<amin<<"/("<<datapts<<" - "<<2*ngaus<<" - 1) = "<<amin/(datapts-2*ngaus-1)<<endl;
+     cout<<"Chi^2 (amin) = "<<amin<<"   Reduced Chi^2 = "<<amin<<"/("<<datapts<<" - "<<2*ngaus<<" - 1) = "<<amin/(datapts-2*ngaus-1)<<endl;
 
      //Now draw both FFs on the same plot for the GRC poster. 
      TCanvas* c5=new TCanvas("c5");
