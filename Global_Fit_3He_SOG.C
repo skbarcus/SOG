@@ -27,7 +27,7 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 Int_t loops = 1;
-const Int_t datapts = 246;//248
+const Int_t datapts = 246+11;//248
 Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
@@ -69,13 +69,14 @@ Float_t uncertainty[1000];
 Float_t E0[1000];
 Float_t Q2[datapts];
 
-Int_t Amroun_pts = 57;
+Int_t Amroun_pts = 57;                 //Dropped two points with no energy value give.
 Int_t Collard_pts = 118;
 Int_t Szlata_pts = 22;
 Int_t Dunn_pts = 27;
-Int_t Camsonne_pts = 16;
+Int_t Camsonne_pts = 16;               //Dropped two points with crazy Chi^2 values. Should reevaluate eventually.
 Int_t Nakagawa_pts = 5;
 Int_t my_pts = 1;
+Int_t Arnold_pts = 11;                 //These XSs had to be calculated from A^1/2 function.
 
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
@@ -666,10 +667,20 @@ void Global_Fit_3He_SOG()
 	  m7->Draw();
 	}
 
+      //Plot 11 Arnold 1978 data points.
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts+Arnold_pts);i++) 
+	{
+	  TMarker *m8 = new TMarker(theta[i], Chi2[i], 20);
+	  m8->SetMarkerColor(kGreen+2);
+	  m8->SetMarkerSize(1);
+	  m8->Draw();
+	}
+
       //auto legend1 = new TLegend(0.1,0.7,0.48,0.9); //Places legend in upper left corner of histogram.
       auto legend1 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
       legend1->AddEntry(m2,"Collard 1965","p");
       legend1->AddEntry(m3,"Szlata 1977","p");
+      legend1->AddEntry(m8,"Arnold 1978","p");
       legend1->AddEntry(m4,"Dunn 1983","p");
       legend1->AddEntry(m1,"Amroun 1994","p");
       legend1->AddEntry(m6,"Nakagawa 2001","p");
@@ -681,7 +692,7 @@ void Global_Fit_3He_SOG()
       TCanvas* cQ2=new TCanvas("cQ2");
       cQ2->SetGrid();
 
-      TH2D *hQ2 = new TH2D("hQ2","\Chi^{2} vs. Q^{2}" , datapts+1, 0., 70., maxchi2+21,0., maxchi2+20);
+      TH2D *hQ2 = new TH2D("hQ2","\Chi^{2} vs. Q^{2}" , datapts+1, 0., maxQ2+2, 500, 0., maxchi2+10);
       for(Int_t i=0;i<datapts;i++)
 	{
 	  //hQ2->Fill(Q2[i],Chi2[i]);
@@ -754,9 +765,19 @@ void Global_Fit_3He_SOG()
 	  m7->Draw();
 	}
 
+      //Plot 11 Arnold 1978 data points.
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts+Arnold_pts);i++) 
+	{
+	  TMarker *m8 = new TMarker(Q2[i], Chi2[i], 20);
+	  m8->SetMarkerColor(kGreen+2);
+	  m8->SetMarkerSize(1);
+	  m8->Draw();
+	}
+
       auto legend2 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
       legend2->AddEntry(m2,"Collard 1965","p");
       legend2->AddEntry(m3,"Szlata 1977","p");
+      legend2->AddEntry(m8,"Arnold 1978","p");
       legend2->AddEntry(m4,"Dunn 1983","p");
       legend2->AddEntry(m1,"Amroun 1994","p");
       legend2->AddEntry(m6,"Nakagawa 2001","p");
@@ -851,9 +872,19 @@ void Global_Fit_3He_SOG()
 	  m7->Draw();
 	}
 
+      //Plot 11 Arnold 1978 data points.
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts+Arnold_pts);i++) 
+	{
+	  TMarker *m8 = new TMarker(theta[i], sigexp[i]/xsfit[i], 20);
+	  m8->SetMarkerColor(kGreen+2);
+	  m8->SetMarkerSize(1);
+	  m8->Draw();
+	}
+
       auto legend3 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
       legend3->AddEntry(m2,"Collard 1965","p");
       legend3->AddEntry(m3,"Szlata 1977","p");
+      legend3->AddEntry(m8,"Arnold 1978","p");
       legend3->AddEntry(m4,"Dunn 1983","p");
       legend3->AddEntry(m1,"Amroun 1994","p");
       legend3->AddEntry(m6,"Nakagawa 2001","p");
@@ -942,9 +973,19 @@ void Global_Fit_3He_SOG()
 	  m7->Draw();
 	}
 
+      //Plot 11 Arnold 1978 data points.
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts+Arnold_pts);i++) 
+	{
+	  TMarker *m8 = new TMarker(pow(Q2[i],0.5), sigexp[i]/xsfit[i], 20);
+	  m8->SetMarkerColor(kGreen+2);
+	  m8->SetMarkerSize(1);
+	  m8->Draw();
+	}
+
       auto legend4 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
       legend4->AddEntry(m2,"Collard 1965","p");
       legend4->AddEntry(m3,"Szlata 1977","p");
+      legend4->AddEntry(m8,"Arnold 1978","p");
       legend4->AddEntry(m4,"Dunn 1983","p");
       legend4->AddEntry(m1,"Amroun 1994","p");
       legend4->AddEntry(m6,"Nakagawa 2001","p");
@@ -1036,9 +1077,19 @@ void Global_Fit_3He_SOG()
 	  m7->Draw();
 	}
 
+      //Plot 11 Arnold 1978 data points.
+      for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts+Arnold_pts);i++) 
+	{
+	  TMarker *m8 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	  m8->SetMarkerColor(kGreen+2);
+	  m8->SetMarkerSize(1);
+	  m8->Draw();
+	}
+
       auto legend5 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
       legend5->AddEntry(m2,"Collard 1965","p");
       legend5->AddEntry(m3,"Szlata 1977","p");
+      legend5->AddEntry(m8,"Arnold 1978","p");
       legend5->AddEntry(m4,"Dunn 1983","p");
       legend5->AddEntry(m1,"Amroun 1994","p");
       legend5->AddEntry(m6,"Nakagawa 2001","p");
@@ -2222,10 +2273,20 @@ void Global_Fit_3He_SOG()
 	     m7->SetMarkerSize(1);
 	     m7->Draw();
 	   }
+
+	 //Plot 11 Arnold 1978 data points.
+	 for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts+Arnold_pts);i++) 
+	   {
+	     TMarker *m8 = new TMarker(pow(Q2[i],0.5), residual_FB[i], 20);
+	     m8->SetMarkerColor(kGreen+2);
+	     m8->SetMarkerSize(1);
+	     m8->Draw();
+	   }
 	 
 	 auto legend6 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
 	 legend6->AddEntry(m2,"Collard 1965","p");
 	 legend6->AddEntry(m3,"Szlata 1977","p");
+	 legend6->AddEntry(m8,"Arnold 1978","p");
 	 legend6->AddEntry(m4,"Dunn 1983","p");
 	 legend6->AddEntry(m1,"Amroun 1994","p");
 	 legend6->AddEntry(m6,"Nakagawa 2001","p");
