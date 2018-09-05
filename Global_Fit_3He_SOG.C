@@ -28,19 +28,20 @@ Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason,
 
 Int_t loops = 1;
 const Int_t datapts = 246+11;//248
-Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
+Int_t userand = 5;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=10.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 1;
-Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
+Int_t useFB = 0;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t improve = 0;                       //1 = use mnimpr() to check for other minima around the one MIGRAD finds.
-Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter errors. With ERRordef=30, npar=24, 10000 calls took about 1.5 hours and gave results only slightly different from intial parameter errors given. Several pars were hitting limits.  
+Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter errors. With ERRordef=30, npar=24, 10000 calls took about 1.5 hours and gave results only slightly different from intial parameter errors given. Several pars were hitting limits. 
+Int_t optimize_Ri = 1;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.  
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 10;                        //Number of Gaussians used to fit data.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
@@ -82,6 +83,9 @@ Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
 Double_t R[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
+Double_t R_init[12] = {};
+Double_t R_best[12] = {};
+Double_t R_best_chi2 = 0;
 Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
@@ -484,6 +488,71 @@ void Global_Fit_3He_SOG()
      R[11] = 5.;//5.;//5.;
    }
 
+ if(userand == 4) //ngaus = 8
+   {
+     //Generate random R[i] values. 
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand = new TF1("rand","x",0.,.01);
+     R[0] = 0.1;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand1 = new TF1("rand1","x",6.,7.);
+     R[1] = TMath::Nint(rand1->GetRandom())/10.+R[0];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand2 = new TF1("rand2","x",6.,7.);
+     R[2] = TMath::Nint(rand2->GetRandom())/10.+R[1];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand3 = new TF1("rand3","x",6.,7.);
+     R[3] = TMath::Nint(rand3->GetRandom())/10.+R[2];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand4 = new TF1("rand4","x",6.,7.);
+     R[4] = TMath::Nint(rand4->GetRandom())/10.+R[3];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand5 = new TF1("rand5","x",8.,9.);
+     R[5] = TMath::Nint(rand5->GetRandom())/10.+R[4];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand6 = new TF1("rand6","x",8.,9.);
+     R[6] = TMath::Nint(rand6->GetRandom())/10.+R[5];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand7 = new TF1("rand7","x",8.,9.);
+     R[7] = TMath::Nint(rand7->GetRandom())/10.+R[6];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+   }
+
+ if(userand == 5) //ngaus = 10
+   {
+     //Generate random R[i] values. 
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand = new TF1("rand","x",0.,.01);
+     R[0] = 0.1;
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand1 = new TF1("rand1","x",4.,5.);
+     R[1] = TMath::Nint(rand1->GetRandom())/10.+R[0];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand2 = new TF1("rand2","x",4.,5.);
+     R[2] = TMath::Nint(rand2->GetRandom())/10.+R[1];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand3 = new TF1("rand3","x",4.,5.);
+     R[3] = TMath::Nint(rand3->GetRandom())/10.+R[2];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand4 = new TF1("rand4","x",4.,5.);
+     R[4] = TMath::Nint(rand4->GetRandom())/10.+R[3];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand5 = new TF1("rand5","x",4.,5.);
+     R[5] = TMath::Nint(rand5->GetRandom())/10.+R[4];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand6 = new TF1("rand6","x",7.,8.);
+     R[6] = TMath::Nint(rand6->GetRandom())/10.+R[5];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand7 = new TF1("rand7","x",7.,8.);
+     R[7] = TMath::Nint(rand7->GetRandom())/10.+R[6];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand8 = new TF1("rand8","x",7.,8.);
+     R[8] = TMath::Nint(rand8->GetRandom())/10.+R[7];
+     gRandom->SetSeed(0);                    //Sets new random seed.
+     TF1 *rand9 = new TF1("rand9","x",7.,8.);
+     R[9] = TMath::Nint(rand9->GetRandom())/10.+R[8];
+   }
+
  //Add a constant to each value of Ri.
  /* 
  for(Int_t i=0;i<ngaus;i++)
@@ -517,6 +586,7 @@ void Global_Fit_3He_SOG()
   for(Int_t i=0;i<ngaus;i++)
     {
       gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], 0.,1.,ierflg);
+      //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], 0.,0.,ierflg);
       //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
       //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.000000000001,Qich[i]+0.000000000001,ierflg);
       //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.05,Qich[i]+0.05,ierflg);
@@ -524,6 +594,7 @@ void Global_Fit_3He_SOG()
   for(Int_t i=0;i<ngaus;i++)
     {
       gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], 0.,1.,ierflg);
+      //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], 0.,0.,ierflg);
       //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.001,Qim[i]+0.001,ierflg);
       //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.000000000001,Qim[i]+0.000000000001,ierflg);
       //gMinuit->mnparm(ngaus+i, Form("Qim%d",i+1), Qim[i], stepsize[0], Qim[i]-0.05,Qim[i]+0.05,ierflg);
@@ -551,7 +622,94 @@ void Global_Fit_3He_SOG()
   Int_t nvpar,nparx,icstat;
   gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
   //gMinuit->mnprin(3,amin);
-  
+
+  //Attempt to optimize the Ri by varying them systematically.
+  if(optimize_Ri == 1)
+    {
+      Int_t chi2_init = amin;
+      R_best_chi2 = amin;
+      cout<<"Initial Chi^2 = "<<amin<<endl;
+      R_init[0] = R[0];
+      R_best[0] = R[0];
+      //Set initial best Ri values to the initial Ri values.
+      for(Int_t i=1;i<ngaus;i++)
+	{
+	  R_best[i] = R[i];
+	}
+
+      for(Int_t i=1;i<ngaus;i++)
+	{
+	  Int_t chi2_better = 1;  //Test if the change improved chi2.
+	  R_init[i] = R[i];
+	  cout<<"*********************************************************"<<endl;
+	  cout<<"Optimizing Initial R["<<i<<"] = "<<R[i]<<endl;
+
+	  //Check for better Ri values below the initial Ri value.
+	  while(chi2_better == 1)
+	    {
+	      R[i] = R[i] - 0.1;
+	      cout<<"R["<<i<<"] set to "<<R[i]<<endl;
+	      gMinuit->mnexcm("MIGRAD", arglist , 2, ierflg);
+	      //gMinuit->mnimpr();
+	      gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
+	      cout<<"- Updated R["<<i<<"] = "<<R[i]<<"   New Chi^2 = "<<amin<<endl;
+	      for(Int_t j=0;j<ngaus;j++)
+		{
+		  cout<<"R["<<j<<"] = "<<R[j]<<endl;
+		}
+	      if(amin<R_best_chi2)
+		{
+		  R_best[i] = R[i]; //Store best Ri value thus far.
+		  R_best_chi2 = amin; //Store the best updated chi2 so far.
+		  chi2_better = 1;
+		}
+	      else
+		{
+		  R[i] = R_best[i]; //No improvement so reset Ri to the best previous value.
+		  cout<<"No improvement found. Setting R["<<i<<"] to best value = "<<R_best[i]<<".   With best Chi^2 = "<<R_best_chi2<<"."<<endl;
+		  chi2_better = 0;
+		}
+	    } 
+	  //Check for better Ri values above the initial Ri value.
+	  chi2_better = 1;
+	  R[i] = R_init[i];  //Start from initial Ri and move up now.
+	  while(chi2_better == 1)
+	    {
+	      R[i] = R[i] + 0.1;
+	      cout<<"R["<<i<<"] set to "<<R[i]<<endl;
+	      gMinuit->mnexcm("MIGRAD", arglist , 2, ierflg);
+	      //gMinuit->mnimpr();
+	      gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
+	      cout<<"+ Updated R["<<i<<"] = "<<R[i]<<"   New Chi^2 = "<<amin<<endl;
+	      for(Int_t j=0;j<ngaus;j++)
+		{
+		  cout<<"R["<<j<<"] = "<<R[j]<<endl;
+		}
+	      if(amin<R_best_chi2)
+		{
+		  R_best[i] = R[i]; //Store best Ri value thus far.
+		  R_best_chi2 = amin; //Store the best updated chi2 so far.
+		  chi2_better = 1;
+		}
+	      else
+		{
+		  R[i] = R_best[i]; //No improvement so reset Ri to the best previous value.
+		  cout<<"No improvement found. Setting R["<<i<<"] to final best value = "<<R_best[i]<<".   With best Chi^2 = "<<R_best_chi2<<"."<<endl;
+		  chi2_better = 0;
+		}
+	    } 
+	}
+      //Final fit using all of the Ri_best values.
+      cout<<"Preforming final fit with optimized R[i] values."<<endl;
+      for(Int_t j=0;j<ngaus;j++)
+	{
+	  cout<<"R["<<j<<"] = "<<R[j]<<endl;
+	}
+      gMinuit->mnexcm("MIGRAD", arglist , 2, ierflg);
+      //gMinuit->mnimpr();
+      gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
+    }//End optimize Ri.
+
   //Print Chi^2 and residual for each data point.
   if(showplots == 1)
     { 
