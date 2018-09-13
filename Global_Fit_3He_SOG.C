@@ -28,7 +28,7 @@ Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason,
 
 Int_t loops = 1;
 const Int_t datapts = 246+11;//248
-Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=10.
+Int_t userand = 4;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=10.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
@@ -39,9 +39,10 @@ Int_t useFB = 0;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t improve = 0;                       //1 = use mnimpr() to check for other minima around the one MIGRAD finds.
 Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter errors. With ERRordef=30, npar=24, 10000 calls took about 1.5 hours and gave results only slightly different from intial parameter errors given. Several pars were hitting limits. 
-Int_t optimize_Ri = 0;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.  
+Int_t optimize_Ri = 1;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.  
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
+Int_t ngaus_Amroun = 12;
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
@@ -81,13 +82,25 @@ Int_t Arnold_pts = 11;                 //These XSs had to be calculated from A^1
 
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
-Double_t R[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
+Double_t R[12] = {0.1,0.7,1.3,1.9,2.7,3.2,4.5,5.5,0.,0.,0.,0.};
+//Double_t R[12] = {0.1,0.6,1.,1.5,2.1,2.4,3.,3.7,4.4,4.7,0.,0.};//9/12/18 pretty good 2.
+//Double_t R[12] = {0.1,0.6,1.,1.5,2.0,2.4,3.1,3.9,4.5,4.8,0.,0.}; //9/12/18 pretty good 1. Also these Ri work well with Qi 2. Very smooth Fm.
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t R_init[12] = {};
 Double_t R_best[12] = {};
 Double_t R_best_chi2 = 0;
-Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
-Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
+//Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
+//Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
+//Double_t Qich[12] = {0.0289116,0.176012,0.227652,0.18408,0.186425,0.093576,0.0329847,0.052855,0.016552,0.00285043,0.00615456,1.58614E-11};
+//Double_t Qim[12] = {0.0585454,0.160715,0.222426,0.156211,0.191486,0.125172,0.00162158,0.0602476,0.0228372,6.94389E-13,0.0192538,1.03119E-11};
+
+Double_t Qich[12] = {0.0896211,0.234994,0.367953,0.193344,0.0460444,0.0763543,1.05355e-12,1.20741e-10,0.,0.,0.,0.};//9/12/18 pretty good 2.
+Double_t Qim[12] = {0.0738571,0.287688,0.219872,0.125082,0.000139601,7.65055e-13,0.0676226,0.0808108,0.,0.,0.,0.};
+//Double_t Qich[12] = {0.0411639,0.236983,0.204183,0.276745,0.0977119,0.0724304,0.0541865,0.0207177,1.26197e-07,0.00411213,0.,0.};//9/12/18 pretty good 2.
+//Double_t Qim[12] = {0.07112,0.213554,0.205701,0.238441,0.162279,0.017472,0.0869983,0.0239365,0.0295892,5.58285e-10,0.,0.};
+//Double_t Qich[12] = {0.0411535,0.237047,0.203676,0.277975,0.092553,0.0821181,0.0562533,0.0157997,2.61438e-10,0.00176867,0.,0.};//9/12/18 pretty good 1.
+//Double_t Qim[12] = {0.0692335,0.221858,0.189445,0.254013,0.127296,0.0508983,0.0726007,0.0160226,0.0224739,4.38656e-10,0.,0.}
+
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t Qich_best[12] = {};
@@ -287,6 +300,54 @@ void fcn_FB(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
   f = chisq;
 }
 
+void print_fit()//Never finished since I'm not sure this will be useful.
+{
+  TCanvas* c_FF=new TCanvas("c_FF");
+  c_FF->Divide(1,2);
+  c_FF->cd(1)->SetLogy();
+  c_FF->cd(1)->SetGrid();
+  c_FF->cd(1);
+  
+  TF1 *fChFF1 = new TF1("fChFF1",ChFF_Q2,yminFF,ymaxFF+54,1);
+  fChFF1->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+  fChFF1->Draw("L");
+  c_FF->SetTitle("Current Fit Form Factors");
+  fChFF1->SetTitle("^{3}He Charge Form Factor");
+  fChFF1->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
+  fChFF1->GetHistogram()->GetYaxis()->CenterTitle(true);
+  fChFF1->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+  fChFF1->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+  fChFF1->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
+  fChFF1->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+  fChFF1->GetHistogram()->GetXaxis()->CenterTitle(true);
+  fChFF1->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+  fChFF1->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+  fChFF1->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+
+  c_FF->cd(2)->SetLogy();
+  c_FF->cd(2)->SetGrid();
+  c_FF->cd(2);
+
+  TF1 *fMFF = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
+  fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+  fMFF->Draw("L");
+  //c4->SetTitle("He3 Magnetic Form Factor");
+  fMFF->SetTitle("^{3}He Magnetic Form Factor");
+  fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
+  fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
+  fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+  fMFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+  fMFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
+  fMFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+  fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
+  fMFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+  fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+  fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+
+  c_FF->SaveAs("Test_Print.png");
+  //c1->SaveAs(Form("./%i/%s/pictures_png/%i_%s_wire%i_wire%i.png",run,plane,run,plane,wire1,wire2));
+}
+
 void Global_Fit_3He_SOG() 
 {
   //Define a new stopwatch.
@@ -357,6 +418,155 @@ void Global_Fit_3He_SOG()
   //Create an output file to store fit results.
  std::ofstream output ("Ri_Chi2.txt", std::ofstream::out);
  output<<"FCN    Qichtot    Qimtot  R[0]  R[1]  R[2]  R[3]  R[4]  R[5]  R[6]  R[7]  R[8]  R[9]  R[10]  R[11]  Q0ch    Q1ch    Q2ch    Q3ch    Q4ch    Q5ch    Q6ch    Q7ch    Q8ch    Q9ch    Q10ch    Q11ch    Q0m    Q1m    Q2m    Q3m    Q4m    Q5m    Q6m    Q7m    Q8m    Q9m    Q10m    Q11m"<<endl;
+
+ //Define FFs for plotting purposes.
+ //Plot Charge FF Fch(Q) fm^-1.
+ Double_t ChFF(Double_t *Q, Double_t *par)
+ {
+   Double_t fitch = 0.;
+   Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	//Use SOG fit for C12 Qi coefficients and R[i] values. 
+	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+
+	//Convert to fm. Not sure I need to do this.
+	//sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(Q[0]*pow(GeV2fm,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(Q[0]*pow(GeV2fm,0.5)*R[i])/(Q[0]*pow(GeV2fm,0.5)*R[i])) );
+	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(Q[0]*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(Q[0]*R[i])/(Q[0]*R[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+    //Convert to fm. Not sure I need to do this.
+    //fitch = fitch * exp(-0.25*pow(Q[0]*pow(GeV2fm,0.5),2.)*pow(gamma,2.0));
+    fitch = fitch * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+    fitch = fabs(fitch);
+    return fitch;
+ }
+
+ //Plot Charge FF Fch(Q^2) fm^-2.
+ Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
+ {
+   Double_t fitch = 0.;
+   Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	//Use SOG fit for C12 Qi coefficients and R[i] values. 
+	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+
+	//Convert to fm. Not sure I need to do this.
+	//sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0]*GeV2fm,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0]*GeV2fm,0.5)*R[i])/(pow(Q2[0]*GeV2fm,0.5)*R[i])) );
+	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+    //Convert to fm. Not sure I need to do this.
+    //fitch = fitch * exp(-0.25*Q2[0]*GeV2fm*pow(gamma,2.0));
+    fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    fitch = fabs(fitch);
+    return fitch;
+ }
+
+//Plot Amroun's charge FF. No idea whay I can't just redefine Qi from ChFF_Q2.
+ Double_t ChFF_Q2_Amroun(Double_t *Q2, Double_t *par)
+ {
+   Double_t fitch = 0.;
+   Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus_Amroun; i++)
+      { 	
+	//Use SOG fit for C12 Qi coefficients and R[i] values. 
+	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+
+	//Convert to fm. Not sure I need to do this.
+	//sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0]*GeV2fm,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0]*GeV2fm,0.5)*R[i])/(pow(Q2[0]*GeV2fm,0.5)*R[i])) );
+	sumchtemp = (Qich_Amroun[i]/(1.0+2.0*pow(R_Amroun[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R_Amroun[i]) + (2.0*pow(R_Amroun[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R_Amroun[i])/(pow(Q2[0],0.5)*R_Amroun[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+    //Convert to fm. Not sure I need to do this.
+    //fitch = fitch * exp(-0.25*Q2[0]*GeV2fm*pow(gamma,2.0));
+    fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    fitch = fabs(fitch);
+    return fitch;
+ }
+
+     
+     //Plot magnetic FF(Q) fm^-1.
+     Double_t MFF(Double_t *Q, Double_t *par)
+     {
+       Double_t fitm = 0.;
+       Double_t summtemp = 0.;
+       
+       //Define SOG for magnetic FF.
+       for(Int_t i=0; i<ngaus; i++)
+	 { 	
+	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
+	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(Q[0]*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(Q[0]*R[i])/(Q[0]*R[i])) );
+	   
+	   fitm = fitm + summtemp;
+	 }
+       
+       fitm = fitm * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+       fitm = fabs(fitm);
+       return fitm;
+     }
+     
+     //Plot magnetic FF(Q^2) fm^-2.
+     Double_t MFF_Q2(Double_t *Q2, Double_t *par)
+     {
+       Double_t fitm = 0.;
+       Double_t summtemp = 0.;
+       
+       //Define SOG for magnetic FF.
+       for(Int_t i=0; i<ngaus; i++)
+	 { 	
+	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
+	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   fitm = fitm + summtemp;
+	 }
+       
+       fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
+       fitm = fabs(fitm);
+       return fitm;
+     }
+     
+     //Reset Ri to equal Amroun's values.
+     //for(Int_t i=0;i<12;i++)
+     // {
+     //	 R[i] = R_Amroun[i];
+     // }
+     
+     //Define Amroun's FF. Not sure why I can't just change Qi in MFF_Q2.
+     Double_t MFF_Q2_Amroun(Double_t *Q2, Double_t *par)
+     {
+       Double_t fitm = 0.;
+       Double_t summtemp = 0.;
+       
+       //Define SOG for magnetic FF.
+       for(Int_t i=0; i<ngaus_Amroun; i++)
+	 { 	
+	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
+	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	   summtemp = (Qim_Amroun[i]/(1.0+2.0*pow(R_Amroun[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R_Amroun[i]) + (2.0*pow(R_Amroun[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R_Amroun[i])/(pow(Q2[0],0.5)*R_Amroun[i])) );
+	   
+	   fitm = fitm + summtemp;
+	 }
+       
+       fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
+       fitm = fabs(fitm);
+       return fitm;
+     }
 
  //Begin loop over fit with different Ri values each time.
  for(Int_t q=0;q<loops;q++)
@@ -528,30 +738,39 @@ void Global_Fit_3He_SOG()
      R[0] = 0.1;
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand1 = new TF1("rand1","x",4.,5.);
+     // R[1] = 0.6;
      R[1] = TMath::Nint(rand1->GetRandom())/10.+R[0];
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand2 = new TF1("rand2","x",4.,5.);
+     //R[2] = 1.;
      R[2] = TMath::Nint(rand2->GetRandom())/10.+R[1];
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand3 = new TF1("rand3","x",4.,5.);
+     //R[3] = 1.5;
      R[3] = TMath::Nint(rand3->GetRandom())/10.+R[2];
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand4 = new TF1("rand4","x",4.,5.);
+     //R[4] = 2.1;
      R[4] = TMath::Nint(rand4->GetRandom())/10.+R[3];
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand5 = new TF1("rand5","x",4.,5.);
+     //R[5] = 2.4;
      R[5] = TMath::Nint(rand5->GetRandom())/10.+R[4];
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand6 = new TF1("rand6","x",7.,8.);
+     //R[6] = 3.1;
      R[6] = TMath::Nint(rand6->GetRandom())/10.+R[5];
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand7 = new TF1("rand7","x",7.,8.);
+     //R[7] = 3.9;
      R[7] = TMath::Nint(rand7->GetRandom())/10.+R[6];
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand8 = new TF1("rand8","x",7.,8.);
+     //R[8] = 4.5;
      R[8] = TMath::Nint(rand8->GetRandom())/10.+R[7];
      gRandom->SetSeed(0);                    //Sets new random seed.
      TF1 *rand9 = new TF1("rand9","x",7.,8.);
+     //R[9] = 4.8;
      R[9] = TMath::Nint(rand9->GetRandom())/10.+R[8];
    }
 
@@ -578,7 +797,7 @@ void Global_Fit_3He_SOG()
   Double_t arglist[10];
   Int_t ierflg = 0;
 
-  arglist[0] = 1.; //1 is for simple chi^2. For multiparameter errors this needs to be increased. 30 adds ~ 1 min.
+  arglist[0] = 30.; //1 is for simple chi^2. For multiparameter errors this needs to be increased. 30 adds ~ 1 min.
   gMinuit->mnexcm("SET ERR", arglist ,1,ierflg); //Set the ERRordef or UP. 
   
   //Set step sizes.
@@ -1710,83 +1929,10 @@ void Global_Fit_3He_SOG()
  //Close output file.
  output.close();
 
+ //print_fit();
+
  if(showplots == 1)
    {
- //Plot Charge FF Fch(Q) fm^-1.
- Double_t ChFF(Double_t *Q, Double_t *par)
- {
-   Double_t fitch = 0.;
-   Double_t sumchtemp = 0.;
-
-    //Define SOG for charge FF.
-    for(Int_t i=0; i<ngaus; i++)
-      { 	
-	//Use SOG fit for C12 Qi coefficients and R[i] values. 
-	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-
-	//Convert to fm. Not sure I need to do this.
-	//sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(Q[0]*pow(GeV2fm,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(Q[0]*pow(GeV2fm,0.5)*R[i])/(Q[0]*pow(GeV2fm,0.5)*R[i])) );
-	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(Q[0]*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(Q[0]*R[i])/(Q[0]*R[i])) );
-	
-	fitch = fitch + sumchtemp;
-      }
-    //Convert to fm. Not sure I need to do this.
-    //fitch = fitch * exp(-0.25*pow(Q[0]*pow(GeV2fm,0.5),2.)*pow(gamma,2.0));
-    fitch = fitch * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
-    fitch = fabs(fitch);
-    return fitch;
- }
-
- //Plot Charge FF Fch(Q^2) fm^-2.
- Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
- {
-   Double_t fitch = 0.;
-   Double_t sumchtemp = 0.;
-
-    //Define SOG for charge FF.
-    for(Int_t i=0; i<ngaus; i++)
-      { 	
-	//Use SOG fit for C12 Qi coefficients and R[i] values. 
-	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-
-	//Convert to fm. Not sure I need to do this.
-	//sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0]*GeV2fm,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0]*GeV2fm,0.5)*R[i])/(pow(Q2[0]*GeV2fm,0.5)*R[i])) );
-	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	
-	fitch = fitch + sumchtemp;
-      }
-    //Convert to fm. Not sure I need to do this.
-    //fitch = fitch * exp(-0.25*Q2[0]*GeV2fm*pow(gamma,2.0));
-    fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
-    fitch = fabs(fitch);
-    return fitch;
- }
-
-//Plot Amroun's charge FF. No idea whay I can't just redefine Qi from ChFF_Q2.
- Double_t ChFF_Q2_Amroun(Double_t *Q2, Double_t *par)
- {
-   Double_t fitch = 0.;
-   Double_t sumchtemp = 0.;
-
-    //Define SOG for charge FF.
-    for(Int_t i=0; i<ngaus; i++)
-      { 	
-	//Use SOG fit for C12 Qi coefficients and R[i] values. 
-	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-
-	//Convert to fm. Not sure I need to do this.
-	//sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0]*GeV2fm,0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0]*GeV2fm,0.5)*R[i])/(pow(Q2[0]*GeV2fm,0.5)*R[i])) );
-	sumchtemp = (Qich_Amroun[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	
-	fitch = fitch + sumchtemp;
-      }
-    //Convert to fm. Not sure I need to do this.
-    //fitch = fitch * exp(-0.25*Q2[0]*GeV2fm*pow(gamma,2.0));
-    fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
-    fitch = fabs(fitch);
-    return fitch;
- }
-
  TF1 *fChFF = new TF1("fChFF",ChFF_Q2,yminFF,ymaxFF+54,1);
  //TF1 *fChFF = new TF1("fChFF",ChFF,yminFF,ymaxFF,1);
  //cout<<fChFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
@@ -2110,78 +2256,6 @@ void Global_Fit_3He_SOG()
      c4->SetGrid();
      c4->SetLogy();
      
-     //Plot magnetic FF(Q) fm^-1.
-     Double_t MFF(Double_t *Q, Double_t *par)
-     {
-       Double_t fitm = 0.;
-       Double_t summtemp = 0.;
-       
-       //Define SOG for magnetic FF.
-       for(Int_t i=0; i<ngaus; i++)
-	 { 	
-	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
-	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	   
-	   summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(Q[0]*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(Q[0]*R[i])/(Q[0]*R[i])) );
-	   
-	   fitm = fitm + summtemp;
-	 }
-       
-       fitm = fitm * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
-       fitm = fabs(fitm);
-       return fitm;
-     }
-     
-     //Plot magnetic FF(Q^2) fm^-2.
-     Double_t MFF_Q2(Double_t *Q2, Double_t *par)
-     {
-       Double_t fitm = 0.;
-       Double_t summtemp = 0.;
-       
-       //Define SOG for magnetic FF.
-       for(Int_t i=0; i<ngaus; i++)
-	 { 	
-	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
-	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	   
-	   summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	   
-	   fitm = fitm + summtemp;
-	 }
-       
-       fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
-       fitm = fabs(fitm);
-       return fitm;
-     }
-     
-     //Reset Ri to equal Amroun's values.
-     for(Int_t i=0;i<12;i++)
-       {
-	 R[i] = R_Amroun[i];
-       }
-     
-     //Define Amroun's FF. Not sure why I can't just change Qi in MFF_Q2.
-     Double_t MFF_Q2_Amroun(Double_t *Q2, Double_t *par)
-     {
-       Double_t fitm = 0.;
-       Double_t summtemp = 0.;
-       
-       //Define SOG for magnetic FF.
-       for(Int_t i=0; i<ngaus; i++)
-	 { 	
-	   //Use SOG fit for C12 Qi coefficients and R[i] values. 
-	   //sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	   
-	   summtemp = (Qim_Amroun[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	   
-	   fitm = fitm + summtemp;
-	 }
-       
-       fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
-       fitm = fabs(fitm);
-       return fitm;
-     }
-     
      TF1 *fMFF = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
      //cout<<fMFF->Eval(0.000001)<<"!!!!!!!!"<<endl;
      cout<<"Qimtot = "<<Qimtot<<endl;
@@ -2203,6 +2277,7 @@ void Global_Fit_3He_SOG()
      fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
      
      cout<<"Chi^2 (amin) = "<<amin<<"   Reduced Chi^2 = "<<amin<<"/("<<datapts<<" - "<<2*ngaus<<" - 1) = "<<amin/(datapts-2*ngaus-1)<<endl;
+     cout<<"BIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<2*ngaus<<"*ln("<<datapts<<") = "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*2*ngaus<<"   AIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<2*ngaus<<" = "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<endl;
 
      //Now draw both FFs on the same plot for the GRC poster. 
      TCanvas* c5=new TCanvas("c5");
