@@ -46,7 +46,7 @@ Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi,
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 1;
-Int_t useFB = 0;                         //Turn on Fourier Bessel fit.
+Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t improve = 0;                       //1 = use mnimpr() to check for other minima around the one MIGRAD finds.
 Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter errors. With ERRordef=30, npar=24, 10000 calls took about 1.5 hours and gave results only slightly different from intial parameter errors given. Several pars were hitting limits. 
@@ -657,7 +657,7 @@ Double_t test(Double_t X)
   return val;
 }
 
-void Global_Fit_3He_SOG()
+void Test()
 {
 
   //Define a new stopwatch.
@@ -2332,5 +2332,5 @@ if(userand == 5) //ngaus = 9
 int main()
 {
   //Double_t xyz = 5.5;
-  Global_Fit_3He_SOG();
+  Test();
 }
