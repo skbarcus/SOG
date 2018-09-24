@@ -26,6 +26,7 @@ Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
+const Int_t nfunc = 1000;
 Int_t loops = 1;
 Int_t current_loop = 0;
 const Int_t datapts = 259;//248
@@ -156,7 +157,25 @@ Double_t MFF_Q2(Double_t *Q2, Double_t *par)
 }
 */
 
+Double_t MFF_Q2(Double_t *Q2, Double_t *par)
+{
+  Double_t fitm = 0.;
+  Double_t summtemp = 0.;
+  //cout<<"Current Loop = "<<current_loop<<endl;
+  //Define SOG for magnetic FF.
+  for(Int_t i=0; i<ngaus; i++)
+    { 	
+      summtemp = (par[i]/(1.0+2.0*pow(par[i+ngaus],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*par[i+ngaus]) + (2.0*pow(par[i+ngaus],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*par[i+ngaus])/(pow(Q2[0],0.5)*par[i+ngaus])) );
+	
+      fitm = fitm + summtemp;
+    }
 
+  fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
+  fitm = fabs(fitm);
+  return fitm;
+}
+
+/*
 Double_t MFF_Q2(Double_t *Q2, Double_t *par)
 {
   Double_t fitm = 0.;
@@ -174,7 +193,7 @@ Double_t MFF_Q2(Double_t *Q2, Double_t *par)
   fitm = fabs(fitm);
   return fitm;
 }
-
+*/
 //Define Amroun's FF. Not sure why I can't just change Qi in MFF_Q2.
 Double_t MFF_Q2_Amroun(Double_t *Q2, Double_t *par)
 {
@@ -368,7 +387,7 @@ void Multifit_FF_Plots()
     {
       //cout<<"loop = "<<current_loop<<endl;
       //Define array of TF1 to plot the various fits with.
-      TF1 *fChFF[1000];
+      TF1 *fChFF[nfunc];
 
       if(current_loop==0)
 	{
@@ -429,16 +448,47 @@ void Multifit_FF_Plots()
   //for(current_loop=0; current_loop<1; current_loop++)//nlines-skip;current_loop++)
   //Reset current loop.
   current_loop = 0;
+  TF1 **fMFF = new TF1*[nfunc];
   for(Int_t z=0; z<nlines-skip; z++)
     {
       //cout<<"loop = "<<current_loop<<endl;
       //Define array of TF1 to plot the various fits with.
-      TF1 *fMFF[1000];
+      //TF1 *fMFF[nfunc];
+      //TF1 **fMFF = new TF1*[nfunc];
 
       if(current_loop==0)
 	{
-	  fMFF[current_loop] = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
-	  fMFF[current_loop]->Draw("L");
+	  char fname[20];
+	  sprintf(fname,"f%d",z);
+	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,20);
+	  //fMFF[current_loop]->SetParameters(Qimmulti[current_loop][0],Qimmulti[current_loop][1],Qimmulti[current_loop][2],Qimmulti[current_loop][3],Qimmulti[current_loop][4],Qimmulti[current_loop][5],Qimmulti[current_loop][6],Qimmulti[current_loop][7],Qimmulti[current_loop][8],Qimmulti[current_loop][9],Rmulti[current_loop][0],Rmulti[current_loop][1],Rmulti[current_loop][2],Rmulti[current_loop][3],Rmulti[current_loop][4],Rmulti[current_loop][5],Rmulti[current_loop][6],Rmulti[current_loop][7],Rmulti[current_loop][8],Rmulti[current_loop][9]);
+	  fMFF[current_loop]->SetParameter(0,Qimmulti[current_loop][0]);
+	  fMFF[current_loop]->SetParameter(1,Qimmulti[current_loop][1]);
+	  fMFF[current_loop]->SetParameter(2,Qimmulti[current_loop][2]);
+	  fMFF[current_loop]->SetParameter(3,Qimmulti[current_loop][3]);
+	  fMFF[current_loop]->SetParameter(4,Qimmulti[current_loop][4]);
+	  fMFF[current_loop]->SetParameter(5,Qimmulti[current_loop][5]);
+	  fMFF[current_loop]->SetParameter(6,Qimmulti[current_loop][6]);
+	  fMFF[current_loop]->SetParameter(7,Qimmulti[current_loop][7]);
+	  fMFF[current_loop]->SetParameter(8,Qimmulti[current_loop][8]);
+	  fMFF[current_loop]->SetParameter(9,Qimmulti[current_loop][9]);
+	  fMFF[current_loop]->SetParameter(10,Rmulti[current_loop][0]);
+	  fMFF[current_loop]->SetParameter(11,Rmulti[current_loop][1]);
+	  fMFF[current_loop]->SetParameter(12,Rmulti[current_loop][2]);
+	  fMFF[current_loop]->SetParameter(13,Rmulti[current_loop][3]);
+	  fMFF[current_loop]->SetParameter(14,Rmulti[current_loop][4]);
+	  fMFF[current_loop]->SetParameter(15,Rmulti[current_loop][5]);
+	  fMFF[current_loop]->SetParameter(16,Rmulti[current_loop][6]);
+	  fMFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
+	  fMFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
+	  fMFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
+
+	  //fMFF[current_loop] = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
+	  fMFF[current_loop]->Draw();
+	  //fMFF[0] = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
+	  //fMFF[0]->Draw("");
+	  /*
+	  fMFF[current_loop]->SetLineColor(3);
 	  fMFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
 	  fMFF[current_loop]->SetTitle("^{3}He Magnetic Form Factor");
 	  fMFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
@@ -452,25 +502,56 @@ void Multifit_FF_Plots()
 	  fMFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
 	  fMFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
 	  cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
+	  */
 	}
       else
 	{
-	  fMFF[current_loop] = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
-	  fMFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
-	  fMFF[current_loop]->Draw("L same");
-	  cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
+	  char fname[20];
+	  sprintf(fname,"f%d",z);
+	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,20);
+	  fMFF[current_loop]->SetParameter(0,Qimmulti[current_loop][0]);
+	  fMFF[current_loop]->SetParameter(1,Qimmulti[current_loop][1]);
+	  fMFF[current_loop]->SetParameter(2,Qimmulti[current_loop][2]);
+	  fMFF[current_loop]->SetParameter(3,Qimmulti[current_loop][3]);
+	  fMFF[current_loop]->SetParameter(4,Qimmulti[current_loop][4]);
+	  fMFF[current_loop]->SetParameter(5,Qimmulti[current_loop][5]);
+	  fMFF[current_loop]->SetParameter(6,Qimmulti[current_loop][6]);
+	  fMFF[current_loop]->SetParameter(7,Qimmulti[current_loop][7]);
+	  fMFF[current_loop]->SetParameter(8,Qimmulti[current_loop][8]);
+	  fMFF[current_loop]->SetParameter(9,Qimmulti[current_loop][9]);
+	  fMFF[current_loop]->SetParameter(10,Rmulti[current_loop][0]);
+	  fMFF[current_loop]->SetParameter(11,Rmulti[current_loop][1]);
+	  fMFF[current_loop]->SetParameter(12,Rmulti[current_loop][2]);
+	  fMFF[current_loop]->SetParameter(13,Rmulti[current_loop][3]);
+	  fMFF[current_loop]->SetParameter(14,Rmulti[current_loop][4]);
+	  fMFF[current_loop]->SetParameter(15,Rmulti[current_loop][5]);
+	  fMFF[current_loop]->SetParameter(16,Rmulti[current_loop][6]);
+	  fMFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
+	  fMFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
+	  fMFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
+	  //fMFF[current_loop] = new TF1(Form("fMFF_%d",current_loop),MFF_Q2,yminFF,ymaxFF+54,1);
+	  //fMFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
+	  //fMFF[1] = new TF1(Form("fMFF_%d",current_loop),MFF_Q2,yminFF,ymaxFF+54,1);
+	  // fMFF[1]->Draw("same");
+	  fMFF[current_loop]->Draw("lsame");
+	  //cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
 	}
-      //cout<<"fMFF->Eval(0) = "<<fMFF->Eval(0.0001)<<endl;
-      //cout<<"loop before ++ = "<<current_loop<<endl;
+      //fMFF[2]->Draw("L");
+      cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
+      cout<<"loop before ++ = "<<current_loop<<endl;
       if(current_loop<(nlines-skip-1))
 	{
 	  current_loop++;
 	}
-      //cout<<"loop after ++ = "<<current_loop<<endl;
+      cout<<"loop after ++ = "<<current_loop<<endl;
     }
-
-
-
+  /*
+  fMFF[0]->Draw();
+  for(Int_t i=1;i<10;i++)
+    {
+      fMFF[i]->Draw("lsame");
+    }
+  */
 
 
 
