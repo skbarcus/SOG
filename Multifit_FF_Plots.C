@@ -30,6 +30,7 @@ const Int_t nfunc = 1000;
 Int_t loops = 1;
 Int_t current_loop = 0;
 const Int_t datapts = 259;//248
+const Int_t size = 1000;//248
 Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
@@ -62,7 +63,7 @@ Int_t skip = 1.;                          //Gives number of lines to skip at top
 Int_t nlines = 0;                        //Counts number of lines in the data file. 
 Int_t ncols;                             //Set how many columns of data we have in the data file.
 char* str[1000];                          //Variable to read lines of the data file.
-Float_t Chi2[datapts],rChi2[datapts],BIC[datapts],AIC[datapts],Qichtot[datapts],Qimtot[datapts],R0[datapts],R1[datapts],R2[datapts],R3[datapts],R4[datapts],R5[datapts],R6[datapts],R7[datapts],R8[datapts],R9[datapts],R10[datapts],R11[datapts],Q0ch[datapts],Q1ch[datapts],Q2ch[datapts],Q3ch[datapts],Q4ch[datapts],Q5ch[datapts],Q6ch[datapts],Q7ch[datapts],Q8ch[datapts],Q9ch[datapts],Q10ch[datapts],Q11ch[datapts],Q0m[datapts],Q1m[datapts],Q2m[datapts],Q3m[datapts],Q4m[datapts],Q5m[datapts],Q6m[datapts],Q7m[datapts],Q8m[datapts],Q9m[datapts],Q10m[datapts],Q11m[datapts];
+Float_t Chi2[size],rChi2[size],BIC[size],AIC[size],Qichtot[size],Qimtot[size],R0[size],R1[size],R2[size],R3[size],R4[size],R5[size],R6[size],R7[size],R8[size],R9[size],R10[size],R11[size],Q0ch[size],Q1ch[size],Q2ch[size],Q3ch[size],Q4ch[size],Q5ch[size],Q6ch[size],Q7ch[size],Q8ch[size],Q9ch[size],Q10ch[size],Q11ch[size],Q0m[size],Q1m[size],Q2m[size],Q3m[size],Q4m[size],Q5m[size],Q6m[size],Q7m[size],Q8m[size],Q9m[size],Q10m[size],Q11m[size];
 Float_t Chi2temp,rChi2temp,BICtemp,AICtemp,Qichtottemp,Qimtottemp,R0temp,R1temp,R2temp,R3temp,R4temp,R5temp,R6temp,R7temp,R8temp,R9temp,R10temp,R11temp,Q0chtemp,Q1chtemp,Q2chtemp,Q3chtemp,Q4chtemp,Q5chtemp,Q6chtemp,Q7chtemp,Q8chtemp,Q9chtemp,Q10chtemp,Q11chtemp,Q0mtemp,Q1mtemp,Q2mtemp,Q3mtemp,Q4mtemp,Q5mtemp,Q6mtemp,Q7mtemp,Q8mtemp,Q9mtemp,Q10mtemp,Q11mtemp;
 Float_t theta[datapts];                     //Angle in degrees.
 Float_t qeff[datapts];                      //q effective in fm^-1.
@@ -70,9 +71,9 @@ Float_t sigexp[datapts];                    //Sigma experimental (cross section)
 Float_t uncertainty[datapts];
 Float_t E0[datapts];
 Float_t Q2[datapts];
-Float_t Rmulti[datapts][12];
-Float_t Qichmulti[datapts][12];
-Float_t Qimmulti[datapts][12];
+Float_t Rmulti[size][12];
+Float_t Qichmulti[size][12];
+Float_t Qimmulti[size][12];
 
 Int_t Amroun_pts = 57;
 Int_t Collard_pts = 118;
@@ -108,6 +109,25 @@ Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
   //Define SOG for charge FF.
   for(Int_t i=0; i<ngaus; i++)
     { 	
+      sumchtemp = (par[i]/(1.0+2.0*pow(par[i+ngaus],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*par[i+ngaus]) + (2.0*pow(par[i+ngaus],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*par[i+ngaus])/(pow(Q2[0],0.5)*par[i+ngaus])) );
+	
+      fitch = fitch + sumchtemp;
+    }
+
+  fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
+  fitch = fabs(fitch);
+  return fitch;
+}
+/*
+//Plot Charge FF Fch(Q^2) fm^-2.
+Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
+{
+  Double_t fitch = 0.;
+  Double_t sumchtemp = 0.;
+  //cout<<"Current Loop = "<<current_loop<<endl;
+  //Define SOG for charge FF.
+  for(Int_t i=0; i<ngaus; i++)
+    { 	
       sumchtemp = (Qichmulti[current_loop][i]/(1.0+2.0*pow(Rmulti[current_loop][i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*Rmulti[current_loop][i]) + (2.0*pow(Rmulti[current_loop][i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*Rmulti[current_loop][i])/(pow(Q2[0],0.5)*Rmulti[current_loop][i])) );
 	
       fitch = fitch + sumchtemp;
@@ -117,7 +137,7 @@ Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
   fitch = fabs(fitch);
   return fitch;
 }
-
+*/
 //Plot Amroun's charge FF. No idea whay I can't just redefine Qi from ChFF_Q2.
 Double_t ChFF_Q2_Amroun(Double_t *Q2, Double_t *par)
 {
@@ -175,25 +195,6 @@ Double_t MFF_Q2(Double_t *Q2, Double_t *par)
   return fitm;
 }
 
-/*
-Double_t MFF_Q2(Double_t *Q2, Double_t *par)
-{
-  Double_t fitm = 0.;
-  Double_t summtemp = 0.;
-  //cout<<"Current Loop = "<<current_loop<<endl;
-  //Define SOG for magnetic FF.
-  for(Int_t i=0; i<ngaus; i++)
-    { 	
-      summtemp = (Qimmulti[current_loop][i]/(1.0+2.0*pow(Rmulti[current_loop][i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*Rmulti[current_loop][i]) + (2.0*pow(Rmulti[current_loop][i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*Rmulti[current_loop][i])/(pow(Q2[0],0.5)*Rmulti[current_loop][i])) );
-	
-      fitm = fitm + summtemp;
-    }
-
-  fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
-  fitm = fabs(fitm);
-  return fitm;
-}
-*/
 //Define Amroun's FF. Not sure why I can't just change Qi in MFF_Q2.
 Double_t MFF_Q2_Amroun(Double_t *Q2, Double_t *par)
 {
@@ -216,7 +217,9 @@ Double_t MFF_Q2_Amroun(Double_t *Q2, Double_t *par)
 void Multifit_FF_Plots() 
 {
   FILE *fp;
-  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Chi2.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Chi2.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_BS_300_Ri_Chi2.txt","r");
+  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_180_9_25_2018.txt","r");
     
   //Read in data.
   while (1) {
@@ -230,21 +233,13 @@ void Multifit_FF_Plots()
     else
       {
 	//Read in the number of columns of data in your data file. 
-	//ncols = fscanf(fp,"%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f",&Chi2temp, &rChi2temp, &BICtemp, &AICtemp, &Qichtottemp, &Qimtottemp, &R0temp, &R1temp, &R2temp, &R3temp, &R4temp, &R5temp, &R6temp, &R7temp, &R8temp, &R9temp, &R10temp, &R11temp, &Q0chtemp, &Q1chtemp, &Q2chtemp, &Q3chtemp, &Q4chtemp, &Q5chtemp, &Q6chtemp, &Q7chtemp, &Q8chtemp, &Q9chtemp, &Q10chtemp, &Q11chtemp, &Q0mtemp, &Q1mtemp, &Q2mtemp, &Q3mtemp, &Q4mtemp, &Q5mtemp, &Q6mtemp, &Q7mtemp, &Q8mtemp, &Q9mtemp, &Q10mtemp, &Q11mtemp);
 	ncols = fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Chi2temp, &rChi2temp, &BICtemp, &AICtemp, &Qichtottemp, &Qimtottemp, &R0temp, &R1temp, &R2temp, &R3temp);
-	//ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f %f %f", &R0temp, &R1temp, &R2temp, &R3temp, &R4temp, &R5temp, &R6temp, &R7temp, &R8temp, &R9temp, &R10temp, &R11temp);
 	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &R4temp, &R5temp, &R6temp, &R7temp, &R8temp, &R9temp, &R10temp, &R11temp, &Q0chtemp, &Q1chtemp);
 	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q2chtemp, &Q3chtemp, &Q4chtemp, &Q5chtemp, &Q6chtemp, &Q7chtemp, &Q8chtemp, &Q9chtemp, &Q10chtemp, &Q11chtemp);
 	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q0mtemp, &Q1mtemp, &Q2mtemp, &Q3mtemp, &Q4mtemp, &Q5mtemp, &Q6mtemp, &Q7mtemp, &Q8mtemp, &Q9mtemp);
 	ncols = ncols + fscanf(fp,"%f %f", &Q10mtemp, &Q11mtemp);
 	//cout<<"ncols = "<<ncols<<endl;
 	if (ncols < 0) break;    
-	//cout<<thetatemp<<"   "<<qefftemp<<"   "<<sigexptemp<<"   "<<uncertaintytemp<<endl;
-	//E0[nlines-skip] = E0temp;
-	//theta[nlines-skip] = thetatemp;
-	//sigexp[nlines-skip] = sigexptemp;
-        //uncertainty[nlines-skip] = uncertaintytemp; 
-	//Q2[nlines-skip] = 4 * E0[nlines-skip] * (E0[nlines-skip]/(1.0+2.0*E0[nlines-skip]*pow(sin(theta[nlines-skip]*deg2rad/2.0),2.0)/MtHe3)) * pow(sin(theta[nlines-skip]*deg2rad/2.0),2.) * GeV2fm;
 
 	Chi2[nlines-skip] = Chi2temp;
 	rChi2[nlines-skip] = rChi2temp;
@@ -325,7 +320,6 @@ void Multifit_FF_Plots()
 	Qimmulti[nlines-skip][10] = Q10mtemp;
 	Qimmulti[nlines-skip][11] = Q11mtemp;
 
-
 	nlines++;
       }
   }
@@ -382,17 +376,42 @@ void Multifit_FF_Plots()
   cFch->SetLogy();
   cFch->SetTitle("Charge Form Factor");
 
+  //Define array of TF1 to plot the various fits with.
+  TF1 **fChFF = new TF1*[nfunc];
+
   //for(current_loop=0; current_loop<1; current_loop++)//nlines-skip;current_loop++)
   for(Int_t z=0; z<nlines-skip; z++)
     {
       //cout<<"loop = "<<current_loop<<endl;
-      //Define array of TF1 to plot the various fits with.
-      TF1 *fChFF[nfunc];
 
       if(current_loop==0)
 	{
-	  fChFF[current_loop] = new TF1("fChFF",ChFF_Q2,yminFF,ymaxFF+54,1);
-	  //fChFF[current_loop]->Draw("L");
+	  char fname[20];
+	  sprintf(fname,"f%d",z);
+	  fChFF[current_loop] = new TF1(fname,ChFF_Q2,yminFF,ymaxFF+54,20);
+
+	  fChFF[current_loop]->SetParameter(0,Qichmulti[current_loop][0]);
+	  fChFF[current_loop]->SetParameter(1,Qichmulti[current_loop][1]);
+	  fChFF[current_loop]->SetParameter(2,Qichmulti[current_loop][2]);
+	  fChFF[current_loop]->SetParameter(3,Qichmulti[current_loop][3]);
+	  fChFF[current_loop]->SetParameter(4,Qichmulti[current_loop][4]);
+	  fChFF[current_loop]->SetParameter(5,Qichmulti[current_loop][5]);
+	  fChFF[current_loop]->SetParameter(6,Qichmulti[current_loop][6]);
+	  fChFF[current_loop]->SetParameter(7,Qichmulti[current_loop][7]);
+	  fChFF[current_loop]->SetParameter(8,Qichmulti[current_loop][8]);
+	  fChFF[current_loop]->SetParameter(9,Qichmulti[current_loop][9]);
+	  fChFF[current_loop]->SetParameter(10,Rmulti[current_loop][0]);
+	  fChFF[current_loop]->SetParameter(11,Rmulti[current_loop][1]);
+	  fChFF[current_loop]->SetParameter(12,Rmulti[current_loop][2]);
+	  fChFF[current_loop]->SetParameter(13,Rmulti[current_loop][3]);
+	  fChFF[current_loop]->SetParameter(14,Rmulti[current_loop][4]);
+	  fChFF[current_loop]->SetParameter(15,Rmulti[current_loop][5]);
+	  fChFF[current_loop]->SetParameter(16,Rmulti[current_loop][6]);
+	  fChFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
+	  fChFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
+	  fChFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
+
+	  fChFF[current_loop]->Draw("L");
 	  fChFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
 	  fChFF[current_loop]->SetTitle("^{3}He Charge Form Factor");
 	  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
@@ -405,38 +424,52 @@ void Multifit_FF_Plots()
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
-	  cout<<"fChFF->Eval(0) = "<<fChFF[current_loop]->Eval(0.0001)<<endl;
 	}
       else
 	{
-	  fChFF[current_loop] = new TF1("fChFF",ChFF_Q2,yminFF,ymaxFF+54,1);
+	  char fname[20];
+	  sprintf(fname,"f%d",z);
+	  fChFF[current_loop] = new TF1(fname,ChFF_Q2,yminFF,ymaxFF+54,20);
+
+	  fChFF[current_loop]->SetParameter(0,Qichmulti[current_loop][0]);
+	  fChFF[current_loop]->SetParameter(1,Qichmulti[current_loop][1]);
+	  fChFF[current_loop]->SetParameter(2,Qichmulti[current_loop][2]);
+	  fChFF[current_loop]->SetParameter(3,Qichmulti[current_loop][3]);
+	  fChFF[current_loop]->SetParameter(4,Qichmulti[current_loop][4]);
+	  fChFF[current_loop]->SetParameter(5,Qichmulti[current_loop][5]);
+	  fChFF[current_loop]->SetParameter(6,Qichmulti[current_loop][6]);
+	  fChFF[current_loop]->SetParameter(7,Qichmulti[current_loop][7]);
+	  fChFF[current_loop]->SetParameter(8,Qichmulti[current_loop][8]);
+	  fChFF[current_loop]->SetParameter(9,Qichmulti[current_loop][9]);
+	  fChFF[current_loop]->SetParameter(10,Rmulti[current_loop][0]);
+	  fChFF[current_loop]->SetParameter(11,Rmulti[current_loop][1]);
+	  fChFF[current_loop]->SetParameter(12,Rmulti[current_loop][2]);
+	  fChFF[current_loop]->SetParameter(13,Rmulti[current_loop][3]);
+	  fChFF[current_loop]->SetParameter(14,Rmulti[current_loop][4]);
+	  fChFF[current_loop]->SetParameter(15,Rmulti[current_loop][5]);
+	  fChFF[current_loop]->SetParameter(16,Rmulti[current_loop][6]);
+	  fChFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
+	  fChFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
+	  fChFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
+
 	  fChFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
-	  //fChFF[current_loop]->Draw("L same");
-	  cout<<"fChFF->Eval(0) = "<<fChFF[current_loop]->Eval(0.0001)<<endl;
+	  fChFF[current_loop]->Draw("L SAME");
 	}
-      //cout<<"fChFF->Eval(0) = "<<fChFF->Eval(0.0001)<<endl;
-      cout<<"loop before ++ = "<<current_loop<<endl;
+      cout<<"fChFF->Eval(0) = "<<fChFF[current_loop]->Eval(0.0001)<<endl;
+      //cout<<"loop before ++ = "<<current_loop<<endl;
       if(current_loop<(nlines-skip-1))
 	{
 	  current_loop++;
 	}
-      cout<<"loop after ++ = "<<current_loop<<endl;
+      //cout<<"loop after ++ = "<<current_loop<<endl;
     }
-
-  fChFF[0]->Draw("L");
-  for(Int_t i=1;i<nlines-skip;i++)
-    {
-      fChFF[i]->Draw("L same");
-    }
-  //cout<<"????????? = "<<current_loop<<endl;
 
   TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,yminFF,ymaxFF+54,1);
-  //cout<<fChFF_Amroun->Eval(35)<<endl;
   fChFF_Amroun->SetNpx(npdraw);
   fChFF_Amroun->SetLineColor(4);
-  fChFF_Amroun->Draw("L same");
+  fChFF_Amroun->Draw("L SAME");
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
+  ChFF_leg->AddEntry(fChFF[0],"New ^{3}He |F_{ch}(q^{2})| Fit","l");
   ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
   ChFF_leg->Draw();
 
@@ -448,20 +481,20 @@ void Multifit_FF_Plots()
   //for(current_loop=0; current_loop<1; current_loop++)//nlines-skip;current_loop++)
   //Reset current loop.
   current_loop = 0;
+
+  //Define array of TF1 to plot the various fits with.
   TF1 **fMFF = new TF1*[nfunc];
+
   for(Int_t z=0; z<nlines-skip; z++)
     {
       //cout<<"loop = "<<current_loop<<endl;
-      //Define array of TF1 to plot the various fits with.
-      //TF1 *fMFF[nfunc];
-      //TF1 **fMFF = new TF1*[nfunc];
 
       if(current_loop==0)
 	{
 	  char fname[20];
 	  sprintf(fname,"f%d",z);
 	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,20);
-	  //fMFF[current_loop]->SetParameters(Qimmulti[current_loop][0],Qimmulti[current_loop][1],Qimmulti[current_loop][2],Qimmulti[current_loop][3],Qimmulti[current_loop][4],Qimmulti[current_loop][5],Qimmulti[current_loop][6],Qimmulti[current_loop][7],Qimmulti[current_loop][8],Qimmulti[current_loop][9],Rmulti[current_loop][0],Rmulti[current_loop][1],Rmulti[current_loop][2],Rmulti[current_loop][3],Rmulti[current_loop][4],Rmulti[current_loop][5],Rmulti[current_loop][6],Rmulti[current_loop][7],Rmulti[current_loop][8],Rmulti[current_loop][9]);
+
 	  fMFF[current_loop]->SetParameter(0,Qimmulti[current_loop][0]);
 	  fMFF[current_loop]->SetParameter(1,Qimmulti[current_loop][1]);
 	  fMFF[current_loop]->SetParameter(2,Qimmulti[current_loop][2]);
@@ -483,12 +516,9 @@ void Multifit_FF_Plots()
 	  fMFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
 	  fMFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
 
-	  //fMFF[current_loop] = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
-	  fMFF[current_loop]->Draw();
-	  //fMFF[0] = new TF1("fMFF",MFF_Q2,yminFF,ymaxFF+54,1);
-	  //fMFF[0]->Draw("");
-	  /*
-	  fMFF[current_loop]->SetLineColor(3);
+	  fMFF[current_loop]->Draw("L");
+
+	  //fMFF[current_loop]->SetLineColor(3);
 	  fMFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
 	  fMFF[current_loop]->SetTitle("^{3}He Magnetic Form Factor");
 	  fMFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
@@ -501,13 +531,12 @@ void Multifit_FF_Plots()
 	  fMFF[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
 	  fMFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
 	  fMFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
-	  cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
-	  */
 	}
       else
 	{
 	  char fname[20];
 	  sprintf(fname,"f%d",z);
+
 	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,20);
 	  fMFF[current_loop]->SetParameter(0,Qimmulti[current_loop][0]);
 	  fMFF[current_loop]->SetParameter(1,Qimmulti[current_loop][1]);
@@ -529,21 +558,17 @@ void Multifit_FF_Plots()
 	  fMFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
 	  fMFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
 	  fMFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
-	  //fMFF[current_loop] = new TF1(Form("fMFF_%d",current_loop),MFF_Q2,yminFF,ymaxFF+54,1);
-	  //fMFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
-	  //fMFF[1] = new TF1(Form("fMFF_%d",current_loop),MFF_Q2,yminFF,ymaxFF+54,1);
-	  // fMFF[1]->Draw("same");
-	  fMFF[current_loop]->Draw("lsame");
-	  //cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
+	  fMFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
+	  fMFF[current_loop]->Draw("L SAME");
 	}
       //fMFF[2]->Draw("L");
       cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
-      cout<<"loop before ++ = "<<current_loop<<endl;
+      //cout<<"loop before ++ = "<<current_loop<<endl;
       if(current_loop<(nlines-skip-1))
 	{
 	  current_loop++;
 	}
-      cout<<"loop after ++ = "<<current_loop<<endl;
+      //cout<<"loop after ++ = "<<current_loop<<endl;
     }
   /*
   fMFF[0]->Draw();
@@ -578,7 +603,7 @@ void Multifit_FF_Plots()
   fMFF_Amroun->SetLineColor(4);
   fMFF_Amroun->Draw("L same");
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
+  MFF_leg->AddEntry(fMFF[0],"New ^{3}He |F_{m}(q^{2})| Fit","l");
   MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
   MFF_leg->Draw();
 
