@@ -28,6 +28,7 @@ Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason,
 
 const Int_t nfunc = 1000;
 Double_t maxchi2 = 505;
+Double_t Qim_range = 0.1; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
 const Int_t datapts = 259;//248
@@ -436,7 +437,7 @@ void Multifit_FF_Plots()
 	  fChFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fChFF[current_loop]->SetLineWidth(linewidth);
 
-	  if(Chi2[current_loop]<maxchi2)
+	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
 	      fChFF[current_loop]->Draw("L");
 
@@ -449,7 +450,7 @@ void Multifit_FF_Plots()
 		{
 		  hRi_sep[i]->Fill(Rmulti[current_loop][i+1]-Rmulti[current_loop][i]);
 		}
-
+	      cout<<"Sum Qich = "<<Qichtot[current_loop]<<endl;
 	      first = 1; //No longer first plot.
 	      total_funcs++;
 	    }
@@ -496,7 +497,7 @@ void Multifit_FF_Plots()
 	  fChFF[current_loop]->SetLineWidth(linewidth);
 
 	  fChFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
-	  if(Chi2[current_loop]<maxchi2)
+	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
 	      if(first==0)
 		{
@@ -528,7 +529,7 @@ void Multifit_FF_Plots()
 		{
 		  hRi_sep[i]->Fill(Rmulti[current_loop][i+1]-Rmulti[current_loop][i]);
 		}
-
+	      cout<<"Sum Qich = "<<Qichtot[current_loop]<<endl;
 	      total_funcs++;
 	    }
 	}
@@ -597,10 +598,11 @@ void Multifit_FF_Plots()
 	  fMFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fMFF[current_loop]->SetLineWidth(linewidth);
 
-	  if(Chi2[current_loop]<maxchi2)
+	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
 	      fMFF[current_loop]->Draw("L");
 	      first = 1; //No longer first plot.
+	      cout<<"Sum Qim = "<<Qimtot[current_loop]<<endl;
 	    }
 
 	  //fMFF[current_loop]->SetLineColor(3);
@@ -647,7 +649,7 @@ void Multifit_FF_Plots()
 	  fMFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fMFF[current_loop]->SetLineWidth(linewidth);
 
-	  if(Chi2[current_loop]<maxchi2)
+	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
 	      if(first==0)
 		{
@@ -669,6 +671,7 @@ void Multifit_FF_Plots()
 		{
 		  fMFF[current_loop]->Draw("L SAME");
 		}
+	      cout<<"Sum Qim = "<<Qimtot[current_loop]<<endl;
 	    }
 	}
       //fMFF[2]->Draw("L");

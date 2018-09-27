@@ -33,7 +33,8 @@ Double_t deg2rad = pi/180.0;
 Double_t GeV2fm = 1./0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
 Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
 Double_t C = 299792458.0;                //Speed of light [m/s]. 
-Double_t e = 1.60217662E-19;             //Electron charge C.
+Double_t e = 1.60217662E-19;             //Electron charge [C].
+Double_t e2_nuclear = 1.4399643929E-3;             //Electron charge squared in nuclear units [GeV * fm].
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
@@ -46,7 +47,7 @@ Int_t fft = 0;                           //0 = don't use FFT to try to get a cha
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 1;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
-Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
+Int_t useFB_FM = 1;                      //0 = Turn on Fourier Bessel fit just for FC. 1 = Turn on Fourier Bessel fit attempting FC and FM.
 Int_t improve = 0;                       //1 = use mnimpr() to check for other minima around the one MIGRAD finds.
 Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter errors. With ERRordef=30, npar=24, 10000 calls took about 1.5 hours and gave results only slightly different from intial parameter errors given. Several pars were hitting limits. 
 Int_t optimize_Ri = 0;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.
@@ -166,6 +167,7 @@ Double_t amin = 0.;
 Double_t maxQ2 = 0.;
 TMarker *m1,*m2,*m3,*m4,*m5,*m6,*m7,*m8;
 
+//Define SOG FFs and XS.
 Double_t XS(float E0, float theta, Double_t *par)
 {
   //Double_t value=( (par[0]*par[0])/(x*x)-1)/ ( par[1]+par[2]*y-par[3]*y*y);
@@ -254,11 +256,11 @@ Double_t XS(float E0, float theta, Double_t *par)
     }
   */
 
-  val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + (pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); //magnetic moment for C12 is 0 -> no mag part of XS.
+  val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(fitch,2.) + (pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(fitm,2.) ); 
   //cout<<"XS = "<<val<<endl;
   return val;
 }
-
+/*
 Double_t FB(float E0, float theta, Double_t *par)
 {
   Double_t val = 0.;
@@ -266,10 +268,10 @@ Double_t FB(float E0, float theta, Double_t *par)
   Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
   Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
   Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
-  Double_t FB_GE_sum = 0.;
-  Double_t FB_GE_temp = 0.;
-  Double_t FB_GM_sum = 0.;
-  Double_t FB_GM_temp = 0.;
+  Double_t FB_FC_sum = 0.;
+  Double_t FB_FC_temp = 0.;
+  Double_t FB_FM_sum = 0.;
+  Double_t FB_FM_temp = 0.;
   Double_t R_FB = 5.;  //fm
   Double_t mottxs = 0.;
   Double_t tau = 0;
@@ -281,30 +283,92 @@ Double_t FB(float E0, float theta, Double_t *par)
   //Calculate tau.
   tau = Q2eff/(4*pow(MtHe3,2.)*GeV2fm);
 
-  //Calculate GE.
+  //Calculate FC.
   for(Int_t i=1; i<(nFB+1); i++)
     {
-      FB_GE_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
-      FB_GE_sum = FB_GE_sum + FB_GE_temp;
+      FB_FC_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_FC_sum = FB_FC_sum + FB_FC_temp;
     }
 
-  //Calculate GM.
+  //Calculate FM.
   for(Int_t i=1; i<(nFB+1); i++)
     {
-      FB_GM_temp = ( -4 * par[i-1+nFB] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
-      FB_GM_sum = FB_GM_sum + FB_GM_temp;
+      FB_FM_temp = ( -4 * par[i-1+nFB] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_FM_sum = FB_FM_sum + FB_FM_temp;
     }
 
   //val = FB_sum;
-  if(useFB_GM == 0)
+  if(useFB_FM == 0)
     {
-      //val = pow(Z,2.) * mottxs * pow(FB_GE_sum,2.)/(1+tau); //Just GE (GM=0). This was for the recoil proton being measure.
-      val = mottxs * pow(FB_GE_sum,2.)/(1+tau);
+      //val = pow(Z,2.) * mottxs * pow(FB_FC_sum,2.)/(1+tau); //Just FC (FM=0). This was for the recoil proton being measure.
+      val = mottxs * pow(FB_FC_sum,2.)/(1+tau);
     }
-  if(useFB_GM == 1)
+  if(useFB_FM == 1)
     {
-      //val = pow(Z,2.) * mottxs * (   (  pow(FB_GE_sum,2.)+tau*pow(FB_GM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_GM_sum,2.)*pow(1/(1+rho),2.)*pow(1/tan(theta*deg2rad),2.)  );  //Try to fit GE and GM. This was for the recoil proton being measure.
-      val = mottxs * (   (  pow(FB_GE_sum,2.)+tau*pow(FB_GM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_GM_sum,2.)*pow(tan(theta*deg2rad/2.),2.)  );
+      //val = pow(Z,2.) * mottxs * (   (  pow(FB_FC_sum,2.)+tau*pow(FB_FM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_FM_sum,2.)*pow(1/(1+rho),2.)*pow(1/tan(theta*deg2rad),2.)  );  //Try to fit FC and FM. This was for the recoil proton being measure.
+      val = mottxs * (   (  pow(FB_FC_sum,2.)+tau*pow(FB_FM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_FM_sum,2.)*pow(tan(theta*deg2rad/2.),2.)  );
+    }
+  return val;
+}
+*/
+
+Double_t FB(float E0, float theta, Double_t *par)
+{
+  Double_t val = 0.;
+
+  Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+  Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
+  Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
+  Double_t FB_FC_sum = 0.;
+  Double_t FB_FC_temp = 0.;
+  Double_t FB_FM_sum = 0.;
+  Double_t FB_FM_temp = 0.;
+  Double_t R_FB = 5.;  //fm
+  Double_t mottxs = 0.;
+  Double_t tau = 0;
+  Double_t rho = E0/MtHe3;
+
+  Double_t eta = 1 + (2*E0/MtHe3) * pow(sin(theta*deg2rad/2.0),2.);//Beck 1984.
+
+  //Double_t W = E0 - Ef;
+  //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
+  //Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2eff  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
+  //Double_t eta = 1.0 + Q2eff/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2.
+
+  //Calculate Mott XS.
+  //mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/GeV2fm;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7. SOG formula.
+  //mottxs = ( pow(Z,2.)/(4*pow(E0,2.)) ) * pow(cos(theta*deg2rad/2.0),2.)/pow(sin(theta*deg2rad/2.0),4.) * 1.0/GeV2fm;//Beck 1984.
+  mottxs = ( pow(Z,2.)*pow(e2_nuclear,2.)/(4*pow(E0,2.)) ) * pow(cos(theta*deg2rad/2.0),2.)/pow(sin(theta*deg2rad/2.0),4.);//Beck 1984.
+  //cout<<"MottXS = "<<mottxs<<endl;
+  //Calculate tau.
+  tau = Q2eff/(4*pow(MtHe3,2.)*GeV2fm);
+
+  //Calculate FC.
+  for(Int_t i=1; i<(nFB+1); i++)
+    {
+      FB_FC_temp = ( -4 * par[i-1] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_FC_sum = FB_FC_sum + FB_FC_temp;
+    }
+
+  //Calculate FM.
+  for(Int_t i=1; i<(nFB+1); i++)
+    {
+      FB_FM_temp = ( -4 * par[i-1+nFB] * sin( pow(Q2eff,0.5) * R_FB ) ) / ( pow(Q2eff,0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2eff - pow(i*pi/R_FB,2.))  );
+      FB_FM_sum = FB_FM_sum + FB_FM_temp;
+    }
+
+  //val = FB_sum;
+  if(useFB_FM == 0)
+    {
+      //val = pow(Z,2.) * mottxs * pow(FB_FC_sum,2.)/(1+tau); //Just FC (FM=0). This was for the recoil proton being measure.
+      val = mottxs * pow(FB_FC_sum,2.)/(1+tau);
+    }
+  if(useFB_FM == 1)
+    {
+      //val = pow(Z,2.) * mottxs * (   (  pow(FB_FC_sum,2.)+tau*pow(FB_FM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_FM_sum,2.)*pow(1/(1+rho),2.)*pow(1/tan(theta*deg2rad),2.)  );  //Try to fit FC and FM. This was for the recoil proton being measure.
+      //val = mottxs * (   (  pow(FB_FC_sum,2.)+tau*pow(FB_FM_sum,2.)  )/(1+tau) + 2*tau*pow(FB_FM_sum,2.)*pow(tan(theta*deg2rad/2.),2.)  );
+      //val = mottxs * (1./eta) * ( (Q2eff/q2_3)*pow(FB_FC_sum,2.) + (pow(muHe3,2.0)*Q2eff/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2eff/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(FB_FM_sum,2.) ); //SOG XS formula.
+      val = mottxs * (1/eta) * (  pow(FB_FC_sum,2.)/(1+tau) + tau*pow(muHe3,2)*pow(FB_FM_sum,2.)*( 1/(1+tau) + 2*pow(tan(theta*deg2rad/2),2.) )  ); //Beck 1984 XS formula.
     }
   return val;
 }
@@ -325,7 +389,8 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 	  delta  = (sigexp[i]-XS(E0[i],theta[i],par))/uncertainty[i];
 	  chisq += delta*delta;
 	  Chi2[i] = delta*delta;
-	  residual[i] = (sigexp[i] - XS(E0[i],theta[i],par))/sigexp[i]; 
+	  //residual[i] = (sigexp[i] - XS(E0[i],theta[i],par))/sigexp[i]; 
+	  residual[i] = fabs(sigexp[i] - XS(E0[i],theta[i],par))/XS(E0[i],theta[i],par); 
 	  xsfit[i] = XS(E0[i],theta[i],par);
 	  //cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
 	}
@@ -337,7 +402,8 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 	  delta  = (sigexp_bs[i]-XS(E0_bs[i],theta_bs[i],par))/uncertainty_bs[i];
 	  chisq += delta*delta;
 	  Chi2[i] = delta*delta;
-	  residual[i] = (sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/sigexp_bs[i]; 
+	  //residual[i] = (sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/sigexp_bs[i];
+	  residual[i] = fabs(sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/XS(E0_bs[i],theta_bs[i],par);
 	  xsfit[i] = XS(E0_bs[i],theta_bs[i],par);
 	  //cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
 	}
@@ -360,7 +426,8 @@ void fcn_FB(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
       delta  = (sigexp[i]-FB(E0[i],theta[i],par))/uncertainty[i];
       chisq += delta*delta;
       Chi2_FB[i] = delta*delta;
-      residual_FB[i] = (sigexp[i] - FB(E0[i],theta[i],par))/sigexp[i]; 
+      //residual_FB[i] = (sigexp[i] - FB(E0[i],theta[i],par))/sigexp[i];
+      residual_FB[i] = fabs(sigexp[i] - FB(E0[i],theta[i],par))/FB(E0[i],theta[i],par);
       FBfit[i] = FB(E0[i],theta[i],par);
       //cout<<"FBfit["<<i<<"] = "<<FBfit[i]<<endl;
     }
@@ -626,7 +693,7 @@ Double_t rho_rms(Double_t *r, Double_t *par)
   return rho_rms;
 }
 
-Double_t myfunc(Double_t Q2) 
+Double_t ChFF_Deriv(Double_t Q2) 
 {
   Double_t fitch = 0.;
   Double_t sumchtemp = 0.;
@@ -642,37 +709,89 @@ Double_t myfunc(Double_t Q2)
   return fitch;
 }
 
-//Plot GE and GM for FB fits.
-//Calculate GE.
-Double_t FB_GE(Double_t *Q2, Double_t *par)
+//Plot FC and FM for FB fits.
+//Calculate FC.
+Double_t FB_FC(Double_t *Q2, Double_t *par)
 {
-  Double_t FB_GE_temp = 0;
-  Double_t FB_GE_sum = 0;
+  Double_t FB_FC_temp = 0;
+  Double_t FB_FC_sum = 0;
   Double_t R_FB = 5.;
   
   for(Int_t i=1; i<(nFB+1); i++)
     {
-      FB_GE_temp = ( -4 * av[i-1] * sin( pow(Q2[0],0.5) * R_FB ) ) / ( pow(Q2[0],0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2[0] - pow(i*pi/R_FB,2.))  );
-      FB_GE_sum = FB_GE_sum + FB_GE_temp;
+      FB_FC_temp = ( -4 * av[i-1] * sin( pow(Q2[0],0.5) * R_FB ) ) / ( pow(Q2[0],0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2[0] - pow(i*pi/R_FB,2.))  );
+      FB_FC_sum = FB_FC_sum + FB_FC_temp;
       //cout<<"av["<<i-1<<"] = "<<av[i-1]<<endl;
     }
-  return FB_GE_sum;
+  return FB_FC_sum;
 }
 
-//Plot GE and GM for FB fits.
-//Calculate GM.
-Double_t FB_GM(Double_t *Q2, Double_t *par)
+//Plot FC and FM for FB fits.
+//Calculate FM.
+Double_t FB_FM(Double_t *Q2, Double_t *par)
 {
-  Double_t FB_GM_temp = 0;
-  Double_t FB_GM_sum = 0;
+  Double_t FB_FM_temp = 0;
+  Double_t FB_FM_sum = 0;
   Double_t R_FB = 5.;
   
   for(Int_t i=1; i<(nFB+1); i++)
     {
-      FB_GM_temp = ( -4 * av[i-1+nFB] * sin( pow(Q2[0],0.5) * R_FB ) ) / ( pow(Q2[0],0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2[0] - pow(i*pi/R_FB,2.))  );
-      FB_GM_sum = FB_GM_sum + FB_GM_temp;
+      FB_FM_temp = ( -4 * av[i-1+nFB] * sin( pow(Q2[0],0.5) * R_FB ) ) / ( pow(Q2[0],0.5) * i * ROOT::Math::sph_bessel(1,i*pi) * (Q2[0] - pow(i*pi/R_FB,2.))  );
+      FB_FM_sum = FB_FM_sum + FB_FM_temp;
     }
-  return FB_GM_sum;
+  return FB_FM_sum;
+}
+
+//Define the charge density from I. Sick. 
+Double_t rho_ch_FB(Double_t *r, Double_t *par)
+{
+  Double_t rho = 0;
+  Double_t rho_temp = 0;
+  Double_t R_FB = 5.;
+   
+  for(Int_t i=0;i<nFB;i++)
+    {
+      rho_temp = av[i] * ROOT::Math::sph_bessel(0,(i*pi/R_FB)*r[0]);
+      rho = rho + rho_temp;
+    }
+
+  return rho;
+}
+
+//Create a function to calculate rms radius.
+Double_t FB_rho_rms(Double_t *r, Double_t *par)
+{
+  Double_t rho = 0;
+  Double_t rho_temp = 0;
+  Double_t R_FB = 5.;
+   
+  for(Int_t i=0;i<nFB;i++)
+    {
+      rho_temp = av[i] * ROOT::Math::sph_bessel(0,(i*pi/R_FB)*r[0]);
+      rho = rho + rho_temp;
+    }
+
+  rho = rho * 4*pi*pow(r[0],4.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+
+  return rho;
+}
+
+//Create a function that can be integrated to check that the normilaization to Ze is correct.
+Double_t FB_rho_ch_int(Double_t *r, Double_t *par)
+{
+  Double_t rho = 0;
+  Double_t rho_temp = 0;
+  Double_t R_FB = 5.;
+   
+  for(Int_t i=0;i<nFB;i++)
+    {
+      rho_temp = av[i] * ROOT::Math::sph_bessel(0,(i*pi/R_FB)*r[0]);
+      rho = rho + rho_temp;
+    }
+
+  rho = rho * 4*pi*pow(r[0],2.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+
+  return rho;
 }
 
 Double_t test(Double_t X)
@@ -1745,7 +1864,7 @@ void Global_Fit_3He_SOG()
 	  TCanvas* cresidual=new TCanvas("cresidual");
 	  cresidual->SetGrid();
 
-	  TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Experimental XS to XS from SOG Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, -4., 4.);
+	  TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Experimental XS to XS from SOG Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, 0., 3.);
 	  for(Int_t i=0;i<(datapts);i++)
 	    {
 	      //hxsresidualQ2->Fill(theta[i],sigexp[i]/xsfit[i]);
@@ -2161,17 +2280,18 @@ void Global_Fit_3He_SOG()
   //cout<<"rms radius = "<<frho_ch_int->Integral(0.0,10.)*e/(4*pi)<<endl;
   cout<<"Integral of frho_ch = "<<frho_ch->Integral(0.0,10.)<<"e."<<endl;
   //cout<<"rms radius = "<<pow(frho_rms->Integral(0.0,10.)*e,0.5)<<endl;
+  //cout<<"rms radius no division = "<<pow( frho_rms->Integral(0.0,10.) ,0.5)<<endl; //I. Sick.
   cout<<"rms radius = "<<pow( frho_rms->Integral(0.0,10.)/frho_ch_int->Integral(0.0,10.) ,0.5)<<endl; //I think this is the correct rms formulation.
   //cout<<""<<frho_ch->Integral(0.,10.)<<endl;
    
-  //Define myfunc to be the charge FF and then find its derivative at 0 to get charge radius,
-  cout<<"myfunc(~0) = "<<myfunc(0.0000001)<<endl;
+  //Define ChFF_Deriv to be the charge FF and then find its derivative at 0 to get charge radius,
+  cout<<"ChFF_Deriv(~0) = "<<ChFF_Deriv(0.0000001)<<endl;
   double x0 = 0.002;
-  ROOT::Math::Functor1D f1D(&myfunc);
+  ROOT::Math::Functor1D f1D(&ChFF_Deriv);
  
   ROOT::Math::RichardsonDerivator rd;
   rd.SetFunction(f1D);
-  cout<<"First Derivative:   "<<rd.Derivative1(x0)<<"   -6*dGe(0)/dQ^2 = "<<-6*rd.Derivative1(x0)<<"   rms radius = "<<pow(-6*rd.Derivative1(x0),0.5)<<endl;
+  cout<<"First Derivative:   "<<rd.Derivative1(x0)<<"   -6*dFC(0)/dQ^2 = "<<-6*rd.Derivative1(x0)<<"   rms radius = "<<pow(-6*rd.Derivative1(x0),0.5)<<endl;
   //std::cout << "Second Derivative:  " << rd.Derivative2(x0) << std::endl;
   //std::cout << "Third Derivative:   " << rd.Derivative3(x0) << std::endl;
  
@@ -2193,15 +2313,15 @@ void Global_Fit_3He_SOG()
       static Double_t stepsize_FB[4] = {0.1 , 0.1 , 0.01 , 0.001};
      
       //Set starting guesses for parameters. (Use Retzlaff's FB parameters.)
-      //GE
+      //FC
       for(Int_t i=0;i<nFB;i++)
 	{
 	  gMinuit_FB->mnparm(i, Form("av%d",i+1), av[i], stepsize_FB[3], 0.,1.,ierflg_FB);
 	  //gMinuit->mnparm(i, Form("Qich%d",i+1), Qich[i], stepsize[0], Qich[i]-0.001,Qich[i]+0.001,ierflg);
 	}
-      if(useFB_GM == 1)
+      if(useFB_FM == 1)
 	{
-	  //GM (Guess that Retzlaff's GE FB parameters are close enough.) Doesn't seem to really work.
+	  //FM (Guess that Retzlaff's FC FB parameters are close enough.) Doesn't seem to really work.
 	  for(Int_t i=nFB;i<2*nFB;i++)
 	    {
 	      gMinuit_FB->mnparm(i, Form("av%d",i+1), av[i-nFB], stepsize_FB[3], 0.,1.,ierflg_FB);
@@ -2222,14 +2342,14 @@ void Global_Fit_3He_SOG()
       //gMinuit_FB->mnprin(3,amin_FB);
      
       //Set av and averr to the fitted parameters.
-      if(useFB_GM == 0)
+      if(useFB_FM == 0)
 	{
 	  for(Int_t i=0;i<nFB;i++)
 	    {
 	      gMinuit_FB->GetParameter(i,av[i],averr[i]);
 	    }
 	}
-      if(useFB_GM == 1)
+      if(useFB_FM == 1)
 	{
 	  for(Int_t i=0;i<2*nFB;i++)
 	    {
@@ -2248,7 +2368,7 @@ void Global_Fit_3He_SOG()
 	  TCanvas* cresidual_FB=new TCanvas("cresidual_FB");
 	  cresidual_FB->SetGrid();
 	 
-	  TH2D *hxsresidualQ2_FB = new TH2D("hxsresidualQ2_FB","Residual of Experimental XS to XS from FB Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, -4., 4.);
+	  TH2D *hxsresidualQ2_FB = new TH2D("hxsresidualQ2_FB","Residual of Experimental XS to XS from FB Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, 0., 12.);
 	  for(Int_t i=0;i<(datapts);i++)
 	    {
 	      //hxsresidualQ2->Fill(theta[i],sigexp[i]/xsfit[i]);
@@ -2353,35 +2473,54 @@ void Global_Fit_3He_SOG()
 	  cresidual_FB->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_Residual_vs_Q.png");
 	  cresidual_FB->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_Residual_vs_Q.C");
 
-	  //Plot the FB GE. 
-	  TCanvas* cFB_GE=new TCanvas("cFB_GE");
-	  cFB_GE->SetGrid();
-	  cFB_GE->SetLogy();
+	  //Plot the FB FC. 
+	  TCanvas* cFB_FC=new TCanvas("cFB_FC");
+	  cFB_FC->SetGrid();
+	  cFB_FC->SetLogy();
 
-	  TF1 *fFB_GE = new TF1("fFB_GE",FB_GE,yminFF,ymaxFF+54,1);
-	  fFB_GE->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
-	  fFB_GE->Draw("L");
+	  TF1 *fFB_FC = new TF1("fFB_FC",FB_FC,yminFF,ymaxFF+54,1);
+	  fFB_FC->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+	  fFB_FC->Draw("L");
 
 	  //Save the canvas as a .png file and a .C file.
-	  cFB_GE->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_GE.png");
-	  cFB_GE->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_GE.C");
+	  cFB_FC->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_FC.png");
+	  cFB_FC->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_FC.C");
 
-	  if(useFB_GM == 1)
+	  if(useFB_FM == 1)
 	    {
-	      //Plot the FB GM. 
-	      TCanvas* cFB_GM=new TCanvas("cFB_GM");
-	      cFB_GM->SetGrid();
-	      cFB_GM->SetLogy();
+	      //Plot the FB FM. 
+	      TCanvas* cFB_FM=new TCanvas("cFB_FM");
+	      cFB_FM->SetGrid();
+	      cFB_FM->SetLogy();
 	     
-	      TF1 *fFB_GM = new TF1("fFB_GM",FB_GM,yminFF,ymaxFF+54,1);
-	      fFB_GM->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
-	      fFB_GM->Draw("L");
+	      TF1 *fFB_FM = new TF1("fFB_FM",FB_FM,yminFF,ymaxFF+54,1);
+	      fFB_FM->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+	      fFB_FM->Draw("L");
 	      //Save the canvas as a .png file and a .C file.
-	      cFB_GM->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_GM.png");
-	      cFB_GM->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_GM.C");
+	      cFB_FM->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_FM.png");
+	      cFB_FM->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_FM.C");
 	    }
 
+	  //Plot the FB charge density. 
+	  TCanvas* cFB_rho=new TCanvas("cFB_rho");
+	  cFB_rho->SetGrid();
+	  
+	  TF1 *fFB_rho = new TF1("fFB_rho",rho_ch_FB,yminFF,6.,1);
+	  fFB_rho->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
+	  fFB_rho->Draw("L");
+	  //Save the canvas as a .png file and a .C file.
+	  cFB_rho->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_rho.png");
+	  cFB_rho->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/FB_rho.C");
+
+	  cout<<"Integral of rho = "<<fFB_rho->Integral(0.0,10.)<<" e."<<endl;
+
 	}//End showplots.
+
+      //Calculate FB rms charge radius.
+      TF1 *fFB_rho_ch_int = new TF1("fFB_rho_ch_int",FB_rho_ch_int,0.,10.,1);
+      TF1 *fFB_rho_rms = new TF1("fFB_rho_rms",FB_rho_rms,0.,10.,1);
+      //cout<<"FB rms charge radius = "<<pow( fFB_rho_rms->Integral(0.0,10.) ,0.5)<<endl;
+      cout<<"FB rms charge radius = "<<pow( fFB_rho_rms->Integral(0.0,10.)/fFB_rho_ch_int->Integral(0.0,10.) ,0.5)<<endl; //I think this is the correct rms formulation.
     }//End use FB.
  
   st->Stop();
