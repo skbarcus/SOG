@@ -28,7 +28,7 @@ Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason,
 
 const Int_t nfunc = 1000;
 Double_t maxchi2 = 505;
-Double_t Qim_range = 0.1; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
+Double_t Qim_range = 1.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
 const Int_t datapts = 259;//248
@@ -107,6 +107,12 @@ Int_t first = 0;                     //Counter to check if this is the first cur
 Int_t total_funcs = 0;
 Double_t Rimax = 6.4;
 Int_t Ri_divisions = 64;
+Double_t BIC_tot = 0.;               //Total value for Bayesian information criterion.
+Double_t AIC_tot = 0.;               //Total value for Akaike information criterion.
+Double_t Qich_tot = 0.;              //Total value for sum of Qi values.
+Double_t Qim_tot = 0.;
+Double_t Chi2_tot = 0.;              //Total value for sum of Chi^2 and rChi^2.
+Double_t rChi2_tot = 0;
 
 //Plot Charge FF Fch(Q^2) fm^-2.
 Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
@@ -229,6 +235,7 @@ void Multifit_FF_Plots()
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_BS_300_Ri_Chi2.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_180_9_25_2018.txt","r");
   fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Combined_Ri_Fits.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_n=9_300_9_28_2018.txt","r");
     
   //Read in data.
   while (1) {
@@ -452,6 +459,12 @@ void Multifit_FF_Plots()
 		}
 	      cout<<"Sum Qich = "<<Qichtot[current_loop]<<endl;
 	      first = 1; //No longer first plot.
+	      BIC_tot = BIC_tot + BIC[current_loop];         //Sum of BIC.
+	      AIC_tot = AIC_tot + AIC[current_loop];         //Sum of AIC.
+	      Qich_tot = Qich_tot + Qichtot[current_loop];   //Sum of Qich total values.
+	      Qim_tot = Qim_tot + Qimtot[current_loop];      //Sum of Qim total values.
+	      Chi2_tot = Chi2_tot + Chi2[current_loop];      //Sum of Chi^2 total values.
+	      rChi2_tot = rChi2_tot + rChi2[current_loop];   //Sum of rChi^2 total values.
 	      total_funcs++;
 	    }
 	  fChFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
@@ -530,6 +543,12 @@ void Multifit_FF_Plots()
 		  hRi_sep[i]->Fill(Rmulti[current_loop][i+1]-Rmulti[current_loop][i]);
 		}
 	      cout<<"Sum Qich = "<<Qichtot[current_loop]<<endl;
+	      Qich_tot = Qich_tot + Qichtot[current_loop];   //Sum of Qich total values.
+	      Qim_tot = Qim_tot + Qimtot[current_loop];      //Sum of Qim total values.
+	      BIC_tot = BIC_tot + BIC[current_loop];         //Sum of BIC.
+	      AIC_tot = AIC_tot + AIC[current_loop];         //Sum of AIC.
+	      Chi2_tot = Chi2_tot + Chi2[current_loop];      //Sum of Chi^2 total values.
+	      rChi2_tot = rChi2_tot + rChi2[current_loop];   //Sum of rChi^2 total values.
 	      total_funcs++;
 	    }
 	}
@@ -724,6 +743,9 @@ void Multifit_FF_Plots()
 
   //Print total number of fits suviving the chi2 cut.
   cout<<"# of fits below Chi^2 cutoff = "<<total_funcs<<endl;
+  cout<<"Average sum of Chi^2 = "<<Chi2_tot/total_funcs<<".   Average sum of rChi^2 = "<<rChi2_tot/total_funcs<<"."<<endl;
+  cout<<"Average sum of Qich = "<<Qich_tot/total_funcs<<".   Average sum of Qim = "<<Qim_tot/total_funcs<<"."<<endl;
+  cout<<"Average fit BIC = "<<BIC_tot/total_funcs<<".   Average fit AIC = "<<AIC_tot/total_funcs<<"."<<endl;
 
   //Plot Ri on one histogram.
   TCanvas* cRi_all=new TCanvas("cR_all");

@@ -7,9 +7,12 @@ CXXFLAGS      = -Wall  -fno-exceptions -fPIC  \
 
 LIBS = $(ROOTLIBS) $(ROOTGLIBS) $(ROOTFUNCS)
 
-all: Global_Fit_3He_SOG
+all: Global_Fit_3He_SOG Global_Fit_3H_SOG
 
 Global_Fit_3He_SOG: Global_Fit_3He_SOG.C
+	$(CXX) -g $(CXXFLAGS) -o $@ $< -I. $(LIBS) -lMathMore -lMinuit
+
+Global_Fit_3H_SOG: Global_Fit_3H_SOG.C
 	$(CXX) -g $(CXXFLAGS) -o $@ $< -I. $(LIBS) -lMathMore -lMinuit
 
 

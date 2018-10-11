@@ -101,11 +101,11 @@ void Calculate_XS()
   Double_t GeV2fm = 1.0/0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
   Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
   Double_t C = 299792458.0;                //Speed of light [m/s]. 
-  Double_t angle = 75.31*deg2rad;                   //Scattering angle [rad].
+  Double_t angle = 8.*deg2rad;                   //Scattering angle [rad].
   Double_t theta = 75.31;
 
   Double_t alpha = 1.0/137.0;              //Fine structure constant.
-  Double_t E0 = 0.02883;               //Initial electron energy [GeV].
+  Double_t E0 = 6.0596;               //Initial electron energy [GeV].
   Double_t Ef = 0.0;                       //Final energy of the electron after scattering.
   Double_t EfH3 = 0.0;
   Double_t EfHe3 = 0.0;
