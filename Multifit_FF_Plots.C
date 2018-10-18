@@ -92,10 +92,10 @@ Double_t R[12] = {0.1,0.7,1.3,2.,2.7,3.6,4.4,5.6,0.,0.,0.,0.};//7
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t Qich[12] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
 Double_t Qim[12] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
-//Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
-//Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
-Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
-Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
+Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
+Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
+//Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
+//Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
 Double_t Qicherr[12]={}; 
@@ -221,12 +221,49 @@ Double_t ChFF_Deriv(Double_t Q2)
   return fitch;
 }
 
+//Create a function that can be integrated to check that the normilaization to Ze is correct.
+Double_t rho_ch_int(Double_t *r, Double_t *par)
+{
+  Double_t rho_int = 0;
+  Double_t rho_int_temp = 0;
+   
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      rho_int_temp = par[i]/( 1+2*pow(par[i+ngaus],2.)/pow(gamma,2.) ) * (  exp( -pow((r[0]-par[i+ngaus]),2.)/pow(gamma,2.) ) + exp( -pow((r[0]+par[i+ngaus]),2.)/pow(gamma,2.) )  );
+      rho_int = rho_int + rho_int_temp;
+    }
+
+  rho_int = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_int * 4*pi*pow(r[0],2.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+
+  return rho_int;
+}
+
+//Create a function to calculate rms radius.
+Double_t rho_rms(Double_t *r, Double_t *par)
+{
+  Double_t rho_rms = 0;
+  Double_t rho_rms_temp = 0;
+   
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      rho_rms_temp = par[i]/( 1+2*pow(par[ngaus+i],2.)/pow(gamma,2.) ) * (  exp( -pow((r[0]-par[ngaus+i]),2.)/pow(gamma,2.) ) + exp( -pow((r[0]+par[ngaus+i]),2.)/pow(gamma,2.) )  );
+      rho_rms = rho_rms + rho_rms_temp;
+    }
+
+  rho_rms = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_rms * 4*pi*pow(r[0],4.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+
+  return rho_rms;
+}
+
 //Create Gaussian fit for the elastic peak.
 Double_t fit_gaus(Double_t *x,Double_t *par) 
 {
   Double_t fitval = par[0]*TMath::Exp(-0.5*pow(((x[0]-par[1])/par[2]),2));
   return fitval;
 }
+
+
+
 
 void Multifit_FF_Plots() 
 {
@@ -410,6 +447,9 @@ void Multifit_FF_Plots()
   
   //Define array of TF1 to plot the various fits with.
   TF1 **fChFF = new TF1*[nfunc];
+  //TF1 **fChFF_Deriv = new TF1*[nfunc];
+  TF1 **frho_ch_int = new TF1*[nfunc];
+  TF1 **frho_rms = new TF1*[nfunc];
 
   //for(current_loop=0; current_loop<1; current_loop++)//nlines-skip;current_loop++)
   for(z=0; z<nlines-skip; z++)
@@ -421,27 +461,29 @@ void Multifit_FF_Plots()
 	  char fname[20];
 	  sprintf(fname,"f%d",z);
 	  fChFF[current_loop] = new TF1(fname,ChFF_Q2,yminFF,ymaxFF+54,20);
+	  //char fname1[20];
+	  //sprintf(fname1,"f%d",z);
+	  //fChFF_Deriv[current_loop] = new TF1(fname1,ChFF_Deriv,yminFF,ymaxFF+54,20);
+	  char fname1[20];
+	  sprintf(fname1,"f%d",z);
+	  frho_ch_int[current_loop] = new TF1(fname1,rho_ch_int,0.,10.,2*ngaus+1);
+	  char fname2[20];
+	  sprintf(fname2,"f%d",z);
+	  frho_rms[current_loop] = new TF1(fname2,rho_rms,0.,10.,2*ngaus+1);
 
-	  fChFF[current_loop]->SetParameter(0,Qichmulti[current_loop][0]);
-	  fChFF[current_loop]->SetParameter(1,Qichmulti[current_loop][1]);
-	  fChFF[current_loop]->SetParameter(2,Qichmulti[current_loop][2]);
-	  fChFF[current_loop]->SetParameter(3,Qichmulti[current_loop][3]);
-	  fChFF[current_loop]->SetParameter(4,Qichmulti[current_loop][4]);
-	  fChFF[current_loop]->SetParameter(5,Qichmulti[current_loop][5]);
-	  fChFF[current_loop]->SetParameter(6,Qichmulti[current_loop][6]);
-	  fChFF[current_loop]->SetParameter(7,Qichmulti[current_loop][7]);
-	  fChFF[current_loop]->SetParameter(8,Qichmulti[current_loop][8]);
-	  fChFF[current_loop]->SetParameter(9,Qichmulti[current_loop][9]);
-	  fChFF[current_loop]->SetParameter(10,Rmulti[current_loop][0]);
-	  fChFF[current_loop]->SetParameter(11,Rmulti[current_loop][1]);
-	  fChFF[current_loop]->SetParameter(12,Rmulti[current_loop][2]);
-	  fChFF[current_loop]->SetParameter(13,Rmulti[current_loop][3]);
-	  fChFF[current_loop]->SetParameter(14,Rmulti[current_loop][4]);
-	  fChFF[current_loop]->SetParameter(15,Rmulti[current_loop][5]);
-	  fChFF[current_loop]->SetParameter(16,Rmulti[current_loop][6]);
-	  fChFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
-	  fChFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
-	  fChFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
+	  //Set parameters for the various functions.
+	  for(Int_t i=0;i<ngaus;i++)
+	    {
+	      fChFF[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      fChFF[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	      //fChFF_Deriv[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      //fChFF_Deriv[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	      frho_ch_int[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      frho_ch_int[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	      frho_rms[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      frho_rms[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	    }
+
 	  fChFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fChFF[current_loop]->SetLineWidth(linewidth);
 
@@ -475,6 +517,8 @@ void Multifit_FF_Plots()
 	      Chi2_tot = Chi2_tot + Chi2[current_loop];      //Sum of Chi^2 total values.
 	      rChi2_tot = rChi2_tot + rChi2[current_loop];   //Sum of rChi^2 total values.
 
+	      cout<<"Total Charge = "<<frho_ch_int[current_loop]->Integral(0.,10.)<<"e."<<endl;
+	      cout<<"rms radius = "<<pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5)<<endl;
 	      rms[z] = pow(-6*rd.Derivative1(x0),0.5);
 	      rms_tot = rms[z] + rms_tot;
 
@@ -498,27 +542,29 @@ void Multifit_FF_Plots()
 	  char fname[20];
 	  sprintf(fname,"f%d",z);
 	  fChFF[current_loop] = new TF1(fname,ChFF_Q2,yminFF,ymaxFF+54,20);
+	  //char fname1[20];
+	  //sprintf(fname1,"f%d",z);
+	  //fChFF_Deriv[current_loop] = new TF1(fname1,ChFF_Deriv,yminFF,ymaxFF+54,20);
+	  char fname1[20];
+	  sprintf(fname1,"f%d",z);
+	  frho_ch_int[current_loop] = new TF1(fname1,rho_ch_int,0.,10.,2*ngaus+1);
+	  char fname2[20];
+	  sprintf(fname2,"f%d",z);
+	  frho_rms[current_loop] = new TF1(fname2,rho_rms,0.,10.,2*ngaus+1);
 
-	  fChFF[current_loop]->SetParameter(0,Qichmulti[current_loop][0]);
-	  fChFF[current_loop]->SetParameter(1,Qichmulti[current_loop][1]);
-	  fChFF[current_loop]->SetParameter(2,Qichmulti[current_loop][2]);
-	  fChFF[current_loop]->SetParameter(3,Qichmulti[current_loop][3]);
-	  fChFF[current_loop]->SetParameter(4,Qichmulti[current_loop][4]);
-	  fChFF[current_loop]->SetParameter(5,Qichmulti[current_loop][5]);
-	  fChFF[current_loop]->SetParameter(6,Qichmulti[current_loop][6]);
-	  fChFF[current_loop]->SetParameter(7,Qichmulti[current_loop][7]);
-	  fChFF[current_loop]->SetParameter(8,Qichmulti[current_loop][8]);
-	  fChFF[current_loop]->SetParameter(9,Qichmulti[current_loop][9]);
-	  fChFF[current_loop]->SetParameter(10,Rmulti[current_loop][0]);
-	  fChFF[current_loop]->SetParameter(11,Rmulti[current_loop][1]);
-	  fChFF[current_loop]->SetParameter(12,Rmulti[current_loop][2]);
-	  fChFF[current_loop]->SetParameter(13,Rmulti[current_loop][3]);
-	  fChFF[current_loop]->SetParameter(14,Rmulti[current_loop][4]);
-	  fChFF[current_loop]->SetParameter(15,Rmulti[current_loop][5]);
-	  fChFF[current_loop]->SetParameter(16,Rmulti[current_loop][6]);
-	  fChFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
-	  fChFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
-	  fChFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
+	  //Set parameters for the various functions.
+	  for(Int_t i=0;i<ngaus;i++)
+	    {
+	      fChFF[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      fChFF[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	      //fChFF_Deriv[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      //fChFF_Deriv[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	      frho_ch_int[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      frho_ch_int[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	      frho_rms[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      frho_rms[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	    }
+
 	  fChFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fChFF[current_loop]->SetLineWidth(linewidth);
 
@@ -544,6 +590,7 @@ void Multifit_FF_Plots()
 	      else
 		{
 		  fChFF[current_loop]->Draw("L SAME");
+		  //frho_ch_int[current_loop]->Draw("L SAME");
 		}
 
 	      for(Int_t i=0;i<ngaus;i++)
@@ -570,6 +617,9 @@ void Multifit_FF_Plots()
 	      AIC_tot = AIC_tot + AIC[current_loop];         //Sum of AIC.
 	      Chi2_tot = Chi2_tot + Chi2[current_loop];      //Sum of Chi^2 total values.
 	      rChi2_tot = rChi2_tot + rChi2[current_loop];   //Sum of rChi^2 total values.
+
+	      cout<<"Total Charge = "<<frho_ch_int[current_loop]->Integral(0.,10.)<<"e."<<endl;
+	      cout<<"rms radius = "<<pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5)<<endl; 
 
 	      rms[z] = pow(-6*rd.Derivative1(x0),0.5);
 	      rms_tot = rms[z] + rms_tot;
@@ -629,26 +679,13 @@ void Multifit_FF_Plots()
 	  sprintf(fname,"f%d",z);
 	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,20);
 
-	  fMFF[current_loop]->SetParameter(0,Qimmulti[current_loop][0]);
-	  fMFF[current_loop]->SetParameter(1,Qimmulti[current_loop][1]);
-	  fMFF[current_loop]->SetParameter(2,Qimmulti[current_loop][2]);
-	  fMFF[current_loop]->SetParameter(3,Qimmulti[current_loop][3]);
-	  fMFF[current_loop]->SetParameter(4,Qimmulti[current_loop][4]);
-	  fMFF[current_loop]->SetParameter(5,Qimmulti[current_loop][5]);
-	  fMFF[current_loop]->SetParameter(6,Qimmulti[current_loop][6]);
-	  fMFF[current_loop]->SetParameter(7,Qimmulti[current_loop][7]);
-	  fMFF[current_loop]->SetParameter(8,Qimmulti[current_loop][8]);
-	  fMFF[current_loop]->SetParameter(9,Qimmulti[current_loop][9]);
-	  fMFF[current_loop]->SetParameter(10,Rmulti[current_loop][0]);
-	  fMFF[current_loop]->SetParameter(11,Rmulti[current_loop][1]);
-	  fMFF[current_loop]->SetParameter(12,Rmulti[current_loop][2]);
-	  fMFF[current_loop]->SetParameter(13,Rmulti[current_loop][3]);
-	  fMFF[current_loop]->SetParameter(14,Rmulti[current_loop][4]);
-	  fMFF[current_loop]->SetParameter(15,Rmulti[current_loop][5]);
-	  fMFF[current_loop]->SetParameter(16,Rmulti[current_loop][6]);
-	  fMFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
-	  fMFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
-	  fMFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
+	  //Set parameters for the various functions.
+	  for(Int_t i=0;i<ngaus;i++)
+	    {
+	      fMFF[current_loop]->SetParameter(i,Qimmulti[current_loop][i]);
+	      fMFF[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	    }
+
 	  fMFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fMFF[current_loop]->SetLineWidth(linewidth);
 
@@ -679,26 +716,14 @@ void Multifit_FF_Plots()
 	  sprintf(fname,"f%d",z);
 
 	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,20);
-	  fMFF[current_loop]->SetParameter(0,Qimmulti[current_loop][0]);
-	  fMFF[current_loop]->SetParameter(1,Qimmulti[current_loop][1]);
-	  fMFF[current_loop]->SetParameter(2,Qimmulti[current_loop][2]);
-	  fMFF[current_loop]->SetParameter(3,Qimmulti[current_loop][3]);
-	  fMFF[current_loop]->SetParameter(4,Qimmulti[current_loop][4]);
-	  fMFF[current_loop]->SetParameter(5,Qimmulti[current_loop][5]);
-	  fMFF[current_loop]->SetParameter(6,Qimmulti[current_loop][6]);
-	  fMFF[current_loop]->SetParameter(7,Qimmulti[current_loop][7]);
-	  fMFF[current_loop]->SetParameter(8,Qimmulti[current_loop][8]);
-	  fMFF[current_loop]->SetParameter(9,Qimmulti[current_loop][9]);
-	  fMFF[current_loop]->SetParameter(10,Rmulti[current_loop][0]);
-	  fMFF[current_loop]->SetParameter(11,Rmulti[current_loop][1]);
-	  fMFF[current_loop]->SetParameter(12,Rmulti[current_loop][2]);
-	  fMFF[current_loop]->SetParameter(13,Rmulti[current_loop][3]);
-	  fMFF[current_loop]->SetParameter(14,Rmulti[current_loop][4]);
-	  fMFF[current_loop]->SetParameter(15,Rmulti[current_loop][5]);
-	  fMFF[current_loop]->SetParameter(16,Rmulti[current_loop][6]);
-	  fMFF[current_loop]->SetParameter(17,Rmulti[current_loop][7]);
-	  fMFF[current_loop]->SetParameter(18,Rmulti[current_loop][8]);
-	  fMFF[current_loop]->SetParameter(19,Rmulti[current_loop][9]);
+
+	  //Set parameters for the various functions.
+	  for(Int_t i=0;i<ngaus;i++)
+	    {
+	      fMFF[current_loop]->SetParameter(i,Qimmulti[current_loop][i]);
+	      fMFF[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	    }
+
 	  fMFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
 	  fMFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fMFF[current_loop]->SetLineWidth(linewidth);
