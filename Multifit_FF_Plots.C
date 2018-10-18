@@ -78,7 +78,8 @@ Float_t Q2[datapts];
 Float_t Rmulti[size][12];
 Float_t Qichmulti[size][12];
 Float_t Qimmulti[size][12];
-Float_t rms[size];                          //Charge radius defined as -6*derivative of Ch FF at Q^2=0.
+Float_t rms_deriv[size];                          //Charge radius defined as -6*derivative of Ch FF at Q^2=0.
+Float_t rms_int[size];                          //Charge radius defined in the integral manner.
 
 Int_t Amroun_pts = 57;
 Int_t Collard_pts = 118;
@@ -116,10 +117,14 @@ Double_t Qich_tot = 0.;              //Total value for sum of Qi values.
 Double_t Qim_tot = 0.;
 Double_t Chi2_tot = 0.;              //Total value for sum of Chi^2 and rChi^2.
 Double_t rChi2_tot = 0;
-Double_t rms_tot = 0;                //Total value of rms charge radius defined as -6*derivative of Ch FF at Q^2=0.
-Double_t rms_min = 1.85;
-Double_t rms_max = 1.95;
-Int_t rms_divisions = 100;
+Double_t rms_deriv_tot = 0;                //Total value of rms charge radius defined as -6*derivative of Ch FF at Q^2=0.
+Double_t rms_deriv_min = 1.85;
+Double_t rms_deriv_max = 1.95;
+Int_t rms_deriv_divisions = 100;
+Double_t rms_int_tot = 0;                //Total value of rms charge radius integral method.
+Double_t rms_int_min = rms_deriv_min;
+Double_t rms_int_max = rms_deriv_max;
+Int_t rms_int_divisions = rms_deriv_divisions;
 
 Int_t z = 0; //Counter for main loop.
 
@@ -261,9 +266,6 @@ Double_t fit_gaus(Double_t *x,Double_t *par)
   Double_t fitval = par[0]*TMath::Exp(-0.5*pow(((x[0]-par[1])/par[2]),2));
   return fitval;
 }
-
-
-
 
 void Multifit_FF_Plots() 
 {
@@ -518,9 +520,11 @@ void Multifit_FF_Plots()
 	      rChi2_tot = rChi2_tot + rChi2[current_loop];   //Sum of rChi^2 total values.
 
 	      cout<<"Total Charge = "<<frho_ch_int[current_loop]->Integral(0.,10.)<<"e."<<endl;
-	      cout<<"rms radius = "<<pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5)<<endl;
-	      rms[z] = pow(-6*rd.Derivative1(x0),0.5);
-	      rms_tot = rms[z] + rms_tot;
+	      cout<<"rms radius (integral method) = "<<pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5)<<endl;
+	      rms_deriv[z] = pow(-6*rd.Derivative1(x0),0.5);
+	      rms_deriv_tot = rms_deriv[z] + rms_deriv_tot;
+	      rms_int[z] = pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5);
+	      rms_int_tot = rms_int[z] + rms_int_tot;
 
 	      total_funcs++;
 	    }
@@ -619,12 +623,15 @@ void Multifit_FF_Plots()
 	      rChi2_tot = rChi2_tot + rChi2[current_loop];   //Sum of rChi^2 total values.
 
 	      cout<<"Total Charge = "<<frho_ch_int[current_loop]->Integral(0.,10.)<<"e."<<endl;
-	      cout<<"rms radius = "<<pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5)<<endl; 
+	      cout<<"rms radius (integral method) = "<<pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5)<<endl; 
 
-	      rms[z] = pow(-6*rd.Derivative1(x0),0.5);
-	      rms_tot = rms[z] + rms_tot;
+	      rms_deriv[z] = pow(-6*rd.Derivative1(x0),0.5);
+	      rms_deriv_tot = rms_deriv[z] + rms_deriv_tot;
+	      rms_int[z] = pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5);
+	      rms_int_tot = rms_int[z] + rms_int_tot;
 
 	      total_funcs++;
+	      cout<<"Loop = "<<z<<endl;
 	    }
 	}
       cout<<"fChFF->Eval(0) = "<<fChFF[current_loop]->Eval(0.0001)<<endl;
@@ -801,33 +808,55 @@ void Multifit_FF_Plots()
   MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
   MFF_leg->Draw();
 
-  //Plot distribution of charge radii.
-  TCanvas* crms=new TCanvas("crms");
-  crms->SetGrid();
-  crms->SetTitle("Charge Radii");
+  //Plot distribution of charge radii derivative method.
+  TCanvas* crms_deriv=new TCanvas("crms_deriv");
+  crms_deriv->SetGrid();
+  crms_deriv->SetTitle("Charge Radii (Derivative Method)");
 
-  hrms = new TH1F("hrms", "Charge Radii Distribution", rms_divisions, rms_min, rms_max);
+  hrms_deriv = new TH1F("hrms_deriv", "Charge Radii Distribution (Derivative Method)", rms_deriv_divisions, rms_deriv_min, rms_deriv_max);
   for(Int_t i=0;i<total_funcs;i++)
     {
-      hrms->Fill(rms[i]);
+      hrms_deriv->Fill(rms_deriv[i]);
     }
-  hrms->Draw();
+  hrms_deriv->Draw();
 
-  TF1 *fgaus = new TF1("fgaus",fit_gaus,rms_min,rms_max,3);
+  TF1 *fgaus1 = new TF1("fgaus1",fit_gaus,rms_deriv_min,rms_deriv_max,3);
   //func_gaus_Al->SetLineColor(3);
-  fgaus->SetParameter(0,1.);
-  fgaus->SetParameter(1,1.);
-  fgaus->SetParameter(2,1.);
-  hrms->Fit("fgaus","R same M");
-  cout<<"Gaussian Fit of Charge Radii: Chi^2 = "<<fgaus->GetChisquare()<<"   nDOF = "<<fgaus->GetNDF()<<"   Fit Probablility = "<<fgaus->GetProb()<<endl;
-  cout<<"Gaussian Height = "<<fgaus->GetParameter(0)<<"   Gaussian Mean = "<<fgaus->GetParameter(1)<<"   Gaussian Standard Deviation = "<<fgaus->GetParameter(2)<<endl;
+  fgaus1->SetParameter(0,1.);
+  fgaus1->SetParameter(1,1.);
+  fgaus1->SetParameter(2,1.);
+  hrms_deriv->Fit("fgaus1","R same M");
+  cout<<"Gaussian Fit of Charge Radii (Derivative Method): Chi^2 = "<<fgaus1->GetChisquare()<<"   nDOF = "<<fgaus1->GetNDF()<<"   Fit Probablility = "<<fgaus1->GetProb()<<endl;
+  cout<<"Gaussian Height = "<<fgaus1->GetParameter(0)<<"   Gaussian Mean = "<<fgaus1->GetParameter(1)<<"   Gaussian Standard Deviation = "<<fgaus1->GetParameter(2)<<endl;
+
+  //Plot distribution of charge radii integral method.
+  TCanvas* crms_int=new TCanvas("crms_int");
+  crms_int->SetGrid();
+  crms_int->SetTitle("Charge Radii (Integral Method)");
+
+  hrms_int = new TH1F("hrms_int", "Charge Radii Distribution (Integral Method)", rms_int_divisions, rms_int_min, rms_int_max);
+  for(Int_t i=0;i<total_funcs;i++)
+    {
+      hrms_int->Fill(rms_int[i]);
+    }
+  hrms_int->Draw();
+
+  TF1 *fgaus2 = new TF1("fgaus2",fit_gaus,rms_int_min,rms_int_max,3);
+  //func_gaus_Al->SetLineColor(3);
+  fgaus2->SetParameter(0,12.);
+  fgaus2->SetParameter(1,1.9);
+  fgaus2->SetParameter(2,0.004);
+  hrms_int->Fit("fgaus2","R same M");
+  cout<<"Gaussian Fit of Charge Radii (Integral Method): Chi^2 = "<<fgaus2->GetChisquare()<<"   nDOF = "<<fgaus2->GetNDF()<<"   Fit Probablility = "<<fgaus2->GetProb()<<endl;
+  cout<<"Gaussian Height = "<<fgaus2->GetParameter(0)<<"   Gaussian Mean = "<<fgaus2->GetParameter(1)<<"   Gaussian Standard Deviation = "<<fgaus2->GetParameter(2)<<endl;
 
   //Print total number of fits suviving the chi2 cut.
   cout<<"# of fits below Chi^2 cutoff = "<<total_funcs<<endl;
   cout<<"Average sum of Chi^2 = "<<Chi2_tot/total_funcs<<".   Average sum of rChi^2 = "<<rChi2_tot/total_funcs<<"."<<endl;
   cout<<"Average sum of Qich = "<<Qich_tot/total_funcs<<".   Average sum of Qim = "<<Qim_tot/total_funcs<<"."<<endl;
   cout<<"Average fit BIC = "<<BIC_tot/total_funcs<<".   Average fit AIC = "<<AIC_tot/total_funcs<<"."<<endl;
-  cout<<"Average charge rms = "<<rms_tot/total_funcs<<endl;
+  cout<<"Average charge rms (derivative method) = "<<rms_deriv_tot/total_funcs<<endl;
+  cout<<"Average charge rms (integral method) = "<<rms_int_tot/total_funcs<<endl;
 
   //Plot Ri on one histogram.
   TCanvas* cRi_all=new TCanvas("cR_all");
