@@ -101,11 +101,11 @@ void Calculate_XS()
   Double_t GeV2fm = 1.0/0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
   Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
   Double_t C = 299792458.0;                //Speed of light [m/s]. 
-  Double_t angle = 8.*deg2rad;                   //Scattering angle [rad].
-  Double_t theta = 75.31;
+  Double_t angle = 17.*deg2rad;                   //Scattering angle [rad].
+  Double_t theta = 17.;
 
   Double_t alpha = 1.0/137.0;              //Fine structure constant.
-  Double_t E0 = 6.0596;               //Initial electron energy [GeV].
+  Double_t E0 = 4.3;               //Initial electron energy [GeV].
   Double_t Ef = 0.0;                       //Final energy of the electron after scattering.
   Double_t EfH3 = 0.0;
   Double_t EfHe3 = 0.0;
@@ -166,15 +166,12 @@ void Calculate_XS()
   Q2effHe3 = pow( pow(Q2He3,0.5) * (1.0+(1.5*2*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.0,1.0/3.0))) ,2.0);  //Z=2
   
   cout<<"3He: Ef = "<<EfHe3<<" GeV,   Q^2 3He = "<<Q2He3<<" fm^-2,   Qeff^2 = "<<Q2effHe3<<" fm^-2"<<endl;
+  cout<<"3H: Ef = "<<EfH3<<" GeV,   Q^2 3He = "<<Q2H3<<" fm^-2,   Qeff^2 = "<<Q2effH3<<" fm^-2"<<endl;
 
   //Calculate the sum part of the SOG paramaterization for H3 charge FF.
   for(Int_t j=0; j<12; j++)
     {
       sumH3chtemp = (QH3ch[j]/(1.0+2.0*pow(R[j],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2effH3,0.5)*R[j]) + (2.0*pow(R[j],2.0)/pow(gamma,2.0)) * (sin(pow(Q2effH3,0.5)*R[j])/(pow(Q2effH3,0.5)*R[j])) );
-      //sumH3chtemp = QH3ch[j]/(1.0+2.0*pow(R[j],2.0)/pow(gamma,2.0));   //Fine.
-      //sumH3chtemp = cos(pow(Q2,0.5)*R[j]);   //Fine.
-      //sumH3chtemp = 2.0*pow(R[j],2.0)/pow(gamma,2.0);   //Fine.
-      //sumH3chtemp = (sin(pow(Q2,0.5)*R[j])/(pow(Q2,0.5)*R[j]));   //NAN. Issue is at angle = 0 -> Q = 0.
       sumH3ch = sumH3ch + sumH3chtemp;
       //cout<<"sumH3ch = "<<sumH3ch<<endl;
     }
@@ -198,23 +195,11 @@ void Calculate_XS()
   sumH3ch = 0.0;      //Reset sumH3ch.
   sumHe3ch = 0.0;     //Reset sumHe3ch.
   
-  /*
   //Calculate magnetic FFs.
-  EfH3 = E0/(1.0+2.0*E0*pow(sin(angle/2.0),2.0)/MtH3);
-  EfHe3 = E0/(1.0+2.0*E0*pow(sin(angle/2.0),2.0)/MtHe3);
-  Q2H3 = 4.0*E0*EfH3*pow(sin(angle/2.0),2.0) * GeV2fm;
-  Q2He3 = 4.0*E0*EfHe3*pow(sin(angle/2.0),2.0) * GeV2fm;
-  Q2effH3 = pow( pow(Q2H3,0.5) * (1.0+(1.5*1*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.0,1.0/3.0))) ,2.0);   //Z=1
-  Q2effHe3 = pow( pow(Q2He3,0.5) * (1.0+(1.5*2*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.0,1.0/3.0))) ,2.0);  //Z=2
-  */
   //Calculate the sum part of the SOG paramaterization for H3 magnetic FF.
   for(Int_t j=0; j<12; j++)
     {
       sumH3mtemp = (QH3m[j]/(1.0+2.0*pow(R[j],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2effH3,0.5)*R[j]) + (2.0*pow(R[j],2.0)/pow(gamma,2.0)) * (sin(pow(Q2effH3,0.5)*R[j])/(pow(Q2effH3,0.5)*R[j])) );
-      //sumH3chtemp = QH3ch[j]/(1.0+2.0*pow(R[j],2.0)/pow(gamma,2.0));   //Fine.
-      //sumH3chtemp = cos(pow(Q2,0.5)*R[j]);   //Fine.
-      //sumH3chtemp = 2.0*pow(R[j],2.0)/pow(gamma,2.0);   //Fine.
-      //sumH3chtemp = (sin(pow(Q2,0.5)*R[j])/(pow(Q2,0.5)*R[j]));   //NAN. Issue is at angle = 0 -> Q = 0.
       sumH3m = sumH3m + sumH3mtemp;
       //cout<<"sumH3m = "<<sumH3m<<endl;
     }
@@ -264,7 +249,12 @@ void Calculate_XS()
 
   cout<<"3He: Charge contribution to XS = "<<xsch3He<<" fm^2/sr.   Magnetic contribution to XS = "<<xsm3He<<" fm^2/sr. Percent magnetic contribution = "<<100.*xsm3He/(xsch3He+xsm3He)<<"%."<<endl;
   cout<<"3He: XS = "<<xs3He<<" fm^2/sr = "<<xs3He*pow(10,4)<<" ub/sr"<<endl;
-  cout<<"Fch3He = "<<Fch3He<<"   Fm3He = "<<Fm3He<<endl;
+  //cout<<"Fch3He = "<<Fch3He<<"   Fm3He = "<<Fm3He<<endl;
+
+  //cout<<"3H: Charge contribution to XS = "<<xsch3H<<" fm^2/sr.   Magnetic contribution to XS = "<<xsm3H<<" fm^2/sr. Percent magnetic contribution = "<<100.*xsm3H/(xsch3H+xsm3H)<<"%."<<endl;
+  cout<<"3H: XS = "<<xs3H<<" fm^2/sr = "<<xs3H*pow(10,4)<<" ub/sr"<<endl;
+
+  cout<<"Ratio of elastic 3H/3He cross section = "<<xs3H/xs3He<<endl;
 
   //cout<<XS(E0,theta,QHe3ch,QHe3m)<<endl;
   //cout<<XS(E0,theta,5,5)<<endl;

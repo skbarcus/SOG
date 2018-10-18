@@ -27,7 +27,7 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 const Int_t nfunc = 1000;
-Double_t maxchi2 = 505;
+Double_t maxchi2 = 505;//603
 Double_t Qim_range = 1.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -78,6 +78,7 @@ Float_t Q2[datapts];
 Float_t Rmulti[size][12];
 Float_t Qichmulti[size][12];
 Float_t Qimmulti[size][12];
+Float_t rms[size];                          //Charge radius defined as -6*derivative of Ch FF at Q^2=0.
 
 Int_t Amroun_pts = 57;
 Int_t Collard_pts = 118;
@@ -91,8 +92,10 @@ Double_t R[12] = {0.1,0.7,1.3,2.,2.7,3.6,4.4,5.6,0.,0.,0.,0.};//7
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t Qich[12] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
 Double_t Qim[12] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
-Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
-Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
+//Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
+//Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
+Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
+Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
 Double_t Qicherr[12]={}; 
@@ -113,6 +116,12 @@ Double_t Qich_tot = 0.;              //Total value for sum of Qi values.
 Double_t Qim_tot = 0.;
 Double_t Chi2_tot = 0.;              //Total value for sum of Chi^2 and rChi^2.
 Double_t rChi2_tot = 0;
+Double_t rms_tot = 0;                //Total value of rms charge radius defined as -6*derivative of Ch FF at Q^2=0.
+Double_t rms_min = 1.85;
+Double_t rms_max = 1.95;
+Int_t rms_divisions = 100;
+
+Int_t z = 0; //Counter for main loop.
 
 //Plot Charge FF Fch(Q^2) fm^-2.
 Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
@@ -132,26 +141,7 @@ Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
   fitch = fabs(fitch);
   return fitch;
 }
-/*
-//Plot Charge FF Fch(Q^2) fm^-2.
-Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
-{
-  Double_t fitch = 0.;
-  Double_t sumchtemp = 0.;
-  //cout<<"Current Loop = "<<current_loop<<endl;
-  //Define SOG for charge FF.
-  for(Int_t i=0; i<ngaus; i++)
-    { 	
-      sumchtemp = (Qichmulti[current_loop][i]/(1.0+2.0*pow(Rmulti[current_loop][i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*Rmulti[current_loop][i]) + (2.0*pow(Rmulti[current_loop][i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*Rmulti[current_loop][i])/(pow(Q2[0],0.5)*Rmulti[current_loop][i])) );
-	
-      fitch = fitch + sumchtemp;
-    }
 
-  fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
-  fitch = fabs(fitch);
-  return fitch;
-}
-*/
 //Plot Amroun's charge FF. No idea whay I can't just redefine Qi from ChFF_Q2.
 Double_t ChFF_Q2_Amroun(Double_t *Q2, Double_t *par)
 {
@@ -170,26 +160,6 @@ Double_t ChFF_Q2_Amroun(Double_t *Q2, Double_t *par)
   fitch = fabs(fitch);
   return fitch;
 }
-/*
-//Plot magnetic FF(Q^2) fm^-2.
-Double_t MFF_Q2(Double_t *Q2, Double_t *par)
-{
-  Double_t fitm = 0.;
-  Double_t summtemp = 0.;
-       
-  //Define SOG for magnetic FF.
-  for(Int_t i=0; i<ngaus; i++)
-    { 	
-      summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
-	   
-      fitm = fitm + summtemp;
-    }
-       
-  fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
-  fitm = fabs(fitm);
-  return fitm;
-}
-*/
 
 Double_t MFF_Q2(Double_t *Q2, Double_t *par)
 {
@@ -228,6 +198,36 @@ Double_t MFF_Q2_Amroun(Double_t *Q2, Double_t *par)
   return fitm;
 }
 
+Double_t ChFF_Deriv(Double_t Q2) 
+{
+  Double_t fitch = 0.;
+  Double_t sumchtemp = 0.;
+   
+  //Define SOG for charge FF.
+
+  fitch = (Q0ch[z]/(1.0+2.0*pow(R0[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R0[z]) + (2.0*pow(R0[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R0[z])/(pow(Q2,0.5)*R0[z])) ) 
++ (Q1ch[z]/(1.0+2.0*pow(R1[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R1[z]) + (2.0*pow(R1[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R1[z])/(pow(Q2,0.5)*R1[z])) )
++ (Q2ch[z]/(1.0+2.0*pow(R2[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R2[z]) + (2.0*pow(R2[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R2[z])/(pow(Q2,0.5)*R2[z])) )
++ (Q3ch[z]/(1.0+2.0*pow(R3[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R3[z]) + (2.0*pow(R3[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R3[z])/(pow(Q2,0.5)*R3[z])) )
++ (Q4ch[z]/(1.0+2.0*pow(R4[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R4[z]) + (2.0*pow(R4[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R4[z])/(pow(Q2,0.5)*R4[z])) )
++ (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
++ (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
++ (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
++ (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
++ (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) );
+ 
+  fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
+  //fitch = fabs(fitch);
+  return fitch;
+}
+
+//Create Gaussian fit for the elastic peak.
+Double_t fit_gaus(Double_t *x,Double_t *par) 
+{
+  Double_t fitval = par[0]*TMath::Exp(-0.5*pow(((x[0]-par[1])/par[2]),2));
+  return fitval;
+}
+
 void Multifit_FF_Plots() 
 {
   FILE *fp;
@@ -235,6 +235,7 @@ void Multifit_FF_Plots()
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_BS_300_Ri_Chi2.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_180_9_25_2018.txt","r");
   fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Combined_Ri_Fits.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_n=9_300_9_28_2018.txt","r");
     
   //Read in data.
@@ -411,7 +412,7 @@ void Multifit_FF_Plots()
   TF1 **fChFF = new TF1*[nfunc];
 
   //for(current_loop=0; current_loop<1; current_loop++)//nlines-skip;current_loop++)
-  for(Int_t z=0; z<nlines-skip; z++)
+  for(z=0; z<nlines-skip; z++)
     {
       //cout<<"loop = "<<current_loop<<endl;
 
@@ -457,6 +458,14 @@ void Multifit_FF_Plots()
 		{
 		  hRi_sep[i]->Fill(Rmulti[current_loop][i+1]-Rmulti[current_loop][i]);
 		}
+
+	      //Calculate the charge radii.
+	      double x0 = 0.0015;
+	      ROOT::Math::Functor1D f1D(&ChFF_Deriv); //Fail fChFF[current_loop]. Fail ChFF_Q2.
+	      ROOT::Math::RichardsonDerivator rd;
+	      rd.SetFunction(f1D);
+	      cout<<"First Derivative:   "<<rd.Derivative1(x0)<<"   -6*dFC(0)/dQ^2 = "<<-6*rd.Derivative1(x0)<<"   rms radius = "<<pow(-6*rd.Derivative1(x0),0.5)<<endl;
+
 	      cout<<"Sum Qich = "<<Qichtot[current_loop]<<endl;
 	      first = 1; //No longer first plot.
 	      BIC_tot = BIC_tot + BIC[current_loop];         //Sum of BIC.
@@ -465,6 +474,10 @@ void Multifit_FF_Plots()
 	      Qim_tot = Qim_tot + Qimtot[current_loop];      //Sum of Qim total values.
 	      Chi2_tot = Chi2_tot + Chi2[current_loop];      //Sum of Chi^2 total values.
 	      rChi2_tot = rChi2_tot + rChi2[current_loop];   //Sum of rChi^2 total values.
+
+	      rms[z] = pow(-6*rd.Derivative1(x0),0.5);
+	      rms_tot = rms[z] + rms_tot;
+
 	      total_funcs++;
 	    }
 	  fChFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
@@ -542,6 +555,14 @@ void Multifit_FF_Plots()
 		{
 		  hRi_sep[i]->Fill(Rmulti[current_loop][i+1]-Rmulti[current_loop][i]);
 		}
+
+	      //Calculate the charge radii.
+	      double x0 = 0.0015;
+	      ROOT::Math::Functor1D f1D(&ChFF_Deriv); //Fail fChFF[current_loop]. Fail ChFF_Q2.
+	      ROOT::Math::RichardsonDerivator rd;
+	      rd.SetFunction(f1D);
+	      cout<<"First Derivative:   "<<rd.Derivative1(x0)<<"   -6*dFC(0)/dQ^2 = "<<-6*rd.Derivative1(x0)<<"   rms radius = "<<pow(-6*rd.Derivative1(x0),0.5)<<endl;
+
 	      cout<<"Sum Qich = "<<Qichtot[current_loop]<<endl;
 	      Qich_tot = Qich_tot + Qichtot[current_loop];   //Sum of Qich total values.
 	      Qim_tot = Qim_tot + Qimtot[current_loop];      //Sum of Qim total values.
@@ -549,11 +570,25 @@ void Multifit_FF_Plots()
 	      AIC_tot = AIC_tot + AIC[current_loop];         //Sum of AIC.
 	      Chi2_tot = Chi2_tot + Chi2[current_loop];      //Sum of Chi^2 total values.
 	      rChi2_tot = rChi2_tot + rChi2[current_loop];   //Sum of rChi^2 total values.
+
+	      rms[z] = pow(-6*rd.Derivative1(x0),0.5);
+	      rms_tot = rms[z] + rms_tot;
+
 	      total_funcs++;
 	    }
 	}
       cout<<"fChFF->Eval(0) = "<<fChFF[current_loop]->Eval(0.0001)<<endl;
       //cout<<"loop before ++ = "<<current_loop<<endl;
+      /*
+      //Calculate the charge radii.
+      double x0 = 0.0015;
+      ROOT::Math::Functor1D f1D(&ChFF_Deriv); //Fail fChFF[current_loop]. Fail ChFF_Q2.
+      ROOT::Math::RichardsonDerivator rd;
+      rd.SetFunction(f1D);
+      cout<<"First Derivative:   "<<rd.Derivative1(x0)<<"   -6*dFC(0)/dQ^2 = "<<-6*rd.Derivative1(x0)<<"   rms radius = "<<pow(-6*rd.Derivative1(x0),0.5)<<endl;
+      rms[z] = pow(-6*rd.Derivative1(x0),0.5);
+      rms_tot = rms[z] + rms_tot;
+      */
       if(current_loop<(nlines-skip-1))
 	{
 	  current_loop++;
@@ -741,11 +776,33 @@ void Multifit_FF_Plots()
   MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
   MFF_leg->Draw();
 
+  //Plot distribution of charge radii.
+  TCanvas* crms=new TCanvas("crms");
+  crms->SetGrid();
+  crms->SetTitle("Charge Radii");
+
+  hrms = new TH1F("hrms", "Charge Radii Distribution", rms_divisions, rms_min, rms_max);
+  for(Int_t i=0;i<total_funcs;i++)
+    {
+      hrms->Fill(rms[i]);
+    }
+  hrms->Draw();
+
+  TF1 *fgaus = new TF1("fgaus",fit_gaus,rms_min,rms_max,3);
+  //func_gaus_Al->SetLineColor(3);
+  fgaus->SetParameter(0,1.);
+  fgaus->SetParameter(1,1.);
+  fgaus->SetParameter(2,1.);
+  hrms->Fit("fgaus","R same M");
+  cout<<"Gaussian Fit of Charge Radii: Chi^2 = "<<fgaus->GetChisquare()<<"   nDOF = "<<fgaus->GetNDF()<<"   Fit Probablility = "<<fgaus->GetProb()<<endl;
+  cout<<"Gaussian Height = "<<fgaus->GetParameter(0)<<"   Gaussian Mean = "<<fgaus->GetParameter(1)<<"   Gaussian Standard Deviation = "<<fgaus->GetParameter(2)<<endl;
+
   //Print total number of fits suviving the chi2 cut.
   cout<<"# of fits below Chi^2 cutoff = "<<total_funcs<<endl;
   cout<<"Average sum of Chi^2 = "<<Chi2_tot/total_funcs<<".   Average sum of rChi^2 = "<<rChi2_tot/total_funcs<<"."<<endl;
   cout<<"Average sum of Qich = "<<Qich_tot/total_funcs<<".   Average sum of Qim = "<<Qim_tot/total_funcs<<"."<<endl;
   cout<<"Average fit BIC = "<<BIC_tot/total_funcs<<".   Average fit AIC = "<<AIC_tot/total_funcs<<"."<<endl;
+  cout<<"Average charge rms = "<<rms_tot/total_funcs<<endl;
 
   //Plot Ri on one histogram.
   TCanvas* cRi_all=new TCanvas("cR_all");
