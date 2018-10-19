@@ -203,6 +203,23 @@ Double_t MFF_Q2_Amroun(Double_t *Q2, Double_t *par)
   return fitm;
 }
 
+//Define the charge density from I. Sick. 
+Double_t rho_ch(Double_t *r, Double_t *par)
+{
+  Double_t rho = 0;
+  Double_t rho_temp = 0;
+   
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      rho_temp = par[i]/( 1+2*pow(par[i+ngaus],2.)/pow(gamma,2.) ) * (  exp( -pow((r[0]-par[i+ngaus]),2.)/pow(gamma,2.) ) + exp( -pow((r[0]+par[i+ngaus]),2.)/pow(gamma,2.) )  );
+      rho = rho + rho_temp;
+    }
+
+  rho = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho; //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+
+  return rho;
+}
+
 Double_t ChFF_Deriv(Double_t Q2) 
 {
   Double_t fitch = 0.;
@@ -274,6 +291,7 @@ void Multifit_FF_Plots()
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_BS_300_Ri_Chi2.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_180_9_25_2018.txt","r");
   fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Combined_Ri_Fits.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Closer_Ri_Fits_n=10_525_10_1_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_n=9_300_9_28_2018.txt","r");
     
@@ -432,6 +450,12 @@ void Multifit_FF_Plots()
   cFch->SetLogy();
   cFch->SetTitle("Charge Form Factor");
 
+  TCanvas* cCh_den=new TCanvas("cCh_den");
+  cCh_den->SetGrid();
+  cCh_den->SetTitle("Charge Density");
+
+  cFch->cd();
+
   //Define a few analysis histograms to store the Ri values and look for patterns.
   TH1F *hRi = new TH1F("hRi", "Ri Distribution", Ri_divisions, 0., Rimax);
 
@@ -452,6 +476,7 @@ void Multifit_FF_Plots()
   //TF1 **fChFF_Deriv = new TF1*[nfunc];
   TF1 **frho_ch_int = new TF1*[nfunc];
   TF1 **frho_rms = new TF1*[nfunc];
+  TF1 **frho_ch = new TF1*[nfunc];
 
   //for(current_loop=0; current_loop<1; current_loop++)//nlines-skip;current_loop++)
   for(z=0; z<nlines-skip; z++)
@@ -472,6 +497,9 @@ void Multifit_FF_Plots()
 	  char fname2[20];
 	  sprintf(fname2,"f%d",z);
 	  frho_rms[current_loop] = new TF1(fname2,rho_rms,0.,10.,2*ngaus+1);
+	  char fname3[20];
+	  sprintf(fname3,"f%d",z);
+	  frho_ch[current_loop] = new TF1(fname3,rho_ch,0.,10.,2*ngaus+1);
 
 	  //Set parameters for the various functions.
 	  for(Int_t i=0;i<ngaus;i++)
@@ -484,14 +512,21 @@ void Multifit_FF_Plots()
 	      frho_ch_int[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
 	      frho_rms[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
 	      frho_rms[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	      frho_ch[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      frho_ch[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
 	    }
 
 	  fChFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fChFF[current_loop]->SetLineWidth(linewidth);
+	  frho_ch[current_loop]->SetLineColorAlpha(2,transparency);
+	  frho_ch[current_loop]->SetLineWidth(linewidth);
 
 	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
+	      cFch->cd();
 	      fChFF[current_loop]->Draw("L");
+	      cCh_den->cd();
+	      frho_ch[current_loop]->Draw("L");
 
 	      for(Int_t i=0;i<ngaus;i++)
 		{
@@ -540,6 +575,19 @@ void Multifit_FF_Plots()
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+
+	  frho_ch[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
+	  frho_ch[current_loop]->SetTitle("^{3}He Charge Density");
+	  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetTitle("e/fm^{3}");
+	  frho_ch[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
+	  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+	  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+	  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
+	  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetTitle("r (fm)");
+	  frho_ch[current_loop]->GetHistogram()->GetXaxis()->CenterTitle(true);
+	  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+	  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+	  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
 	}
       else
 	{
@@ -555,6 +603,9 @@ void Multifit_FF_Plots()
 	  char fname2[20];
 	  sprintf(fname2,"f%d",z);
 	  frho_rms[current_loop] = new TF1(fname2,rho_rms,0.,10.,2*ngaus+1);
+	  char fname3[20];
+	  sprintf(fname3,"f%d",z);
+	  frho_ch[current_loop] = new TF1(fname3,rho_ch,0.,10.,2*ngaus+1);
 
 	  //Set parameters for the various functions.
 	  for(Int_t i=0;i<ngaus;i++)
@@ -567,16 +618,23 @@ void Multifit_FF_Plots()
 	      frho_ch_int[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
 	      frho_rms[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
 	      frho_rms[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
+	      frho_ch[current_loop]->SetParameter(i,Qichmulti[current_loop][i]);
+	      frho_ch[current_loop]->SetParameter(i+ngaus,Rmulti[current_loop][i]);
 	    }
 
 	  fChFF[current_loop]->SetLineColorAlpha(2,transparency);
 	  fChFF[current_loop]->SetLineWidth(linewidth);
+	  frho_ch[current_loop]->SetLineColorAlpha(2,transparency);
+	  frho_ch[current_loop]->SetLineWidth(linewidth);
 
 	  fChFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
+	  frho_ch[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
+
 	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
 	      if(first==0)
 		{
+		  cFch->cd();
 		  fChFF[current_loop]->Draw("L");
 		  fChFF[current_loop]->SetTitle("^{3}He Charge Form Factor");
 		  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
@@ -589,11 +647,30 @@ void Multifit_FF_Plots()
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+
+		  cCh_den->cd();
+		  frho_ch[current_loop]->Draw("L");
+		  frho_ch[current_loop]->SetTitle("^{3}He Charge Density");
+		  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetTitle("e/fm^{3}");
+		  frho_ch[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
+		  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+		  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+		  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
+		  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetTitle("r (fm)");
+		  frho_ch[current_loop]->GetHistogram()->GetXaxis()->CenterTitle(true);
+		  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+		  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+		  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+
 		  first = 1; //No longer first plot.
 		}
 	      else
 		{
+		  cFch->cd();
 		  fChFF[current_loop]->Draw("L SAME");
+
+		  cCh_den->cd();
+		  frho_ch[current_loop]->Draw("L SAME");
 		  //frho_ch_int[current_loop]->Draw("L SAME");
 		}
 
@@ -657,6 +734,7 @@ void Multifit_FF_Plots()
   fChFF_Amroun->SetNpx(npdraw);
   fChFF_Amroun->SetLineColor(4);
   fChFF_Amroun->SetLineWidth(linewidth);
+  cFch->cd();
   fChFF_Amroun->Draw("L SAME");
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
   ChFF_leg->AddEntry(fChFF[0],"New ^{3}He |F_{ch}(q^{2})| Fit","l");
@@ -818,6 +896,16 @@ void Multifit_FF_Plots()
     {
       hrms_deriv->Fill(rms_deriv[i]);
     }
+  hrms_deriv->GetYaxis()->CenterTitle(true);
+  hrms_deriv->GetYaxis()->SetLabelSize(0.05);
+  hrms_deriv->GetYaxis()->SetTitleSize(0.06);
+  hrms_deriv->GetYaxis()->SetTitleOffset(0.75);
+  hrms_deriv->GetXaxis()->CenterTitle(true);
+  hrms_deriv->GetXaxis()->SetLabelSize(0.05);
+  hrms_deriv->GetXaxis()->SetTitleSize(0.06);
+  hrms_deriv->GetXaxis()->SetTitleOffset(0.75);
+  hrms_deriv->SetLineWidth(linewidth);
+  hrms_deriv->GetXaxis()->SetTitle("r (fm)");
   hrms_deriv->Draw();
 
   TF1 *fgaus1 = new TF1("fgaus1",fit_gaus,rms_deriv_min,rms_deriv_max,3);
@@ -838,6 +926,17 @@ void Multifit_FF_Plots()
     {
       hrms_int->Fill(rms_int[i]);
     }
+  hrms_int->GetYaxis()->CenterTitle(true);
+  hrms_int->GetYaxis()->SetLabelSize(0.05);
+  hrms_int->GetYaxis()->SetTitleSize(0.06);
+  hrms_int->GetYaxis()->SetTitleOffset(0.75);
+  hrms_int->GetXaxis()->CenterTitle(true);
+  hrms_int->GetXaxis()->SetLabelSize(0.05);
+  hrms_int->GetXaxis()->SetTitleSize(0.06);
+  hrms_int->GetXaxis()->SetTitleOffset(0.75);
+  hrms_int->SetLineWidth(linewidth);
+  hrms_int->SetLineWidth(linewidth);
+  hrms_int->GetXaxis()->SetTitle("r (fm)");
   hrms_int->Draw();
 
   TF1 *fgaus2 = new TF1("fgaus2",fit_gaus,rms_int_min,rms_int_max,3);
