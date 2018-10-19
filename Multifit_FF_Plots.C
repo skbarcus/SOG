@@ -807,7 +807,7 @@ void Multifit_FF_Plots()
   MFF_leg->AddEntry(fMFF[0],"New ^{3}He |F_{m}(q^{2})| Fit","l");
   MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
   MFF_leg->Draw();
-
+  
   //Plot distribution of charge radii derivative method.
   TCanvas* crms_deriv=new TCanvas("crms_deriv");
   crms_deriv->SetGrid();
@@ -821,7 +821,6 @@ void Multifit_FF_Plots()
   hrms_deriv->Draw();
 
   TF1 *fgaus1 = new TF1("fgaus1",fit_gaus,rms_deriv_min,rms_deriv_max,3);
-  //func_gaus_Al->SetLineColor(3);
   fgaus1->SetParameter(0,1.);
   fgaus1->SetParameter(1,1.);
   fgaus1->SetParameter(2,1.);
@@ -834,7 +833,7 @@ void Multifit_FF_Plots()
   crms_int->SetGrid();
   crms_int->SetTitle("Charge Radii (Integral Method)");
 
-  hrms_int = new TH1F("hrms_int", "Charge Radii Distribution (Integral Method)", rms_int_divisions, rms_int_min, rms_int_max);
+  hrms_int = new TH1F("hrms_int", "Charge Radii Distribution (Integral Method)", rms_deriv_divisions, rms_deriv_min, rms_deriv_max);
   for(Int_t i=0;i<total_funcs;i++)
     {
       hrms_int->Fill(rms_int[i]);
@@ -842,10 +841,9 @@ void Multifit_FF_Plots()
   hrms_int->Draw();
 
   TF1 *fgaus2 = new TF1("fgaus2",fit_gaus,rms_int_min,rms_int_max,3);
-  //func_gaus_Al->SetLineColor(3);
   fgaus2->SetParameter(0,12.);
   fgaus2->SetParameter(1,1.9);
-  fgaus2->SetParameter(2,0.004);
+  //fgaus2->SetParameter(2,0.004);     //Messes up fit.
   hrms_int->Fit("fgaus2","R same M");
   cout<<"Gaussian Fit of Charge Radii (Integral Method): Chi^2 = "<<fgaus2->GetChisquare()<<"   nDOF = "<<fgaus2->GetNDF()<<"   Fit Probablility = "<<fgaus2->GetProb()<<endl;
   cout<<"Gaussian Height = "<<fgaus2->GetParameter(0)<<"   Gaussian Mean = "<<fgaus2->GetParameter(1)<<"   Gaussian Standard Deviation = "<<fgaus2->GetParameter(2)<<endl;
