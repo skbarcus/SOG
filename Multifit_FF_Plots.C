@@ -24,10 +24,10 @@ Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
 Double_t C = 299792458.0;                //Speed of light [m/s]. 
 Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
-Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
+Double_t muHe3 = -2.1275*(3.0/2.0); //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
 
 const Int_t nfunc = 1000;
-Double_t maxchi2 = 505;//603
+Double_t maxchi2 = 505;//3He 505, 3H 603
 Double_t Qim_range = 1.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -48,7 +48,7 @@ Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fi
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
-Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
+Double_t MtHe3 = 3.0160293*0.9315;         //3.0160293*0.9315 Mass of He3 in GeV. 3.0160492*0.9315 mass 3H.
 Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
 //Double_t E0 = 0.5084;                    //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
@@ -119,12 +119,21 @@ Double_t Chi2_tot = 0.;              //Total value for sum of Chi^2 and rChi^2.
 Double_t rChi2_tot = 0;
 Double_t rms_deriv_tot = 0;                //Total value of rms charge radius defined as -6*derivative of Ch FF at Q^2=0.
 Double_t rms_deriv_min = 1.85;
-Double_t rms_deriv_max = 1.95;
+Double_t rms_deriv_max = 2.1;
 Int_t rms_deriv_divisions = 100;
 Double_t rms_int_tot = 0;                //Total value of rms charge radius integral method.
 Double_t rms_int_min = rms_deriv_min;
 Double_t rms_int_max = rms_deriv_max;
 Int_t rms_int_divisions = rms_deriv_divisions;
+Double_t gaus_min = 0.;              //Function range for gaussian fits of individual Ri histograms.
+Double_t gaus_max = 7.;
+Double_t Qi_ch_min = 0.;             //Create ranges for Qi distribution plots.
+Double_t Qi_ch_max = 0.4;
+Double_t Qi_m_min = 0.;
+Double_t Qi_m_max = 0.4;
+Double_t Qi_ch_divisions = 100.;
+Double_t gaus_Qi_min = 0.;              //Function range for gaussian fits of individual Qi histograms.
+Double_t gaus_Qi_max = 0.4;
 
 Int_t z = 0; //Counter for main loop.
 
@@ -295,6 +304,8 @@ void Multifit_FF_Plots()
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_n=9_300_9_28_2018.txt","r");
     
+  //3H
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
   //Read in data.
   while (1) {
     //Skips the first 5 lines of the file. 
@@ -462,13 +473,19 @@ void Multifit_FF_Plots()
   TH1F **hRi_ind = new TH1F*[ngaus];
   for(Int_t i=0;i<ngaus;i++)
     {
-      hRi_ind[i] = new TH1F(Form("hR%d_ind",i), Form("R%d Distribution",i), Ri_divisions, 0., Rimax);
+      hRi_ind[i] = new TH1F(Form("hR%d_ind",i), Form("R%d Distributions",i), Ri_divisions, 0., Rimax);
     }
 
   TH1F **hRi_sep = new TH1F*[ngaus-1];
   for(Int_t i=0;i<(ngaus-1);i++)
     {
       hRi_sep[i] = new TH1F(Form("hR%d_sep",i), Form("R%d to R%d Separation",i,i+1), 15, 0., 1.5);
+    }
+
+  TH1F **Qi_ch = new TH1F*[ngaus];
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      Qi_ch[i] = new TH1F(Form("Qi_ch_%d",i), Form("Qi_ch_%d Distributions",i), Qi_ch_divisions, Qi_ch_min, Qi_ch_max);
     }
   
   //Define array of TF1 to plot the various fits with.
@@ -910,8 +927,8 @@ void Multifit_FF_Plots()
 
   TF1 *fgaus1 = new TF1("fgaus1",fit_gaus,rms_deriv_min,rms_deriv_max,3);
   fgaus1->SetParameter(0,1.);
-  fgaus1->SetParameter(1,1.);
-  fgaus1->SetParameter(2,1.);
+  fgaus1->SetParameter(1,hrms_deriv->GetMean());
+  fgaus1->SetParameter(2,hrms_deriv->GetStdDev());
   hrms_deriv->Fit("fgaus1","R same M");
   cout<<"Gaussian Fit of Charge Radii (Derivative Method): Chi^2 = "<<fgaus1->GetChisquare()<<"   nDOF = "<<fgaus1->GetNDF()<<"   Fit Probablility = "<<fgaus1->GetProb()<<endl;
   cout<<"Gaussian Height = "<<fgaus1->GetParameter(0)<<"   Gaussian Mean = "<<fgaus1->GetParameter(1)<<"   Gaussian Standard Deviation = "<<fgaus1->GetParameter(2)<<endl;
@@ -940,9 +957,9 @@ void Multifit_FF_Plots()
   hrms_int->Draw();
 
   TF1 *fgaus2 = new TF1("fgaus2",fit_gaus,rms_int_min,rms_int_max,3);
-  fgaus2->SetParameter(0,12.);
-  fgaus2->SetParameter(1,1.9);
-  //fgaus2->SetParameter(2,0.004);     //Messes up fit.
+  fgaus2->SetParameter(0,1.);//(0,12.);
+  fgaus2->SetParameter(1,hrms_int->GetMean());//(1,1.9);
+  fgaus2->SetParameter(2,hrms_int->GetStdDev());     //Messes up fit.
   hrms_int->Fit("fgaus2","R same M");
   cout<<"Gaussian Fit of Charge Radii (Integral Method): Chi^2 = "<<fgaus2->GetChisquare()<<"   nDOF = "<<fgaus2->GetNDF()<<"   Fit Probablility = "<<fgaus2->GetProb()<<endl;
   cout<<"Gaussian Height = "<<fgaus2->GetParameter(0)<<"   Gaussian Mean = "<<fgaus2->GetParameter(1)<<"   Gaussian Standard Deviation = "<<fgaus2->GetParameter(2)<<endl;
@@ -968,11 +985,29 @@ void Multifit_FF_Plots()
   cRi_ind->SetTitle("Ri Distributions");
   cRi_ind->Divide(ngaus/2,2);
 
+  TF1 **fgaus_ri = new TF1*[ngaus];
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      //char fname1[20];
+      //sprintf(fname1,"fgaus%d",i);
+      //fgaus[i] = new TF1(fname1,fit_gaus,gaus_min,gaus_max,3);
+      //fgaus[i] = new TF1(Form("fgaus%d",i), Form("R%d Distribution",i), Ri_divisions, 0., Rimax);
+    }
+
   for(Int_t i=0;i<ngaus;i++)
     {
       cRi_ind->cd(i+1);
       hRi_ind[i]->Draw();
       hRi_ind[i]->SetLineWidth(2);
+
+      char fname5[20];
+      sprintf(fname5,"fgaus_r%d",i);
+      fgaus_ri[i] = new TF1(fname5,fit_gaus,gaus_min,gaus_max,3);
+
+      fgaus_ri[i]->SetParameter(0,1.);
+      fgaus_ri[i]->SetParameter(1,hRi_ind[i]->GetMean());
+      fgaus_ri[i]->SetParameter(2,hRi_ind[i]->GetStdDev());
+      hRi_ind[i]->Fit(Form("fgaus_r%d",i),"R same M Q");
     }
 
   //Plot Ri separation histograms.
