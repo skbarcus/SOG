@@ -45,7 +45,8 @@ Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
 Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
-//Double_t E0 = 0.5084;                    //Initial e- energy GeV.
+Double_t theta = 21.04;
+Double_t E0 = 3.356;                    //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
 Double_t ymax = 100.;//100
@@ -61,11 +62,11 @@ Int_t nlines = 0;                        //Counts number of lines in the data fi
 Int_t ncols;                             //Set how many columns of data we have in the data file.
 char* str[1000];                          //Variable to read lines of the data file.
 Float_t thetatemp,qefftemp,sigexptemp,uncertaintytemp,E0temp;
-Float_t theta[1000];                     //Angle in degrees.
+//Float_t theta[1000];                     //Angle in degrees.
 Float_t qeff[1000];                      //q effective in fm^-1.
 Float_t sigexp[1000];                    //Sigma experimental (cross section). Not sure on units yet.
 Float_t uncertainty[1000];
-Float_t E0[1000];
+//Float_t E0[1000];
 Float_t Q2[datapts];
 
 Int_t Amroun_pts = 57;
@@ -95,12 +96,15 @@ Double_t m = 2.;
 //Double_t R[12] = {0.3,0.8,1.1,1.4,1.9,2.5,3.3,4.1,5.1,0.,0.,0.};//23
 //Double_t R[12] = {0.3,0.8,1.3,1.7,2.3,3.,3.9,4.9,0.,0.,0.,0.};//18
 //Double_t R[12] = {0.2,0.7,1.3,1.9,2.6,3.4,4.3,5.1,0.,0.,0.,0.};//11
-Double_t R[12] = {0.1,0.7,1.3,2.,2.7,3.6,4.4,5.6,0.,0.,0.,0.};//7
+//Double_t R[12] = {0.1,0.7,1.3,2.,2.7,3.6,4.4,5.6,0.,0.,0.,0.};//7
 //Double_t R[12] = {0.1,0.7,1.3,1.9,2.7,3.2,4.5,5.5,0.,0.,0.,0.};//5
 //Double_t R[12] = {0.1,0.6,0.8,1.3,1.6,2.2,3.,3.8,4.5,5.6,0.,0.};//4.
 //Double_t R[12] = {0.1,0.6,0.9,1.4,1.8,2.2,3,3.8,4.6,4.5,0.,0.};//9/12/18 3.
 //Double_t R[12] = {0.1,0.6,1.,1.5,2.1,2.4,3.,3.7,4.4,4.7,0.,0.};//9/12/18 pretty good 2.
 //Double_t R[12] = {0.1,0.6,1.,1.5,2.1,2.4,3.1,3.9,4.5,4.8,0.,0.};//9/12/18 pretty good 1.
+
+
+Double_t R[12] = {0.190672,0.693568,1.06127,1.5556,1.97331,2.42858,3.13643,3.87028,4.60607,5.52267};//Avg. Ri 357 fits x^2<505.
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 
 //Double_t Qich[12] = {0.0440183,0.116665,0.202577,0.26934,0.0690628,0.179559,0.0854789,0.0318623,0.00963141,9.4369e-16,0.,0.};//9/15/18 51.
@@ -133,8 +137,8 @@ Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amro
 //Double_t Qim[12] = {0.15363,0.241968,0.227636,0.141837,0.150786,0.0857793,0.0873129,0.0398393,0.,0.,0.,0.};
 //Double_t Qich[12] = {0.0649212,0.308528,0.299338,0.187702,0.102192,0.0379261,0.00712276,2.74347e-12,0.,0.,0.,0.};//11
 //Double_t Qim[12] = {0.0997782,0.274768,0.285966,0.191182,0.109338,0.0645759,0.0435615,0.0126547,0.,0.,0.,0.};
-Double_t Qich[12] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
-Double_t Qim[12] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
+//Double_t Qich[12] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
+//Double_t Qim[12] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
 //Double_t Qich[12] = {0.0896211,0.234994,0.367953,0.193344,0.0460444,0.0763543,1.05355e-12,1.20741E-10,0.,0.,0.,0.};//5
 //Double_t Qim[12] = {0.0738571,0.287688,0.219872,0.125082,0.000139601,7.65055e-13,0.0676226,0.0808108,0.,0.,0.,0.};
 //Double_t Qich[12] = {0.0433495,0.189163,0.153897,0.236151,0.140139,0.155516,0.0690597,0.0159103,0.00495952,2.61974E-12,0.,0.};//4.
@@ -148,6 +152,9 @@ Double_t Qim[12] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0
 //Double_t Qim[12] = {0.059577,0.0966408,0.24088,0.227914,0.123278,0.160815,0.0806045,0.00262875,0.0494118,0.0140003,0.,0.};
 //Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 //Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
+
+Double_t Qich[12] = {0.0511376,0.212372,0.255953,0.235852,0.104617,0.11099,0.0458289,0.0164548,0.00625,0.000121054};   //Avg. Ri 357 fits x^2<505.
+Double_t Qim[12] = {0.106411,0.21999,0.219267,0.210835,0.118368,0.120021,0.0755027,0.0153253,0.0224693,0.0127534};     //Avg. Ri 357 fits x^2<505.
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
@@ -318,4 +325,87 @@ void Plot_FFs()
   MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
   MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
   MFF_leg->Draw();
+
+  TCanvas* cxs=new TCanvas("cxs");
+  cxs->SetGrid();
+  cxs->SetLogy();
+
+  Double_t xs(Double_t *Q2, Double_t *par)
+  {
+    Double_t val = 0.;
+    Double_t mottxs = 0.;
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+    
+    //All Q[0] were Q2eff previously from SOG fit code.
+
+    Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+    //Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
+    //Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
+    Double_t W = E0 - Ef;
+    //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
+    Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2[0]  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
+    Double_t eta = 1.0 + Q2[0]/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2. 
+    Double_t Qtot = 1.0;
+    Double_t Qtemp = 0.;
+
+    //Calculate Mott XS.
+    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+
+    //Calculate XS from FFs.
+    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(MFF_Q2(Q2,par),2.) ); 
+    
+    return val;
+    
+    //return MFF_Q2_Amroun(Q2,par) + ChFF_Q2_Amroun(Q2,par);
+  }
+
+  TF1 *fxs = new TF1("fxs",xs,yminFF,ymaxFF+54,1);
+  //fMFF_Amroun->Draw("L");
+  fxs->SetNpx(npdraw);
+  fxs->Draw("L");
+
+  //Plot Amroun's XS as well.
+  Double_t xs_Amroun(Double_t *Q2, Double_t *par)
+  {
+    Double_t val = 0.;
+    Double_t mottxs = 0.;
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+    
+    //All Q[0] were Q2eff previously from SOG fit code.
+
+    Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+    //Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
+    //Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
+    Double_t W = E0 - Ef;
+    //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
+    Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2[0]  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
+    Double_t eta = 1.0 + Q2[0]/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2. 
+    Double_t Qtot = 1.0;
+    Double_t Qtemp = 0.;
+
+    //Calculate Mott XS.
+    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+
+    //Calculate XS from FFs.
+    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2_Amroun(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(MFF_Q2_Amroun(Q2,par),2.) ); 
+    
+    return val;
+    
+    //return MFF_Q2_Amroun(Q2,par) + ChFF_Q2_Amroun(Q2,par);
+  }
+
+  TF1 *fxs_Amroun = new TF1("fxs_Amroun",xs_Amroun,yminFF,ymaxFF+54,1);
+  //fMFF_Amroun->Draw("L");
+  fxs_Amroun->SetNpx(npdraw);
+  fxs_Amroun->SetLineColor(4);
+  fxs_Amroun->Draw("L SAME");
+
+  cout<<"My XS at test point = "<<fxs->Eval(35.)<<" fm^2/sr = "<<fxs->Eval(35.)*1E4<<" ub/sr"<<endl;
+  cout<<"Amroun's XS at test point = "<<fxs_Amroun->Eval(35.)<<" fm^2/sr = "<<fxs_Amroun->Eval(35.)*1E4<<" ub/sr"<<endl;
 }

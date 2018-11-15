@@ -127,12 +127,13 @@ Double_t rms_int_max = rms_deriv_max;
 Int_t rms_int_divisions = rms_deriv_divisions;
 Double_t gaus_min = 0.;              //Function range for gaussian fits of individual Ri histograms.
 Double_t gaus_max = 7.;
-Double_t Qi_ch_min = 0.;             //Create ranges for Qi distribution plots.
+Double_t Qi_ch_min = -0.1;             //Create ranges for Qi distribution plots.
 Double_t Qi_ch_max = 0.4;
-Double_t Qi_m_min = 0.;
+Double_t Qi_m_min = -0.1;
 Double_t Qi_m_max = 0.4;
-Double_t Qi_ch_divisions = 100.;
-Double_t gaus_Qi_min = 0.;              //Function range for gaussian fits of individual Qi histograms.
+Double_t Qi_ch_divisions = 40.;
+Double_t Qi_m_divisions = 40.;
+Double_t gaus_Qi_min = -0.4;              //Function range for gaussian fits of individual Qi histograms.
 Double_t gaus_Qi_max = 0.4;
 
 Int_t z = 0; //Counter for main loop.
@@ -292,6 +293,12 @@ Double_t fit_gaus(Double_t *x,Double_t *par)
   Double_t fitval = par[0]*TMath::Exp(-0.5*pow(((x[0]-par[1])/par[2]),2));
   return fitval;
 }
+
+//Create a Poisson fit.
+Double_t poisson(Double_t*x,Double_t*par)                                         
+{                                                                              
+  return par[0]*TMath::Poisson(x[0],par[1]);
+}  
 
 void Multifit_FF_Plots() 
 {
@@ -487,6 +494,12 @@ void Multifit_FF_Plots()
     {
       Qi_ch[i] = new TH1F(Form("Qi_ch_%d",i), Form("Qi_ch_%d Distributions",i), Qi_ch_divisions, Qi_ch_min, Qi_ch_max);
     }
+
+  TH1F **Qi_m = new TH1F*[ngaus];
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      Qi_m[i] = new TH1F(Form("Qi_m_%d",i), Form("Qi_m_%d Distributions",i), Qi_m_divisions, Qi_m_min, Qi_m_max);
+    }
   
   //Define array of TF1 to plot the various fits with.
   TF1 **fChFF = new TF1*[nfunc];
@@ -549,6 +562,8 @@ void Multifit_FF_Plots()
 		{
 		  hRi->Fill(Rmulti[current_loop][i]);
 		  hRi_ind[i]->Fill(Rmulti[current_loop][i]);
+		  Qi_ch[i]->Fill(Qichmulti[current_loop][i]);
+		  Qi_m[i]->Fill(Qimmulti[current_loop][i]);
 		}
 	      for(Int_t i=0;i<(ngaus-1);i++)
 		{
@@ -695,6 +710,8 @@ void Multifit_FF_Plots()
 		{
 		  hRi->Fill(Rmulti[current_loop][i]);
 		  hRi_ind[i]->Fill(Rmulti[current_loop][i]);
+		  Qi_ch[i]->Fill(Qichmulti[current_loop][i]);
+		  Qi_m[i]->Fill(Qimmulti[current_loop][i]);
 		}
 	      for(Int_t i=0;i<(ngaus-1);i++)
 		{
@@ -986,13 +1003,6 @@ void Multifit_FF_Plots()
   cRi_ind->Divide(ngaus/2,2);
 
   TF1 **fgaus_ri = new TF1*[ngaus];
-  for(Int_t i=0;i<ngaus;i++)
-    {
-      //char fname1[20];
-      //sprintf(fname1,"fgaus%d",i);
-      //fgaus[i] = new TF1(fname1,fit_gaus,gaus_min,gaus_max,3);
-      //fgaus[i] = new TF1(Form("fgaus%d",i), Form("R%d Distribution",i), Ri_divisions, 0., Rimax);
-    }
 
   for(Int_t i=0;i<ngaus;i++)
     {
@@ -1022,4 +1032,79 @@ void Multifit_FF_Plots()
       hRi_sep[i]->Draw();
       hRi_sep[i]->SetLineWidth(2);
     }
+
+  //Plot individual Qi_ch histograms.
+  TCanvas* cQi_ch=new TCanvas("cQi_ch");
+  cQi_ch->SetGrid();
+  cQi_ch->SetTitle("Qi_ch Distributions");
+  cQi_ch->Divide(ngaus/2,2);
+
+  TF1 **fgaus_Qich = new TF1*[ngaus];
+
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cQi_ch->cd(i+1);
+      Qi_ch[i]->Draw();
+      Qi_ch[i]->SetLineWidth(2);
+
+      char fname6[20];
+      sprintf(fname6,"fgaus_Q%d_ch",i);
+      fgaus_Qich[i] = new TF1(fname6,fit_gaus,gaus_Qi_min,gaus_Qi_max,3);
+
+      fgaus_Qich[i]->SetParameter(0,1.);
+      fgaus_Qich[i]->SetParameter(1,Qi_ch[i]->GetMean());
+      fgaus_Qich[i]->SetParameter(2,Qi_ch[i]->GetStdDev());
+      Qi_ch[i]->Fit(Form("fgaus_Q%d_ch",i),"R same M Q");
+    }
+
+  //Plot individual Qi_m histograms.
+  TCanvas* cQi_m=new TCanvas("cQi_m");
+  cQi_m->SetGrid();
+  cQi_m->SetTitle("Qi_m Distributions");
+  cQi_m->Divide(ngaus/2,2);
+
+  TF1 **fgaus_Qim = new TF1*[ngaus];
+
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cQi_m->cd(i+1);
+      Qi_m[i]->Draw();
+      Qi_m[i]->SetLineWidth(2);
+
+      char fname7[20];
+      sprintf(fname7,"fgaus_Q%d_m",i);
+      fgaus_Qim[i] = new TF1(fname7,fit_gaus,gaus_Qi_min,gaus_Qi_max,3);
+
+      fgaus_Qim[i]->SetParameter(0,20.);
+      fgaus_Qim[i]->SetParameter(1,Qi_m[i]->GetMean());
+      fgaus_Qim[i]->SetParLimits(1,0.,0.4);
+      fgaus_Qim[i]->SetParameter(2,Qi_m[i]->GetStdDev());
+      Qi_m[i]->Fit(Form("fgaus_Q%d_m",i),"R same M Q");
+    }
+
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"R"<<i<<" mean = "<<fgaus_ri[i]->GetParameter(1)<<endl;
+    }
+
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"Q"<<i<<"ch mean = "<<fgaus_Qich[i]->GetParameter(1)<<endl;
+    }
+
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"Q"<<i<<"m mean = "<<fgaus_Qim[i]->GetParameter(1)<<endl;
+    }
+  /*
+  //Test Poisson.
+  TCanvas* cpoisson=new TCanvas("cpoisson");
+  Qi_m[1]->Draw();
+  Qi_m[1]->SetLineWidth(2);
+  fpoisson = new TF1("fpoisson",poisson,-1.,1.,2);
+  fpoisson->SetParameter(0,10.);
+  fpoisson->SetParameter(1,0.1);
+  fpoisson->Draw("same");
+  //Qi_m[1]->Fit(Form("fpoisson",i),"R same M");
+  */
 }
