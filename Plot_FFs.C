@@ -104,7 +104,8 @@ Double_t m = 2.;
 //Double_t R[12] = {0.1,0.6,1.,1.5,2.1,2.4,3.1,3.9,4.5,4.8,0.,0.};//9/12/18 pretty good 1.
 
 
-Double_t R[12] = {0.190672,0.693568,1.06127,1.5556,1.97331,2.42858,3.13643,3.87028,4.60607,5.52267};//Avg. Ri 357 fits x^2<505.
+//Double_t R[12] = {0.190672,0.693568,1.06127,1.5556,1.97331,2.42858,3.13643,3.87028,4.60607,5.52267};//Avg. Ri 357 fits x^2<505.
+Double_t R[12] = {0.3,0.7,0.9,1.4,1.7,2.2,2.9,3.6,4.3,4.9};//Min Chi^2 of 357 (#556 combined). 
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 
 //Double_t Qich[12] = {0.0440183,0.116665,0.202577,0.26934,0.0690628,0.179559,0.0854789,0.0318623,0.00963141,9.4369e-16,0.,0.};//9/15/18 51.
@@ -153,8 +154,10 @@ Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amro
 //Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 //Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 
-Double_t Qich[12] = {0.0511376,0.212372,0.255953,0.235852,0.104617,0.11099,0.0458289,0.0164548,0.00625,0.000121054};   //Avg. Ri 357 fits x^2<505.
-Double_t Qim[12] = {0.106411,0.21999,0.219267,0.210835,0.118368,0.120021,0.0755027,0.0153253,0.0224693,0.0127534};     //Avg. Ri 357 fits x^2<505.
+//Double_t Qich[12] = {0.0511376,0.212372,0.255953,0.235852,0.104617,0.11099,0.0458289,0.0164548,0.00625,0.000121054};   //Avg. Ri 357 fits x^2<505.
+//Double_t Qim[12] = {0.106411,0.21999,0.219267,0.210835,0.118368,0.120021,0.0755027,0.0153253,0.0224693,0.0127534};     //Avg. Ri 357 fits x^2<505.
+Double_t Qich[12] = {0.101632,0.170317,0.165379,0.250085,0.0841009,0.140841,0.0673786,0.0214391,0.00704491,1.00142e-13};   //Min Chi^2 of 357 (#556 combined).
+Double_t Qim[12] = {0.156834,0.0554965,0.250939,0.18088,0.120042,0.136881,0.0686315,0.0252427,0.0147734,2.08722e-13};     //Min Chi^2 of 357 (#556 combined).
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
@@ -205,12 +208,12 @@ void Plot_FFs()
   cFch->SetTitle("Charge Form Factor");
   //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
   fChFF->SetTitle("^{3}He Charge Form Factor");
-  fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
+  fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(Q^{2})|");
   fChFF->GetHistogram()->GetYaxis()->CenterTitle(true);
   fChFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
   fChFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
   fChFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-  fChFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+  fChFF->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
   fChFF->GetHistogram()->GetXaxis()->CenterTitle(true);
   fChFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
   fChFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -283,12 +286,12 @@ void Plot_FFs()
   fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fMFF->Draw("L");
   fMFF->SetTitle("^{3}He Magnetic Form Factor");
-  fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
+  fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(Q^{2})|");
   fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
   fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
   fMFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
   fMFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-  fMFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+  fMFF->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
   fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
   fMFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
   fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -366,6 +369,17 @@ void Plot_FFs()
   //fMFF_Amroun->Draw("L");
   fxs->SetNpx(npdraw);
   fxs->Draw("L");
+  fxs->SetTitle("^{3}He Cross Section at 3.356 Gev and 21.04#circ");
+  fxs->GetHistogram()->GetYaxis()->SetTitle("#frac{d#sigma}{d#Omega} (fm^{2}/sr)");
+  fxs->GetHistogram()->GetYaxis()->CenterTitle(true);
+  fxs->GetHistogram()->GetYaxis()->SetLabelSize(0.04);
+  fxs->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+  fxs->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
+  fxs->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
+  fxs->GetHistogram()->GetXaxis()->CenterTitle(true);
+  fxs->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+  fxs->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+  fxs->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
 
   //Plot Amroun's XS as well.
   Double_t xs_Amroun(Double_t *Q2, Double_t *par)
@@ -406,6 +420,39 @@ void Plot_FFs()
   fxs_Amroun->SetLineColor(4);
   fxs_Amroun->Draw("L SAME");
 
+  auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
+  MFF_leg->AddEntry("fxs","New ^{3}He Cross Section","l");
+  MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun et al.","l");
+  MFF_leg->Draw();
+
   cout<<"My XS at test point = "<<fxs->Eval(35.)<<" fm^2/sr = "<<fxs->Eval(35.)*1E4<<" ub/sr"<<endl;
   cout<<"Amroun's XS at test point = "<<fxs_Amroun->Eval(35.)<<" fm^2/sr = "<<fxs_Amroun->Eval(35.)*1E4<<" ub/sr"<<endl;
+
+  Double_t test_Q2 = 35.;           //Close starting point for correct Q^2.
+  Double_t model_xs = 0.;           //Model value of xs at test_Q2.
+  Double_t exp_xs = 1.33459E-10;    //fm^2/sr. My experimental XS result.
+  Double_t window = 0.5E-15;          //Window of acceptable Q^2 model agreement with exp XS.
+  //Find where model XS equals my experimental XS and that's the Q^2 to place it at.
+
+  //Set initial model xs guess.
+  model_xs = fxs->Eval(test_Q2);
+  cout<<"Initial model_xs = "<<model_xs<<" at Q^2 = "<<test_Q2<<" fm^-2."<<endl;
+
+  //Increment guess up or down until close enough to the exp. xs.
+  while(model_xs>(exp_xs+window) || (model_xs<exp_xs-window))
+    {
+      //If model xs too high.
+      if(model_xs>(exp_xs+window))
+	{
+	  test_Q2 = test_Q2 + 0.00001;
+	}
+      //If model xs too low.
+      if(model_xs<(exp_xs-window))
+	{
+	  test_Q2 = test_Q2 - 0.00001;
+	}
+      model_xs = fxs->Eval(test_Q2);
+      //cout<<"model_xs = "<<model_xs<<" at Q^2 = "<<test_Q2<<" fm^-2 = "<<test_Q2*0.0389<<" GeV^2."<<endl;
+    }
+  cout<<"model_xs = "<<model_xs<<" fm^2/sr at Q^2 = "<<test_Q2<<" fm^-2 = "<<test_Q2*0.0389<<" GeV^2."<<endl;
 }

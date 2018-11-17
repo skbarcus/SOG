@@ -27,7 +27,7 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
 
 const Int_t nfunc = 1000;
-Double_t maxchi2 = 505;//3He 505, 3H 603
+Double_t maxchi2 = 505;//3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
 Double_t Qim_range = 1.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -117,6 +117,8 @@ Double_t Qich_tot = 0.;              //Total value for sum of Qi values.
 Double_t Qim_tot = 0.;
 Double_t Chi2_tot = 0.;              //Total value for sum of Chi^2 and rChi^2.
 Double_t rChi2_tot = 0;
+Double_t min_chi2 = 10000.;              //Variable to store the minimum chi2 fit result.
+Int_t min_chi2_fit = 0;                  //Fit number of the min chi2 fit.
 Double_t rms_deriv_tot = 0;                //Total value of rms charge radius defined as -6*derivative of Ch FF at Q^2=0.
 Double_t rms_deriv_min = 1.85;
 Double_t rms_deriv_max = 2.1;
@@ -558,6 +560,13 @@ void Multifit_FF_Plots()
 	      cCh_den->cd();
 	      frho_ch[current_loop]->Draw("L");
 
+	      if(Chi2[current_loop]<min_chi2)
+		{
+		  cout<<"*****Hello there!*****"<<endl;
+		  min_chi2 = Chi2[current_loop];
+		  min_chi2_fit = current_loop;
+		}
+
 	      for(Int_t i=0;i<ngaus;i++)
 		{
 		  hRi->Fill(Rmulti[current_loop][i]);
@@ -664,6 +673,12 @@ void Multifit_FF_Plots()
 
 	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
+	      if(Chi2[current_loop]<min_chi2)
+		{
+		  cout<<"*****Hello there!*****"<<endl;
+		  min_chi2 = Chi2[current_loop];
+		  min_chi2_fit = current_loop;
+		}
 	      if(first==0)
 		{
 		  cFch->cd();
@@ -1082,6 +1097,8 @@ void Multifit_FF_Plots()
       Qi_m[i]->Fit(Form("fgaus_Q%d_m",i),"R same M Q");
     }
 
+  /*
+  //Average Ri and Qi values. Doesn't seem to be very useful.
   for(Int_t i=0;i<ngaus;i++)
     {
       cout<<"R"<<i<<" mean = "<<fgaus_ri[i]->GetParameter(1)<<endl;
@@ -1096,6 +1113,24 @@ void Multifit_FF_Plots()
     {
       cout<<"Q"<<i<<"m mean = "<<fgaus_Qim[i]->GetParameter(1)<<endl;
     }
+  */
+
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"R"<<i<<" min Chi^2 = "<<Rmulti[min_chi2_fit][i]<<endl;
+    }
+
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"Q"<<i<<"ch min Chi^2 = "<<Qichmulti[min_chi2_fit][i]<<endl;
+    }
+
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      cout<<"Q"<<i<<"m min Chi^2  = "<<Qimmulti[min_chi2_fit][i]<<endl;
+    }
+
+  cout<<"Min Chi^2 fit number = "<<min_chi2_fit<<". Min Chi^2 value = "<<min_chi2<<"."<<endl;
   /*
   //Test Poisson.
   TCanvas* cpoisson=new TCanvas("cpoisson");
