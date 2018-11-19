@@ -345,10 +345,11 @@ void Plot_FFs()
     //All Q[0] were Q2eff previously from SOG fit code.
 
     //theta = 2*TMath::ASin(  pow( (1/(4*pow(E0,2.)/Q2[0]-2*E0/MtHe3)) , 0.5 )  );
+    theta = 2*TMath::ASin(  pow( (1/(4*pow(E0,2.)*GeV2fm/Q2[0]-2*E0/MtHe3)) , 0.5 )  );
 
-    Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+    Ef = E0/(1.0+2.0*E0*pow(sin(theta/2.0),2.0)/MtHe3);
 
-    theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
+    //theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
 
     //Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
     //Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
@@ -398,9 +399,12 @@ void Plot_FFs()
     
     //All Q[0] were Q2eff previously from SOG fit code.
 
-    Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+    theta = 2*TMath::ASin(  pow( (1/(4*pow(E0,2.)*GeV2fm/Q2[0]-2*E0/MtHe3)) , 0.5 )  );
+    //theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
 
-    theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
+    Ef = E0/(1.0+2.0*E0*pow(sin(theta/2.0),2.0)/MtHe3);
+
+    //theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
 
     //Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
     //Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
@@ -433,10 +437,16 @@ void Plot_FFs()
   MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun et al.","l");
   MFF_leg->Draw();
 
-  Double_t test_point = 35.7582;
-  cout<<"My XS at test point = "<<fxs->Eval(test_point)<<" fm^2/sr = "<<fxs->Eval(test_point)*1E4<<" ub/sr"<<endl;
+  Double_t test_point = 35.8152;//35.8152;//35.7582;
+  cout<<"My XS at "<<test_point<<" = "<<fxs->Eval(test_point)<<" fm^2/sr = "<<fxs->Eval(test_point)*1E4<<" ub/sr"<<endl;
   cout<<"Amroun's XS at test point = "<<fxs_Amroun->Eval(test_point)<<" fm^2/sr = "<<fxs_Amroun->Eval(test_point)*1E4<<" ub/sr"<<endl;
+  cout<<"E0 = "<<E0<<"   Ef = "<<E0/(1.0+2.0*E0*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)/MtHe3)<<endl;
   cout<<"Amroun's theta = "<<2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ) * 180./pi<<endl;
+  cout<<"Amroun's theta Q^2eff Correction = "<<2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/   pow(  pow(test_point,0.5)/(1+(1.5*2*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.,1./3.)))  ,2.)   )-(2.*E0/MtHe3))) , 0.5 )  ) * 180./pi<<endl;
+  cout<<"Amroun Mott = "<<(  (pow(Z,2.)*((E0/(1.0+2.0*E0*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)/MtHe3))/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),4.0)))*pow(cos((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)  ) * 1.0/25.7<<endl;
+  cout<<"fChFF(test_point) = "<<fChFF_Amroun->Eval(test_point)<<endl;
+  cout<<"fMFF(test_point) = "<<fMFF_Amroun->Eval(test_point)<<endl;
+  cout<<"******************************************************************"<<endl;
 
   Double_t test_Q2 = 35.;           //Close starting point for correct Q^2.
   Double_t model_xs = 0.;           //Model value of xs at test_Q2.
@@ -454,12 +464,12 @@ void Plot_FFs()
       //If model xs too high.
       if(model_xs>(exp_xs+window))
 	{
-	  test_Q2 = test_Q2 + 0.0001;
+	  test_Q2 = test_Q2 + 0.00001;
 	}
       //If model xs too low.
       if(model_xs<(exp_xs-window))
 	{
-	  test_Q2 = test_Q2 - 0.0001;
+	  test_Q2 = test_Q2 - 0.00001;
 	}
       model_xs = fxs->Eval(test_Q2);
       //cout<<"model_xs = "<<model_xs<<" at Q^2 = "<<test_Q2<<" fm^-2 = "<<test_Q2*0.0389<<" GeV^2."<<endl;
