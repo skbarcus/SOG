@@ -45,7 +45,7 @@ Double_t Z = 2.;                         //Atomic number He3.
 Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
 Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
-Double_t theta = 21.04;
+Double_t theta = 0.;//21.04;
 Double_t E0 = 3.356;                    //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
@@ -344,7 +344,12 @@ void Plot_FFs()
     
     //All Q[0] were Q2eff previously from SOG fit code.
 
+    //theta = 2*TMath::ASin(  pow( (1/(4*pow(E0,2.)/Q2[0]-2*E0/MtHe3)) , 0.5 )  );
+
     Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+
+    theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
+
     //Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
     //Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
     Double_t W = E0 - Ef;
@@ -355,10 +360,10 @@ void Plot_FFs()
     Double_t Qtemp = 0.;
 
     //Calculate Mott XS.
-    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
 
     //Calculate XS from FFs.
-    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(MFF_Q2(Q2,par),2.) ); 
+    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta/2),2))*pow(MFF_Q2(Q2,par),2.) ); 
     
     return val;
     
@@ -394,6 +399,9 @@ void Plot_FFs()
     //All Q[0] were Q2eff previously from SOG fit code.
 
     Ef = E0/(1.0+2.0*E0*pow(sin(theta*deg2rad/2.0),2.0)/MtHe3);
+
+    theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
+
     //Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
     //Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
     Double_t W = E0 - Ef;
@@ -404,10 +412,10 @@ void Plot_FFs()
     Double_t Qtemp = 0.;
 
     //Calculate Mott XS.
-    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta*deg2rad/2.0),4.0)))*pow(cos(theta*deg2rad/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
 
     //Calculate XS from FFs.
-    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2_Amroun(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta*deg2rad/2),2))*pow(MFF_Q2_Amroun(Q2,par),2.) ); 
+    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2_Amroun(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2.)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta/2.),2.))*pow(MFF_Q2_Amroun(Q2,par),2.) ); 
     
     return val;
     
@@ -425,8 +433,10 @@ void Plot_FFs()
   MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun et al.","l");
   MFF_leg->Draw();
 
-  cout<<"My XS at test point = "<<fxs->Eval(35.)<<" fm^2/sr = "<<fxs->Eval(35.)*1E4<<" ub/sr"<<endl;
-  cout<<"Amroun's XS at test point = "<<fxs_Amroun->Eval(35.)<<" fm^2/sr = "<<fxs_Amroun->Eval(35.)*1E4<<" ub/sr"<<endl;
+  Double_t test_point = 35.7582;
+  cout<<"My XS at test point = "<<fxs->Eval(test_point)<<" fm^2/sr = "<<fxs->Eval(test_point)*1E4<<" ub/sr"<<endl;
+  cout<<"Amroun's XS at test point = "<<fxs_Amroun->Eval(test_point)<<" fm^2/sr = "<<fxs_Amroun->Eval(test_point)*1E4<<" ub/sr"<<endl;
+  cout<<"Amroun's theta = "<<2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ) * 180./pi<<endl;
 
   Double_t test_Q2 = 35.;           //Close starting point for correct Q^2.
   Double_t model_xs = 0.;           //Model value of xs at test_Q2.
@@ -437,22 +447,25 @@ void Plot_FFs()
   //Set initial model xs guess.
   model_xs = fxs->Eval(test_Q2);
   cout<<"Initial model_xs = "<<model_xs<<" at Q^2 = "<<test_Q2<<" fm^-2."<<endl;
-
+  
   //Increment guess up or down until close enough to the exp. xs.
   while(model_xs>(exp_xs+window) || (model_xs<exp_xs-window))
     {
       //If model xs too high.
       if(model_xs>(exp_xs+window))
 	{
-	  test_Q2 = test_Q2 + 0.00001;
+	  test_Q2 = test_Q2 + 0.0001;
 	}
       //If model xs too low.
       if(model_xs<(exp_xs-window))
 	{
-	  test_Q2 = test_Q2 - 0.00001;
+	  test_Q2 = test_Q2 - 0.0001;
 	}
       model_xs = fxs->Eval(test_Q2);
       //cout<<"model_xs = "<<model_xs<<" at Q^2 = "<<test_Q2<<" fm^-2 = "<<test_Q2*0.0389<<" GeV^2."<<endl;
     }
   cout<<"model_xs = "<<model_xs<<" fm^2/sr at Q^2 = "<<test_Q2<<" fm^-2 = "<<test_Q2*0.0389<<" GeV^2."<<endl;
+
+  cout<<"Theta = "<<2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_Q2)-(2.*E0/MtHe3))) , 0.5 )  ) * 180./pi<<endl;
+  //cout<<"Theta = "<<2*TMath::ASin(  pow( (1/(4*pow(E0,2.)/test_Q2-2*E0/MtHe3)) , 0.5 )  )<<endl;
 }
