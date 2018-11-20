@@ -119,6 +119,7 @@ Double_t Chi2_tot = 0.;              //Total value for sum of Chi^2 and rChi^2.
 Double_t rChi2_tot = 0;
 Double_t min_chi2 = 10000.;              //Variable to store the minimum chi2 fit result.
 Int_t min_chi2_fit = 0;                  //Fit number of the min chi2 fit.
+Int_t rep_chi2_fit = 556;
 Double_t rms_deriv_tot = 0;                //Total value of rms charge radius defined as -6*derivative of Ch FF at Q^2=0.
 Double_t rms_deriv_min = 1.85;
 Double_t rms_deriv_max = 2.1;
@@ -317,7 +318,7 @@ void Multifit_FF_Plots()
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
   //Read in data.
   while (1) {
-    //Skips the first 5 lines of the file. 
+    //Skips the first skip lines of the file. 
     if (nlines < skip)
       {
 	fgets(str,1000,fp);
@@ -1114,6 +1115,14 @@ void Multifit_FF_Plots()
       cout<<"Q"<<i<<"m mean = "<<fgaus_Qim[i]->GetParameter(1)<<endl;
     }
   */
+
+  //Create an output file to store a single fit result in.
+  std::ofstream output ("Representative_Fit.txt", std::ofstream::out);
+
+  output<<"Fit#   Chi2   rChi2   BIC   AIC    Qichtot    Qimtot  R[0]  R[1]  R[2]  R[3]  R[4]  R[5]  R[6]  R[7]  R[8]  R[9]  R[10]  R[11]  Q0ch    Q1ch    Q2ch    Q3ch    Q4ch    Q5ch    Q6ch    Q7ch    Q8ch    Q9ch    Q10ch    Q11ch    Q0m    Q1m    Q2m    Q3m    Q4m    Q5m    Q6m    Q7m    Q8m    Q9m    Q10m    Q11m"<<endl;
+
+  //Fill text file with fit#, fcn (chi2), Qichtot, Qimtot, Ri, Qich, Qim.
+  output<<rep_chi2_fit<<" "<<Chi2[rep_chi2_fit]<<" "<<rChi2[rep_chi2_fit]<<" "<<BIC[rep_chi2_fit]<<" "<<AIC[rep_chi2_fit]<<" "<<Qichtot[rep_chi2_fit]<<" "<<Qimtot[rep_chi2_fit]<<" "<<Rmulti[rep_chi2_fit][0]<<" "<<Rmulti[rep_chi2_fit][1]<<" "<<Rmulti[rep_chi2_fit][2]<<" "<<Rmulti[rep_chi2_fit][3]<<" "<<Rmulti[rep_chi2_fit][4]<<" "<<Rmulti[rep_chi2_fit][5]<<" "<<Rmulti[rep_chi2_fit][6]<<" "<<Rmulti[rep_chi2_fit][7]<<" "<<Rmulti[rep_chi2_fit][8]<<" "<<Rmulti[rep_chi2_fit][9]<<" "<<Rmulti[rep_chi2_fit][10]<<" "<<Rmulti[rep_chi2_fit][11]<<" "<<Qichmulti[rep_chi2_fit][0]<<" "<<Qichmulti[rep_chi2_fit][1]<<" "<<Qichmulti[rep_chi2_fit][2]<<" "<<Qichmulti[rep_chi2_fit][3]<<" "<<Qichmulti[rep_chi2_fit][4]<<" "<<Qichmulti[rep_chi2_fit][5]<<" "<<Qichmulti[rep_chi2_fit][6]<<" "<<Qichmulti[rep_chi2_fit][7]<<" "<<Qichmulti[rep_chi2_fit][8]<<" "<<Qichmulti[rep_chi2_fit][9]<<" "<<Qichmulti[rep_chi2_fit][10]<<" "<<Qichmulti[rep_chi2_fit][11]<<" "<<Qimmulti[rep_chi2_fit][0]<<" "<<Qimmulti[rep_chi2_fit][1]<<" "<<Qimmulti[rep_chi2_fit][2]<<" "<<Qimmulti[rep_chi2_fit][3]<<" "<<Qimmulti[rep_chi2_fit][4]<<" "<<Qimmulti[rep_chi2_fit][5]<<" "<<Qimmulti[rep_chi2_fit][6]<<" "<<Qimmulti[rep_chi2_fit][7]<<" "<<Qimmulti[rep_chi2_fit][8]<<" "<<Qimmulti[rep_chi2_fit][9]<<" "<<Qimmulti[rep_chi2_fit][10]<<" "<<Qimmulti[rep_chi2_fit][11]<<endl;
 
   for(Int_t i=0;i<ngaus;i++)
     {

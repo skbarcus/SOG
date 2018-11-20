@@ -17,6 +17,11 @@
 #include "Math/Functor.h"
 #include "Math/RichardsonDerivator.h"
 
+#include <vector>  //Needed to use C++ vectors.
+//#include <algorithm>
+//#include <iostream>
+//#include <utility>
+
 Double_t pi = 3.141592654;
 Double_t deg2rad = pi/180.0;
 Double_t GeV2fm = 1./0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
@@ -26,6 +31,7 @@ Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
+Int_t Rep_Fit = 556;
 Int_t loops = 1;
 const Int_t datapts = 259;//248
 Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
@@ -165,15 +171,147 @@ Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263
 Double_t averr[24] = {};
 Double_t Qicherr[12]={}; 
 Double_t Qimerr[12]={};
-Double_t Chi2[datapts]={};
+//Double_t Chi2[datapts]={};
 Double_t residual[datapts]={};
 Double_t xsfit[datapts]={};
 Double_t Chi2_FB[datapts]={};
 Double_t residual_FB[datapts]={};
 Double_t FBfit[datapts]={};
 
+const Int_t size = 1000;
+Float_t Fit[size], Chi2[size],rChi2[size],BIC[size],AIC[size],Qichtot[size],Qimtot[size],R0[size],R1[size],R2[size],R3[size],R4[size],R5[size],R6[size],R7[size],R8[size],R9[size],R10[size],R11[size],Q0ch[size],Q1ch[size],Q2ch[size],Q3ch[size],Q4ch[size],Q5ch[size],Q6ch[size],Q7ch[size],Q8ch[size],Q9ch[size],Q10ch[size],Q11ch[size],Q0m[size],Q1m[size],Q2m[size],Q3m[size],Q4m[size],Q5m[size],Q6m[size],Q7m[size],Q8m[size],Q9m[size],Q10m[size],Q11m[size];
+Float_t Fittemp,Chi2temp,rChi2temp,BICtemp,AICtemp,Qichtottemp,Qimtottemp,R0temp,R1temp,R2temp,R3temp,R4temp,R5temp,R6temp,R7temp,R8temp,R9temp,R10temp,R11temp,Q0chtemp,Q1chtemp,Q2chtemp,Q3chtemp,Q4chtemp,Q5chtemp,Q6chtemp,Q7chtemp,Q8chtemp,Q9chtemp,Q10chtemp,Q11chtemp,Q0mtemp,Q1mtemp,Q2mtemp,Q3mtemp,Q4mtemp,Q5mtemp,Q6mtemp,Q7mtemp,Q8mtemp,Q9mtemp,Q10mtemp,Q11mtemp;
+Float_t Rmulti[size][12];
+Float_t Qichmulti[size][12];
+Float_t Qimmulti[size][12];
+
 void Plot_FFs() 
 {
+  //Read in parameters for the representative fit.
+  FILE *fp;
+  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Combined_Ri_Fits.txt","r");
+
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines < skip)
+	{
+	  fgets(str,1000,fp);
+	  nlines++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	ncols = fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Chi2temp, &rChi2temp, &BICtemp, &AICtemp, &Qichtottemp, &Qimtottemp, &R0temp, &R1temp, &R2temp, &R3temp);
+	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &R4temp, &R5temp, &R6temp, &R7temp, &R8temp, &R9temp, &R10temp, &R11temp, &Q0chtemp, &Q1chtemp);
+	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q2chtemp, &Q3chtemp, &Q4chtemp, &Q5chtemp, &Q6chtemp, &Q7chtemp, &Q8chtemp, &Q9chtemp, &Q10chtemp, &Q11chtemp);
+	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q0mtemp, &Q1mtemp, &Q2mtemp, &Q3mtemp, &Q4mtemp, &Q5mtemp, &Q6mtemp, &Q7mtemp, &Q8mtemp, &Q9mtemp);
+	ncols = ncols + fscanf(fp,"%f %f", &Q10mtemp, &Q11mtemp);
+
+	//Only if using representative fit text file.
+	/*
+	  ncols = fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Fittemp, &Chi2temp, &rChi2temp, &BICtemp, &AICtemp, &Qichtottemp, &Qimtottemp, &R0temp, &R1temp, &R2temp);
+	  ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &R3temp, &R4temp, &R5temp, &R6temp, &R7temp, &R8temp, &R9temp, &R10temp, &R11temp, &Q0chtemp);
+	  ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q1chtemp, &Q2chtemp, &Q3chtemp, &Q4chtemp, &Q5chtemp, &Q6chtemp, &Q7chtemp, &Q8chtemp, &Q9chtemp, &Q10chtemp);
+	  ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q11chtemp, &Q0mtemp, &Q1mtemp, &Q2mtemp, &Q3mtemp, &Q4mtemp, &Q5mtemp, &Q6mtemp, &Q7mtemp, &Q8mtemp);
+	  ncols = ncols + fscanf(fp,"%f %f %f", &Q9mtemp, &Q10mtemp, &Q11mtemp);
+	*/
+	  //cout<<"ncols = "<<ncols<<endl;
+	  if (ncols < 0) break;    
+	  
+	  //Fit[nlines-skip] = Fittemp;               //Only if using representative fit text file. 
+	  Chi2[nlines-skip] = Chi2temp;
+	  rChi2[nlines-skip] = rChi2temp;
+	  BIC[nlines-skip] = BICtemp;
+	  AIC[nlines-skip] = AICtemp;
+	  Qichtot[nlines-skip] = Qichtottemp;
+	  Qimtot[nlines-skip] = Qimtottemp;
+	  R0[nlines-skip] = R0temp;
+	  R1[nlines-skip] = R1temp;
+	  R2[nlines-skip] = R2temp;
+	  R3[nlines-skip] = R3temp;
+	  R4[nlines-skip] = R4temp;
+	  R5[nlines-skip] = R5temp;
+	  R6[nlines-skip] = R6temp;
+	  R7[nlines-skip] = R7temp;
+	  R8[nlines-skip] = R8temp;
+	  R9[nlines-skip] = R9temp;
+	  R10[nlines-skip] = R10temp;
+	  R11[nlines-skip] = R11temp;
+	  Q0ch[nlines-skip] = Q0chtemp;
+	  Q1ch[nlines-skip] = Q1chtemp;
+	  Q2ch[nlines-skip] = Q2chtemp;
+	  Q3ch[nlines-skip] = Q3chtemp;
+	  Q4ch[nlines-skip] = Q4chtemp;
+	  Q5ch[nlines-skip] = Q5chtemp;
+	  Q6ch[nlines-skip] = Q6chtemp;
+	  Q7ch[nlines-skip] = Q7chtemp;
+	  Q8ch[nlines-skip] = Q8chtemp;
+	  Q9ch[nlines-skip] = Q9chtemp;
+	  Q10ch[nlines-skip] = Q10chtemp;
+	  Q11ch[nlines-skip] = Q11chtemp;
+	  Q0m[nlines-skip] = Q0mtemp;
+	  Q1m[nlines-skip] = Q1mtemp;
+	  Q2m[nlines-skip] = Q2mtemp;
+	  Q3m[nlines-skip] = Q3mtemp;
+	  Q4m[nlines-skip] = Q4mtemp;
+	  Q5m[nlines-skip] = Q5mtemp;
+	  Q6m[nlines-skip] = Q6mtemp;
+	  Q7m[nlines-skip] = Q7mtemp;
+	  Q8m[nlines-skip] = Q8mtemp;
+	  Q9m[nlines-skip] = Q9mtemp;
+	  Q10m[nlines-skip] = Q10mtemp;
+	  Q11m[nlines-skip] = Q11mtemp;
+	  Rmulti[nlines-skip][0] = R0temp;
+	  Rmulti[nlines-skip][1] = R1temp;
+	  Rmulti[nlines-skip][2] = R2temp;
+	  Rmulti[nlines-skip][3] = R3temp;
+	  Rmulti[nlines-skip][4] = R4temp;
+	  Rmulti[nlines-skip][5] = R5temp;
+	  Rmulti[nlines-skip][6] = R6temp;
+	  Rmulti[nlines-skip][7] = R7temp;
+	  Rmulti[nlines-skip][8] = R8temp;
+	  Rmulti[nlines-skip][9] = R9temp;
+	  Rmulti[nlines-skip][10] = R10temp;
+	  Rmulti[nlines-skip][11] = R11temp;
+	  Qichmulti[nlines-skip][0] = Q0chtemp;
+	  Qichmulti[nlines-skip][1] = Q1chtemp;
+	  Qichmulti[nlines-skip][2] = Q2chtemp;
+	  Qichmulti[nlines-skip][3] = Q3chtemp;
+	  Qichmulti[nlines-skip][4] = Q4chtemp;
+	  Qichmulti[nlines-skip][5] = Q5chtemp;
+	  Qichmulti[nlines-skip][6] = Q6chtemp;
+	  Qichmulti[nlines-skip][7] = Q7chtemp;
+	  Qichmulti[nlines-skip][8] = Q8chtemp;
+	  Qichmulti[nlines-skip][9] = Q9chtemp;
+	  Qichmulti[nlines-skip][10] = Q10chtemp;
+	  Qichmulti[nlines-skip][11] = Q11chtemp;
+	  Qimmulti[nlines-skip][0] = Q0mtemp;
+	  Qimmulti[nlines-skip][1] = Q1mtemp;
+	  Qimmulti[nlines-skip][2] = Q2mtemp;
+	  Qimmulti[nlines-skip][3] = Q3mtemp;
+	  Qimmulti[nlines-skip][4] = Q4mtemp;
+	  Qimmulti[nlines-skip][5] = Q5mtemp;
+	  Qimmulti[nlines-skip][6] = Q6mtemp;
+	  Qimmulti[nlines-skip][7] = Q7mtemp;
+	  Qimmulti[nlines-skip][8] = Q8mtemp;
+	  Qimmulti[nlines-skip][9] = Q9mtemp;
+	  Qimmulti[nlines-skip][10] = Q10mtemp;
+	  Qimmulti[nlines-skip][11] = Q11mtemp;
+	  
+	  nlines++;
+	}
+    }
+
+  //Set SOG parameters to the representative fit's parameters.
+  for(Int_t i=0;i<ngaus;i++)
+    {
+      R[i] = Rmulti[Rep_Fit-1][i];
+      Qich[i] = Qichmulti[Rep_Fit-1][i];
+      Qim[i] = Qimmulti[Rep_Fit-1][i];
+    }
+
   TCanvas* cFch=new TCanvas("cFch");
   cFch->SetGrid();
   cFch->SetLogy();
@@ -439,6 +577,58 @@ void Plot_FFs()
   MFF_leg->AddEntry("fxs","New ^{3}He Cross Section","l");
   MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun et al.","l");
   MFF_leg->Draw();
+
+  //Plot my data point.
+  m1 = new TMarker(34.0981, 1.33459E-10, 20);
+  m1->SetMarkerColor(kOrange+7);
+  m1->SetMarkerSize(1);
+  m1->Draw();
+
+  using namespace std;
+
+  //Sort Chi2 array by ascending Chi^2.
+  std::vector<float> Chi2_Sorted;
+  //std::pair<float,float> Test;
+  vector< pair <double,int> > Test;
+  pair<double,int> pair;
+  //std::vector< pair <float,float> > Test;
+  //cout<<Chi2_Sorted.size()<<endl;
+
+  for(Int_t i=0;i<nlines-skip;i++)
+    {
+      pair.first = Chi2[i];
+      pair.second = i;
+      Test.push_back(pair);
+
+      //Test.first = Chi2[i];
+      //Test.second = i;
+      //Test.push_back( make_pair(Chi2[i],i) ); 
+      //Test.push_back( pair<double,double>(Chi2[i],i) ); 
+      //Test[i].first = Chi2[i];
+      //Test[i].second = i;
+      Chi2_Sorted.push_back(Chi2[i]);
+    }  
+
+  //Sort array in ascending order.
+  sort(Chi2_Sorted.begin(),Chi2_Sorted.end());
+  for(Int_t i=0;i<nlines-skip;i++)
+    {
+      cout<<"Chi2_Sorted["<<i<<"] = "<<Chi2_Sorted[i]<<endl;
+    } 
+
+  //sort(Test.begin(),Test.end());
+  /*
+  std::sort(Test.begin(), Test.end(),
+	    [](const pair& x, const pair& y) {
+	      // compare second value
+	      if (x.first < y.first)
+		return x.first < y.first;
+	    });
+  */
+   for(Int_t i=0;i<nlines-skip;i++)
+    {
+      cout<<"Fit Number = "<<Test[i].second<<"   Chi2_Sorted["<<i<<"] = "<<Test[i].first<<endl;
+    }
 
   Double_t test_point = 35.8152;//35.8152;//35.7582;
   cout<<"My XS at "<<test_point<<" = "<<fxs->Eval(test_point)<<" fm^2/sr = "<<fxs->Eval(test_point)*1E4<<" ub/sr"<<endl;
