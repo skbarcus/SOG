@@ -46,7 +46,7 @@ Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
 Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
 Double_t theta = 0.;//21.04;
-Double_t theta_cor = 0.;                //Theta that corrects for the Q^2effadjustment. Basically when we plot the XS and FFs the Q2[0] is really Q^2eff. If we calculate theta from Q^2eff we have a slightly incorrect angle. This variable is for the slightly smaller theta representing the real scattering angle.
+Double_t theta_cor = 0.;                //Theta that corrects for the Q^2eff adjustment. Basically when we plot the XS and FFs the Q2[0] is really Q^2eff if we don't use this theta_cor. This variable is for the slightly smaller theta representing the real scattering angle.
 Double_t E0 = 3.356;                    //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
@@ -349,7 +349,7 @@ void Plot_FFs()
     theta = 2*TMath::ASin(  pow( (1/(4*pow(E0,2.)*GeV2fm/Q2[0]-2*E0/MtHe3)) , 0.5 )  );
     theta_cor = 2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/   pow(  pow(Q2[0],0.5)/(1+(1.5*2*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.,1./3.)))  ,2.)   )-(2.*E0/MtHe3))) , 0.5 )  );
 
-    Ef = E0/(1.0+2.0*E0*pow(sin(theta_cor/2.0),2.0)/MtHe3);
+    Ef = E0/(1.0+2.0*E0*pow(sin(theta/2.0),2.0)/MtHe3);
 
     //theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
 
@@ -363,10 +363,10 @@ void Plot_FFs()
     Double_t Qtemp = 0.;
 
     //Calculate Mott XS.
-    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta_cor/2.0),4.0)))*pow(cos(theta_cor/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
 
     //Calculate XS from FFs.
-    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta_cor/2),2))*pow(MFF_Q2(Q2,par),2.) ); 
+    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta/2),2))*pow(MFF_Q2(Q2,par),2.) ); 
     
     return val;
     
@@ -405,7 +405,7 @@ void Plot_FFs()
     theta_cor = 2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/   pow(  pow(Q2[0],0.5)/(1+(1.5*2*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.,1./3.)))  ,2.)   )-(2.*E0/MtHe3))) , 0.5 )  );
     //theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
 
-    Ef = E0/(1.0+2.0*E0*pow(sin(theta_cor/2.0),2.0)/MtHe3);
+    Ef = E0/(1.0+2.0*E0*pow(sin(theta/2.0),2.0)/MtHe3);
 
     //theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
 
@@ -419,10 +419,10 @@ void Plot_FFs()
     Double_t Qtemp = 0.;
 
     //Calculate Mott XS.
-    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta_cor/2.0),4.0)))*pow(cos(theta_cor/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
 
     //Calculate XS from FFs.
-    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2_Amroun(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2.)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta_cor/2.),2.))*pow(MFF_Q2_Amroun(Q2,par),2.) ); 
+    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2_Amroun(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2.)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta/2.),2.))*pow(MFF_Q2_Amroun(Q2,par),2.) ); 
     
     return val;
     
@@ -461,6 +461,7 @@ void Plot_FFs()
   model_xs = fxs->Eval(test_Q2);
   cout<<"Initial model_xs = "<<model_xs<<" at Q^2 = "<<test_Q2<<" fm^-2."<<endl;
   
+  /*
   //Increment guess up or down until close enough to the exp. xs.
   while(model_xs>(exp_xs+window) || (model_xs<exp_xs-window))
     {
@@ -480,5 +481,42 @@ void Plot_FFs()
   cout<<"model_xs = "<<model_xs<<" fm^2/sr at Q^2 = "<<test_Q2<<" fm^-2 = "<<test_Q2*0.0389<<" GeV^2."<<endl;
 
   cout<<"Theta = "<<2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_Q2)-(2.*E0/MtHe3))) , 0.5 )  ) * 180./pi<<endl;
+  */
   //cout<<"Theta = "<<2*TMath::ASin(  pow( (1/(4*pow(E0,2.)/test_Q2-2*E0/MtHe3)) , 0.5 )  )<<endl;
+
+  //Get weighted average of Q^2 (weighted by XS value) in the bin containing my XS.
+  
+  Double_t dphi_cut_min = -0.03;        //Min and Max dphi cuts. Deviation from spectrometer angle.
+  Double_t dphi_cut_max = 0.03;
+  Double_t dphi_min = TMath::ATan(dphi_cut_min);     //Convert cut to actual radian value of the deviation from spectrometer angle.
+  Double_t dphi_max = TMath::ATan(dphi_cut_max);
+  Double_t spect_ang = 21.04;                        //Spectrometer angle in degrees.
+  Double_t ang_min = spect_ang*pi/180.+dphi_min;     //Min and max bin angles in radians.
+  Double_t ang_max = spect_ang*pi/180.+dphi_max;
+  Double_t Q2_min = 4*pow(E0,2.)*pow(sin(ang_min/2.),2.) / (1+2*E0*pow(sin(ang_min/2.),2.)/MtHe3) *GeV2fm;  //Min and max Q^2 for bin (fm^-2).
+  Double_t Q2_max = 4*pow(E0,2.)*pow(sin(ang_max/2.),2.) / (1+2*E0*pow(sin(ang_max/2.),2.)/MtHe3) *GeV2fm;
+  Int_t nbin = 30000;                                 //Number of divisions to apply to the bin when calculating weighted average.
+  Double_t bin_size = (Q2_min+Q2_max)/nbin;          //Size of each bin division.
+  Double_t Q2_weight = 0.;                           //Individual Q^2 values weighted by XS.
+  Double_t Q2_weight_tot = 0.;                       //Sum of individual Q^2 values weighted by XS.
+  Double_t weight_tot = 0.;                          //Sum of all weighting (XS) values.
+  Double_t Q2_cor = 0.;                              //Bin centering corrected Q^2 fm^-2.
+
+  //Print values for the bin.
+  cout<<"phi cut phi analyzer variable: "<<dphi_cut_min<<" to "<<dphi_cut_max<<endl;
+  cout<<"phi cut radians: "<<dphi_min<<" to "<<dphi_max<<endl;
+  cout<<"Spectrometer angle = "<<spect_ang<<" degrees"<<endl;
+  cout<<"Min bin angle = "<<ang_min<<" radians = "<<ang_min*180/pi<<" degrees.   Max bin angle = "<<ang_max<<" radians = "<<ang_max*180/pi<<"."<<endl;
+  cout<<"Min bin Q^2 = "<<Q2_min/GeV2fm<<" GeV^2 = "<<Q2_min<<" fm^-2.   Max bin Q^2 = "<<Q2_max/GeV2fm<<" GeV^2 = "<<Q2_max<<"."<<endl;
+
+  //Find weighted average.
+  for(Int_t i=0;i<nbin;i++)
+    {
+      Q2_weight = (Q2_min+i*bin_size)*fxs->Eval(Q2_min+i*bin_size);
+      Q2_weight_tot = Q2_weight_tot + Q2_weight;
+      weight_tot = weight_tot + fxs->Eval(Q2_min+i*bin_size);
+    }
+  //Calculate weighted average by multiplying each Q^2 value in the bin by the XS value (weight) and summing these weighted Q^2. Then divide by the sum of the weights.
+  Q2_cor = Q2_weight_tot/weight_tot;
+  cout<<"Average Q^2 for the bin = "<<((Q2_min+Q2_max)/2)/GeV2fm<<" GeV^2 = "<<(Q2_min+Q2_max)/2<<" fm^-2.   Corrected bin center = "<<Q2_cor/GeV2fm<<" GeV^2 = "<<Q2_cor<<" fm^-2."<<endl;
 }
