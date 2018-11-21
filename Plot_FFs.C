@@ -31,7 +31,7 @@ Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
-Int_t Rep_Fit = 556;
+Int_t Rep_Fit = 122;    //Fit# from Multifit requires -1. From Plot_FFs or Chi2_Sorted Fit# is just the number.
 Int_t loops = 1;
 const Int_t datapts = 259;//248
 Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
@@ -307,9 +307,9 @@ void Plot_FFs()
   //Set SOG parameters to the representative fit's parameters.
   for(Int_t i=0;i<ngaus;i++)
     {
-      R[i] = Rmulti[Rep_Fit-1][i];
-      Qich[i] = Qichmulti[Rep_Fit-1][i];
-      Qim[i] = Qimmulti[Rep_Fit-1][i];
+      R[i] = Rmulti[Rep_Fit][i];
+      Qich[i] = Qichmulti[Rep_Fit][i];
+      Qim[i] = Qimmulti[Rep_Fit][i];
     }
 
   TCanvas* cFch=new TCanvas("cFch");
@@ -610,13 +610,13 @@ void Plot_FFs()
     }  
 
   //Sort array in ascending order.
-  sort(Chi2_Sorted.begin(),Chi2_Sorted.end());
+  sort(Chi2_Sorted.begin(),Chi2_Sorted.end());           
   for(Int_t i=0;i<nlines-skip;i++)
     {
-      cout<<"Chi2_Sorted["<<i<<"] = "<<Chi2_Sorted[i]<<endl;
+      //cout<<"Chi2_Sorted["<<i<<"] = "<<Chi2_Sorted[i]<<endl;
     } 
 
-  //sort(Test.begin(),Test.end());
+  //sort(Test.begin(),Test.end());              //Will only work if compile first with root -l Plot_FFs.C+ and it's too irritating to bother making this compile nicely.
   /*
   std::sort(Test.begin(), Test.end(),
 	    [](const pair& x, const pair& y) {
@@ -627,7 +627,8 @@ void Plot_FFs()
   */
    for(Int_t i=0;i<nlines-skip;i++)
     {
-      cout<<"Fit Number = "<<Test[i].second<<"   Chi2_Sorted["<<i<<"] = "<<Test[i].first<<endl;
+      //cout<<Test[i].second<<"    "<<Test[i].first<<endl;
+      //cout<<"Fit Number = "<<Test[i].second<<"   Chi2_Sorted["<<i<<"] = "<<Test[i].first<<endl;
     }
 
   Double_t test_point = 35.8152;//35.8152;//35.7582;
