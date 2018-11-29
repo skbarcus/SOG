@@ -53,6 +53,8 @@ Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
 Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
 Double_t theta = 0.;//21.04;
 Double_t theta_cor = 0.;                //Theta that corrects for the Q^2eff adjustment. Basically when we plot the XS and FFs the Q2[0] is really Q^2eff if we don't use this theta_cor. This variable is for the slightly smaller theta representing the real scattering angle.
+Double_t bin_min_Q2 = 30.5589;
+Double_t bin_max_Q2 = 41.247;
 Double_t E0 = 3.356;                    //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
@@ -515,7 +517,7 @@ void Plot_FFs()
   //fMFF_Amroun->Draw("L");
   fxs->SetNpx(npdraw);
   fxs->Draw("L");
-  fxs->SetTitle("^{3}He Cross Section at 3.356 Gev and 21.04#circ");
+  fxs->SetTitle("^{3}He Cross Section at 3.356 Gev");
   fxs->GetHistogram()->GetYaxis()->SetTitle("#frac{d#sigma}{d#Omega} (fm^{2}/sr)");
   fxs->GetHistogram()->GetYaxis()->CenterTitle(true);
   fxs->GetHistogram()->GetYaxis()->SetLabelSize(0.04);
@@ -571,18 +573,29 @@ void Plot_FFs()
   //fMFF_Amroun->Draw("L");
   fxs_Amroun->SetNpx(npdraw);
   fxs_Amroun->SetLineColor(4);
-  fxs_Amroun->Draw("L SAME");
+  //fxs_Amroun->Draw("L SAME");
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fxs","New ^{3}He Cross Section","l");
-  MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun et al.","l");
+  //MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun et al.","l");
   MFF_leg->Draw();
 
   //Plot my data point.
   m1 = new TMarker(34.0981, 1.33459E-10, 20);
   m1->SetMarkerColor(kOrange+7);
   m1->SetMarkerSize(1);
-  m1->Draw();
+  //m1->Draw();
+
+  //Show two lines representing the edges of our bin in Q^2.
+  TLine *line = new TLine(bin_min_Q2,0.,bin_min_Q2,fxs->Eval(bin_min_Q2));
+  line->SetLineColor(kBlack);
+  line->SetLineWidth(2);
+  //line->Draw();
+
+  TLine *line1 = new TLine(bin_max_Q2,0.,bin_max_Q2,fxs->Eval(bin_max_Q2));
+  line1->SetLineColor(kBlack);
+  line1->SetLineWidth(2);
+  //line1->Draw();
 
   using namespace std;
 
