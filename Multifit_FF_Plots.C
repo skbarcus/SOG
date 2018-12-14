@@ -27,7 +27,7 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
 
 const Int_t nfunc = 1000;
-Double_t maxchi2 = 505;//3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
+Double_t maxchi2 = 10000;//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
 Double_t Qim_range = 1.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -43,7 +43,7 @@ Int_t showplots = 1;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 10;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -60,7 +60,7 @@ Double_t range = fabs(ymaxFF - yminFF);
 Int_t n = 10000;
 Int_t ndim = n+1;
 Int_t npdraw = 1001;                     //Number of points to be used when drawing a function.
-Double_t transparency = 0.05;              //Sets the transparency level of the multiplot lines.
+Double_t transparency = 0.2;//0.05              //Sets the transparency level of the multiplot lines.
 Double_t linewidth = 2.;
 Double_t truncate = 100.;                 //Truncate the histogram before inverse FFT. [fm^-2]
 Int_t skip = 1.;                          //Gives number of lines to skip at top of data file. 
@@ -309,13 +309,25 @@ void Multifit_FF_Plots()
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Chi2.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_BS_300_Ri_Chi2.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_180_9_25_2018.txt","r");
-  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Combined_Ri_Fits.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Combined_Ri_Fits.txt","r");//My old point.
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Closer_Ri_Fits_n=10_525_10_1_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_n=9_300_9_28_2018.txt","r");
     
+
+  //3He
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
+  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=8_100_12_12_2018.txt","r");
+
   //3H
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
+
+
   //Read in data.
   while (1) {
     //Skips the first skip lines of the file. 
@@ -419,6 +431,19 @@ void Multifit_FF_Plots()
       }
   }
 
+  //Add in summing up individual Qich,m to account for the mistake where higher n fits leave values for lower n fits.
+  for(Int_t i=0;i<(nlines-skip);i++)
+    {
+
+      Qichtot[i] = 0.;
+      Qimtot[i] = 0.;
+      for(Int_t j=0;j<ngaus;j++)
+	{
+	  Qichtot[i] = Qichtot[i] + Qichmulti[i][j];
+	  Qimtot[i] = Qimtot[i] + Qimmulti[i][j];
+	  //cout<<"!!!!!!!!!!!!!!!"<<Qichtot[i]<<endl;
+	}
+    }
   //Print the data read from the file.
   if(showplots == 1)
     { 
@@ -465,7 +490,6 @@ void Multifit_FF_Plots()
   fclose(fp);
 
   //Now plot all of the curves on one canvas to form an error band.
-
   TCanvas* cFch=new TCanvas("cFch");
   cFch->SetGrid();
   cFch->SetLogy();
@@ -602,7 +626,7 @@ void Multifit_FF_Plots()
 	      rms_deriv_tot = rms_deriv[z] + rms_deriv_tot;
 	      rms_int[z] = pow( frho_rms[current_loop]->Integral(0.0,10.)/frho_ch_int[current_loop]->Integral(0.0,10.) ,0.5);
 	      rms_int_tot = rms_int[z] + rms_int_tot;
-
+       
 	      total_funcs++;
 	    }
 	  fChFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
@@ -630,6 +654,7 @@ void Multifit_FF_Plots()
 	  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
 	  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
 	  frho_ch[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+
 	}
       else
 	{
@@ -695,7 +720,7 @@ void Multifit_FF_Plots()
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
-
+		  
 		  cCh_den->cd();
 		  frho_ch[current_loop]->Draw("L");
 		  frho_ch[current_loop]->SetTitle("^{3}He Charge Density");
@@ -721,7 +746,7 @@ void Multifit_FF_Plots()
 		  frho_ch[current_loop]->Draw("L SAME");
 		  //frho_ch_int[current_loop]->Draw("L SAME");
 		}
-
+	      
 	      for(Int_t i=0;i<ngaus;i++)
 		{
 		  hRi->Fill(Rmulti[current_loop][i]);
@@ -733,7 +758,7 @@ void Multifit_FF_Plots()
 		{
 		  hRi_sep[i]->Fill(Rmulti[current_loop][i+1]-Rmulti[current_loop][i]);
 		}
-
+	      
 	      //Calculate the charge radii.
 	      double x0 = 0.0015;
 	      ROOT::Math::Functor1D f1D(&ChFF_Deriv); //Fail fChFF[current_loop]. Fail ChFF_Q2.
@@ -761,7 +786,8 @@ void Multifit_FF_Plots()
 	      cout<<"Loop = "<<z<<endl;
 	    }
 	}
-      cout<<"fChFF->Eval(0) = "<<fChFF[current_loop]->Eval(0.0001)<<endl;
+//cout<<"fChFF->Eval(0) = "<<fChFF[current_loop]->Eval(10.)<<endl;
+//cout<<"fChFF->Eval(0) = "<<fChFF[current_loop]->Eval(0.0001)<<endl;
       //cout<<"loop before ++ = "<<current_loop<<endl;
       /*
       //Calculate the charge radii.
@@ -773,6 +799,7 @@ void Multifit_FF_Plots()
       rms[z] = pow(-6*rd.Derivative1(x0),0.5);
       rms_tot = rms[z] + rms_tot;
       */
+      
       if(current_loop<(nlines-skip-1))
 	{
 	  current_loop++;
