@@ -2045,7 +2045,7 @@ void Global_Fit_3He_SOG()
 
 
       //Fill text file with fcn (chi2), Qichtot, Qimtot, Ri, Qich, Qim.
-      output<<amin<<" "<<amin/(datapts-2*ngaus-1)<<" "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*2*ngaus<<" "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<" "<<Qichtot<<" "<<Qimtot<<" "<<R[0]<<" "<<R[1]<<" "<<R[2]<<" "<<R[3]<<" "<<R[4]<<" "<<R[5]<<" "<<R[6]<<" "<<R[7]<<" "<<R[8]<<" "<<R[9]<<" "<<R[10]<<" "<<R[11]<<" "<<Qich[0]<<" "<<Qich[1]<<" "<<Qich[2]<<" "<<Qich[3]<<" "<<Qich[4]<<" "<<Qich[5]<<" "<<Qich[6]<<" "<<Qich[7]<<" "<<Qich[8]<<" "<<Qich[9]<<" "<<Qich[10]<<" "<<Qich[11]<<" "<<Qim[0]<<" "<<Qim[1]<<" "<<Qim[2]<<" "<<Qim[3]<<" "<<Qim[4]<<" "<<Qim[5]<<" "<<Qim[6]<<" "<<Qim[7]<<" "<<Qim[8]<<" "<<Qim[9]<<" "<<Qim[10]<<" "<<Qim[11]<<endl;
+      output<<amin<<" "<<amin/(datapts-2*ngaus-1)<<" "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*ngaus<<" "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<" "<<Qichtot<<" "<<Qimtot<<" "<<R[0]<<" "<<R[1]<<" "<<R[2]<<" "<<R[3]<<" "<<R[4]<<" "<<R[5]<<" "<<R[6]<<" "<<R[7]<<" "<<R[8]<<" "<<R[9]<<" "<<R[10]<<" "<<R[11]<<" "<<Qich[0]<<" "<<Qich[1]<<" "<<Qich[2]<<" "<<Qich[3]<<" "<<Qich[4]<<" "<<Qich[5]<<" "<<Qich[6]<<" "<<Qich[7]<<" "<<Qich[8]<<" "<<Qich[9]<<" "<<Qich[10]<<" "<<Qich[11]<<" "<<Qim[0]<<" "<<Qim[1]<<" "<<Qim[2]<<" "<<Qim[3]<<" "<<Qim[4]<<" "<<Qim[5]<<" "<<Qim[6]<<" "<<Qim[7]<<" "<<Qim[8]<<" "<<Qim[9]<<" "<<Qim[10]<<" "<<Qim[11]<<endl;
 
 
     }//End loop over minimization for different Ri values or bootstrapping.
@@ -2194,7 +2194,7 @@ void Global_Fit_3He_SOG()
       c4->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/MFF.C");
      
       cout<<"Chi^2 (amin) = "<<amin<<"   Reduced Chi^2 = "<<amin<<"/("<<datapts<<" - "<<2*ngaus<<" - 1) = "<<amin/(datapts-2*ngaus-1)<<endl;
-      cout<<"BIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<2*ngaus<<"*ln("<<datapts<<") = "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*2*ngaus<<"   AIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<2*ngaus<<" = "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<endl;
+      cout<<"BIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<ngaus<<"*ln("<<datapts<<") = "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*ngaus<<"   AIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<2*ngaus<<" = "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<endl;
 
       //Now draw both FFs on the same plot for the GRC poster. 
       TCanvas* c5=new TCanvas("c5");

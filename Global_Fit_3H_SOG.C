@@ -51,7 +51,7 @@ Int_t useFB = 0;                         //Turn on Fourier Bessel fit.
 Int_t useFB_FM = 1;                      //0 = Turn on Fourier Bessel fit just for FC. 1 = Turn on Fourier Bessel fit attempting FC and FM.
 Int_t improve = 0;                       //1 = use mnimpr() to check for other minima around the one MIGRAD finds.
 Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter errors. With ERRordef=30, npar=24, 10000 calls took about 1.5 hours and gave results only slightly different from intial parameter errors given. Several pars were hitting limits. 
-Int_t optimize_Ri = 1;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.
+Int_t optimize_Ri = 0;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.
 Int_t bootstrap = 0;                     //0 = No bootstrapping. 1 = Using a fixed Ri set randomly select points in the dataset a number of times equal to the number of points in the dataset and then use those points for a fit.
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 9;                        //Number of Gaussians used to fit data.
@@ -1781,7 +1781,7 @@ void Global_Fit_3H_SOG()
 
 
       //Fill text file with fcn (chi2), Qichtot, Qimtot, Ri, Qich, Qim.
-      output<<amin<<" "<<amin/(datapts-2*ngaus-1)<<" "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*2*ngaus<<" "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<" "<<Qichtot<<" "<<Qimtot<<" "<<R[0]<<" "<<R[1]<<" "<<R[2]<<" "<<R[3]<<" "<<R[4]<<" "<<R[5]<<" "<<R[6]<<" "<<R[7]<<" "<<R[8]<<" "<<R[9]<<" "<<R[10]<<" "<<R[11]<<" "<<Qich[0]<<" "<<Qich[1]<<" "<<Qich[2]<<" "<<Qich[3]<<" "<<Qich[4]<<" "<<Qich[5]<<" "<<Qich[6]<<" "<<Qich[7]<<" "<<Qich[8]<<" "<<Qich[9]<<" "<<Qich[10]<<" "<<Qich[11]<<" "<<Qim[0]<<" "<<Qim[1]<<" "<<Qim[2]<<" "<<Qim[3]<<" "<<Qim[4]<<" "<<Qim[5]<<" "<<Qim[6]<<" "<<Qim[7]<<" "<<Qim[8]<<" "<<Qim[9]<<" "<<Qim[10]<<" "<<Qim[11]<<endl;
+      output<<amin<<" "<<amin/(datapts-2*ngaus-1)<<" "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*ngaus<<" "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<" "<<Qichtot<<" "<<Qimtot<<" "<<R[0]<<" "<<R[1]<<" "<<R[2]<<" "<<R[3]<<" "<<R[4]<<" "<<R[5]<<" "<<R[6]<<" "<<R[7]<<" "<<R[8]<<" "<<R[9]<<" "<<R[10]<<" "<<R[11]<<" "<<Qich[0]<<" "<<Qich[1]<<" "<<Qich[2]<<" "<<Qich[3]<<" "<<Qich[4]<<" "<<Qich[5]<<" "<<Qich[6]<<" "<<Qich[7]<<" "<<Qich[8]<<" "<<Qich[9]<<" "<<Qich[10]<<" "<<Qich[11]<<" "<<Qim[0]<<" "<<Qim[1]<<" "<<Qim[2]<<" "<<Qim[3]<<" "<<Qim[4]<<" "<<Qim[5]<<" "<<Qim[6]<<" "<<Qim[7]<<" "<<Qim[8]<<" "<<Qim[9]<<" "<<Qim[10]<<" "<<Qim[11]<<endl;
 
 
     }//End loop over minimization for different Ri values or bootstrapping.
@@ -1930,7 +1930,7 @@ void Global_Fit_3H_SOG()
       c4->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/MFF.C");
      
       cout<<"Chi^2 (amin) = "<<amin<<"   Reduced Chi^2 = "<<amin<<"/("<<datapts<<" - "<<2*ngaus<<" - 1) = "<<amin/(datapts-2*ngaus-1)<<endl;
-      cout<<"BIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<2*ngaus<<"*ln("<<datapts<<") = "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*2*ngaus<<"   AIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<2*ngaus<<" = "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<endl;
+      cout<<"BIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<ngaus<<"*ln("<<datapts<<") = "<<datapts*TMath::Log(amin/datapts)+TMath::Log(datapts)*ngaus<<"   AIC = "<<datapts<<"*ln("<<amin<<"/"<<datapts<<")+"<<2*ngaus<<" = "<<datapts*TMath::Log(amin/datapts)+2*ngaus<<endl;
 
       //Now draw both FFs on the same plot for the GRC poster. 
       TCanvas* c5=new TCanvas("c5");
