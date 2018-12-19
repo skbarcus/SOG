@@ -40,7 +40,7 @@ Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason,
 Double_t mu3H = 2.9788*(3.0/1.0); //Magnetic moment of trinucleon (H3 or He3). NIST: http://physics.nist.gov/cgi-bin/cuu/Results?search_for=magnet+moment   //MCEEP Code for H3 and He3 eleastic FFs has magnetic moments multiplied by 3.0/Z. I don't know why but it works. Maybe it's a factor of A/Z?
 
 Int_t loops = 100;
-Int_t userand = 5;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11.
+Int_t userand = 8;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11. 8 = ngaus=7;
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
@@ -54,7 +54,7 @@ Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter 
 Int_t optimize_Ri = 1;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.
 Int_t bootstrap = 0;                     //0 = No bootstrapping. 1 = Using a fixed Ri set randomly select points in the dataset a number of times equal to the number of points in the dataset and then use those points for a fit.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 9;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 7;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 10;
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 //Double_t Z = 2.;                         //Atomic number He3.
@@ -1117,6 +1117,32 @@ void Global_Fit_3H_SOG()
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand10 = new TF1("rand10","x",6.,7.);
 	  R[10] = TMath::Nint(rand10->GetRandom())/10.+R[9];
+	}
+
+      if(userand == 8) //ngaus = 7
+	{
+	  //Generate random R[i] values. 
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand = new TF1("rand","x",2.,3.);
+	  R[0] = TMath::Nint(rand->GetRandom())/10.;
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand1 = new TF1("rand1","x",5.,6.);
+	  R[1] = TMath::Nint(rand1->GetRandom())/10.+R[0];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand2 = new TF1("rand2","x",5.,6.);
+	  R[2] = TMath::Nint(rand2->GetRandom())/10.+R[1];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand3 = new TF1("rand3","x",5.,6.);
+	  R[3] = TMath::Nint(rand3->GetRandom())/10.+R[2];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand4 = new TF1("rand4","x",10.,11.);
+	  R[4] = TMath::Nint(rand4->GetRandom())/10.+R[3];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand5 = new TF1("rand5","x",10.,11.);
+	  R[5] = TMath::Nint(rand5->GetRandom())/10.+R[4];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand6 = new TF1("rand6","x",10.,11.);
+	  R[6] = TMath::Nint(rand6->GetRandom())/10.+R[5];
 	}
 
       //Add a constant to each value of Ri.

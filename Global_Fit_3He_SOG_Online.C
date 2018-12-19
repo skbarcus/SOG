@@ -39,7 +39,7 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 Int_t loops = 100;
-Int_t userand = 2;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11.
+Int_t userand = 8;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11. 8 = ngaus=13.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
@@ -94,23 +94,23 @@ const Int_t datapts = 259;//Amroun_pts+Collard_pts+Szlata+Dunn_pts+Camsonne_pts+
 
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
-Double_t R[12] = {0.1,0.6,0.7,1.3,1.4,2.,2.7,3.4,4.3,5.2,0.,0.};//51
+Double_t R[15] = {0.1,0.6,0.7,1.3,1.4,2.,2.7,3.4,4.3,5.2,0.,0.};//51
 //Double_t R[12] = {0.2,0.7,1.3,1.5,2.1,2.8,3.6,4.2,5.2,0.,0.,0.};
 //Double_t R[12] = {0.1,0.6,1.,1.5,2.1,2.4,3.,3.7,4.4,4.7,0.,0.};//9/12/18 pretty good 2.
 //Double_t R[12] = {0.1,0.6,1.,1.5,2.0,2.4,3.1,3.9,4.5,4.8,0.,0.}; //9/12/18 pretty good 1. Also these Ri work well with Qi 2. Very smooth Fm.
 //Double_t R[12] = {0.1,0.5,0.9,1.3,1.5,1.9,2.3,2.8,3.1,3.8,4.3,5.};//Best n=12 from Amroun starting.
 //Double_t R[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
-Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
-Double_t R_init[12] = {};
-Double_t R_best[12] = {};
+Double_t R_Amroun[15] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
+Double_t R_init[15] = {};
+Double_t R_best[15] = {};
 Double_t R_best_chi2 = 0;
 //Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//Amroun
 //Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 //Double_t Qich[12] = {0.0289116,0.176012,0.227652,0.18408,0.186425,0.093576,0.0329847,0.052855,0.016552,0.00285043,0.00615456,1.58614E-11};
 //Double_t Qim[12] = {0.0585454,0.160715,0.222426,0.156211,0.191486,0.125172,0.00162158,0.0602476,0.0228372,6.94389E-13,0.0192538,1.03119E-11};
 
-Double_t Qich[12] = {0.0440183,0.116665,0.202577,0.26934,0.0690628,0.179559,0.0854789,0.0318623,0.00963141,9.4369e-16,0.,0.};//9/15/18 51.
-Double_t Qim[12] = {0.0725889,0.0926902,0.209459,0.231037,0.079899,0.188591,0.0836548,0.0440054,0.0235449,2.42131e-10,0.,0.};
+Double_t Qich[15] = {0.0440183,0.116665,0.202577,0.26934,0.0690628,0.179559,0.0854789,0.0318623,0.00963141,9.4369e-16,0.,0.};//9/15/18 51.
+Double_t Qim[15] = {0.0725889,0.0926902,0.209459,0.231037,0.079899,0.188591,0.0836548,0.0440054,0.0235449,2.42131e-10,0.,0.};
 //Double_t Qich[12] = {0.0877489,0.157569,0.251965,0.153987,0.18569,0.114409,0.042258,0.0141493,5.25852e-12,0.,0.,0.};//9/14/18 42
 //Double_t Qim[12] = {0.151938,0.0687805,0.318107,0.0627664,0.234607,0.100287,0.0562909,0.00777628,0.018992,0.,0.,0.};
 //Double_t Qich[12] = {0.087498,0.157869,0.245378,0.101457,0.223892,0.123962,0.0483213,0.014929,0.00494579,0.,0.,0.};//9/14/18 40
@@ -142,12 +142,12 @@ Double_t Qim[12] = {0.0725889,0.0926902,0.209459,0.231037,0.079899,0.188591,0.08
 
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
-Double_t Qich_best[12] = {};
-Double_t Qim_best[12] = {};
+Double_t Qich_best[15] = {};
+Double_t Qim_best[15] = {};
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
-Double_t Qicherr[12]={}; 
-Double_t Qimerr[12]={};
+Double_t Qicherr[15]={}; 
+Double_t Qimerr[15]={};
 Float_t Q2[datapts];
 Double_t Chi2[datapts]={};
 Double_t residual[datapts]={};
@@ -1164,6 +1164,50 @@ void Global_Fit_3He_SOG()
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand10 = new TF1("rand10","x",6.,7.);
 	  R[10] = TMath::Nint(rand10->GetRandom())/10.+R[9];
+	}
+
+      if(userand == 8) //ngaus = 11
+	{
+	  //Generate random R[i] values. 
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand = new TF1("rand","x",1.,2.);
+	  R[0] = TMath::Nint(rand->GetRandom())/10.;
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand1 = new TF1("rand1","x",3.,4.);
+	  R[1] = TMath::Nint(rand1->GetRandom())/10.+R[0];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand2 = new TF1("rand2","x",3.,4.);
+	  R[2] = TMath::Nint(rand2->GetRandom())/10.+R[1];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand3 = new TF1("rand3","x",3.,4.);
+	  R[3] = TMath::Nint(rand3->GetRandom())/10.+R[2];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand4 = new TF1("rand4","x",3.,4.);
+	  R[4] = TMath::Nint(rand4->GetRandom())/10.+R[3];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand5 = new TF1("rand5","x",3.,4.);
+	  R[5] = TMath::Nint(rand5->GetRandom())/10.+R[4];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand6 = new TF1("rand6","x",5.,6.);
+	  R[6] = TMath::Nint(rand6->GetRandom())/10.+R[5];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand7 = new TF1("rand7","x",5.,6.);
+	  R[7] = TMath::Nint(rand7->GetRandom())/10.+R[6];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand8 = new TF1("rand8","x",5.,6.);
+	  R[8] = TMath::Nint(rand8->GetRandom())/10.+R[7];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand9 = new TF1("rand9","x",5.,6.);
+	  R[9] = TMath::Nint(rand9->GetRandom())/10.+R[8];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand10 = new TF1("rand10","x",5.,6.);
+	  R[10] = TMath::Nint(rand10->GetRandom())/10.+R[9];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand11 = new TF1("rand11","x",5.,6.);
+	  R[11] = TMath::Nint(rand11->GetRandom())/10.+R[10];
+	  gRandom->SetSeed(0);                    //Sets new random seed.
+	  TF1 *rand12 = new TF1("rand12","x",5.,6.);
+	  R[12] = TMath::Nint(rand12->GetRandom())/10.+R[11];
 	}
 
       //Add a constant to each value of Ri.
