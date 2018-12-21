@@ -27,7 +27,7 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
 
 const Int_t nfunc = 1000;
-Double_t maxchi2 = 10000;//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
+Double_t maxchi2 = 615;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
 Double_t Qim_range = 1.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -43,7 +43,7 @@ Int_t showplots = 1;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 7;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -93,10 +93,10 @@ Double_t R[12] = {0.1,0.7,1.3,2.,2.7,3.6,4.4,5.6,0.,0.,0.,0.};//7
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t Qich[12] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
 Double_t Qim[12] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
-Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
-Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
-//Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
-//Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
+//Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
+//Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
+Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
+Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
 Double_t Qicherr[12]={}; 
@@ -190,10 +190,12 @@ Double_t MFF_Q2(Double_t *Q2, Double_t *par)
       summtemp = (par[i]/(1.0+2.0*pow(par[i+ngaus],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*par[i+ngaus]) + (2.0*pow(par[i+ngaus],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*par[i+ngaus])/(pow(Q2[0],0.5)*par[i+ngaus])) );
 	
       fitm = fitm + summtemp;
+      //cout<<"Loop "<<i<<" fitm = "<<fitm<<endl;
     }
 
   fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
   fitm = fabs(fitm);
+  //cout<<"fitm = "<<fitm<<endl;
   return fitm;
 }
 
@@ -246,10 +248,12 @@ Double_t ChFF_Deriv(Double_t Q2)
 + (Q3ch[z]/(1.0+2.0*pow(R3[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R3[z]) + (2.0*pow(R3[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R3[z])/(pow(Q2,0.5)*R3[z])) )
 + (Q4ch[z]/(1.0+2.0*pow(R4[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R4[z]) + (2.0*pow(R4[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R4[z])/(pow(Q2,0.5)*R4[z])) )
 + (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
-+ (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
-+ (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
-+ (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
-+ (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) );
+    + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) );
+  //+ (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
+  //+ (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
+  //+ (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
+  //    + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
+  //   + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
  
   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
   //fitch = fabs(fitch);
@@ -315,13 +319,15 @@ void Multifit_FF_Plots()
     
 
   //3He
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
-  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=8_100_12_12_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=8_100_12_12_2018.txt","r");
 
   //3H
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
+  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
@@ -544,7 +550,7 @@ void Multifit_FF_Plots()
 	{
 	  char fname[20];
 	  sprintf(fname,"f%d",z);
-	  fChFF[current_loop] = new TF1(fname,ChFF_Q2,yminFF,ymaxFF+54,20);
+	  fChFF[current_loop] = new TF1(fname,ChFF_Q2,yminFF,ymaxFF+54,2*ngaus);//was 20.
 	  //char fname1[20];
 	  //sprintf(fname1,"f%d",z);
 	  //fChFF_Deriv[current_loop] = new TF1(fname1,ChFF_Deriv,yminFF,ymaxFF+54,20);
@@ -660,7 +666,7 @@ void Multifit_FF_Plots()
 	{
 	  char fname[20];
 	  sprintf(fname,"f%d",z);
-	  fChFF[current_loop] = new TF1(fname,ChFF_Q2,yminFF,ymaxFF+54,20);
+	  fChFF[current_loop] = new TF1(fname,ChFF_Q2,yminFF,ymaxFF+54,2*ngaus);
 	  //char fname1[20];
 	  //sprintf(fname1,"f%d",z);
 	  //fChFF_Deriv[current_loop] = new TF1(fname1,ChFF_Deriv,yminFF,ymaxFF+54,20);
@@ -839,7 +845,7 @@ void Multifit_FF_Plots()
 	{
 	  char fname[20];
 	  sprintf(fname,"f%d",z);
-	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,20);
+	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,2*ngaus);
 
 	  //Set parameters for the various functions.
 	  for(Int_t i=0;i<ngaus;i++)
@@ -877,7 +883,7 @@ void Multifit_FF_Plots()
 	  char fname[20];
 	  sprintf(fname,"f%d",z);
 
-	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,20);
+	  fMFF[current_loop] = new TF1(fname,MFF_Q2,yminFF,ymaxFF+54,2*ngaus);
 
 	  //Set parameters for the various functions.
 	  for(Int_t i=0;i<ngaus;i++)
@@ -916,7 +922,8 @@ void Multifit_FF_Plots()
 	    }
 	}
       //fMFF[2]->Draw("L");
-      cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
+      //cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.0001)<<endl;
+      //cout<<"fMFF->Eval(0) = "<<fMFF[current_loop]->Eval(0.01)<<endl;
       //cout<<"loop before ++ = "<<current_loop<<endl;
       if(current_loop<(nlines-skip-1))
 	{
@@ -986,7 +993,7 @@ void Multifit_FF_Plots()
   hrms_deriv->Draw();
 
   TF1 *fgaus1 = new TF1("fgaus1",fit_gaus,rms_deriv_min,rms_deriv_max,3);
-  fgaus1->SetParameter(0,1.);
+  fgaus1->SetParameter(0,20.);
   fgaus1->SetParameter(1,hrms_deriv->GetMean());
   fgaus1->SetParameter(2,hrms_deriv->GetStdDev());
   hrms_deriv->Fit("fgaus1","R same M");
