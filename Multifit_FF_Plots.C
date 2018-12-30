@@ -25,14 +25,15 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
+Int_t target = 1; //3He = 0. 3H = 1. 
 
-const Int_t nfunc = 1000;
-Double_t maxchi2 = 615;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
-Double_t Qim_range = 1.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
+const Int_t nfunc = 3000;
+Double_t maxchi2 = 603;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
+Double_t Qim_range = 5.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
 const Int_t datapts = 259;//248
-const Int_t size = 1000;//248
+const Int_t size = 3000;//248
 Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
@@ -43,7 +44,7 @@ Int_t showplots = 1;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 7;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -67,17 +68,17 @@ Int_t skip = 1.;                          //Gives number of lines to skip at top
 Int_t nlines = 0;                        //Counts number of lines in the data file. 
 Int_t ncols;                             //Set how many columns of data we have in the data file.
 char* str[1000];                          //Variable to read lines of the data file.
-Float_t Chi2[size],rChi2[size],BIC[size],AIC[size],Qichtot[size],Qimtot[size],R0[size],R1[size],R2[size],R3[size],R4[size],R5[size],R6[size],R7[size],R8[size],R9[size],R10[size],R11[size],Q0ch[size],Q1ch[size],Q2ch[size],Q3ch[size],Q4ch[size],Q5ch[size],Q6ch[size],Q7ch[size],Q8ch[size],Q9ch[size],Q10ch[size],Q11ch[size],Q0m[size],Q1m[size],Q2m[size],Q3m[size],Q4m[size],Q5m[size],Q6m[size],Q7m[size],Q8m[size],Q9m[size],Q10m[size],Q11m[size];
-Float_t Chi2temp,rChi2temp,BICtemp,AICtemp,Qichtottemp,Qimtottemp,R0temp,R1temp,R2temp,R3temp,R4temp,R5temp,R6temp,R7temp,R8temp,R9temp,R10temp,R11temp,Q0chtemp,Q1chtemp,Q2chtemp,Q3chtemp,Q4chtemp,Q5chtemp,Q6chtemp,Q7chtemp,Q8chtemp,Q9chtemp,Q10chtemp,Q11chtemp,Q0mtemp,Q1mtemp,Q2mtemp,Q3mtemp,Q4mtemp,Q5mtemp,Q6mtemp,Q7mtemp,Q8mtemp,Q9mtemp,Q10mtemp,Q11mtemp;
+Float_t Chi2[size],rChi2[size],BIC[size],AIC[size],Qichtot[size],Qimtot[size],R0[size],R1[size],R2[size],R3[size],R4[size],R5[size],R6[size],R7[size],R8[size],R9[size],R10[size],R11[size],R12[size],Q0ch[size],Q1ch[size],Q2ch[size],Q3ch[size],Q4ch[size],Q5ch[size],Q6ch[size],Q7ch[size],Q8ch[size],Q9ch[size],Q10ch[size],Q11ch[size],Q12ch[size],Q0m[size],Q1m[size],Q2m[size],Q3m[size],Q4m[size],Q5m[size],Q6m[size],Q7m[size],Q8m[size],Q9m[size],Q10m[size],Q11m[size],Q12m[size];
+Float_t Chi2temp,rChi2temp,BICtemp,AICtemp,Qichtottemp,Qimtottemp,R0temp,R1temp,R2temp,R3temp,R4temp,R5temp,R6temp,R7temp,R8temp,R9temp,R10temp,R11temp,R12temp,Q0chtemp,Q1chtemp,Q2chtemp,Q3chtemp,Q4chtemp,Q5chtemp,Q6chtemp,Q7chtemp,Q8chtemp,Q9chtemp,Q10chtemp,Q11chtemp,Q12chtemp,Q0mtemp,Q1mtemp,Q2mtemp,Q3mtemp,Q4mtemp,Q5mtemp,Q6mtemp,Q7mtemp,Q8mtemp,Q9mtemp,Q10mtemp,Q11mtemp,Q12mtemp;
 Float_t theta[datapts];                     //Angle in degrees.
 Float_t qeff[datapts];                      //q effective in fm^-1.
 Float_t sigexp[datapts];                    //Sigma experimental (cross section). Not sure on units yet.
 Float_t uncertainty[datapts];
 Float_t E0[datapts];
 Float_t Q2[datapts];
-Float_t Rmulti[size][12];
-Float_t Qichmulti[size][12];
-Float_t Qimmulti[size][12];
+Float_t Rmulti[size][15];
+Float_t Qichmulti[size][15];
+Float_t Qimmulti[size][15];
 Float_t rms_deriv[size];                          //Charge radius defined as -6*derivative of Ch FF at Q^2=0.
 Float_t rms_int[size];                          //Charge radius defined in the integral manner.
 
@@ -89,18 +90,18 @@ Int_t Camsonne_pts = 16;
 Int_t Nakagawa_pts = 5;
 Int_t my_pts = 1;
 
-Double_t R[12] = {0.1,0.7,1.3,2.,2.7,3.6,4.4,5.6,0.,0.,0.,0.};//7
+Double_t R[15] = {0.1,0.7,1.3,2.,2.7,3.6,4.4,5.6,0.,0.,0.,0.};//7
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
-Double_t Qich[12] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
-Double_t Qim[12] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
+Double_t Qich[15] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
+Double_t Qim[15] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
 //Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
 //Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
 Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
 Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
-Double_t Qicherr[12]={}; 
-Double_t Qimerr[12]={};
+Double_t Qicherr[15]={}; 
+Double_t Qimerr[15]={};
 //Double_t Chi2[datapts]={};
 Double_t residual[datapts]={};
 Double_t xsfit[datapts]={};
@@ -243,17 +244,18 @@ Double_t ChFF_Deriv(Double_t Q2)
   //Define SOG for charge FF.
 
   fitch = (Q0ch[z]/(1.0+2.0*pow(R0[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R0[z]) + (2.0*pow(R0[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R0[z])/(pow(Q2,0.5)*R0[z])) ) 
-+ (Q1ch[z]/(1.0+2.0*pow(R1[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R1[z]) + (2.0*pow(R1[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R1[z])/(pow(Q2,0.5)*R1[z])) )
-+ (Q2ch[z]/(1.0+2.0*pow(R2[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R2[z]) + (2.0*pow(R2[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R2[z])/(pow(Q2,0.5)*R2[z])) )
-+ (Q3ch[z]/(1.0+2.0*pow(R3[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R3[z]) + (2.0*pow(R3[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R3[z])/(pow(Q2,0.5)*R3[z])) )
-+ (Q4ch[z]/(1.0+2.0*pow(R4[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R4[z]) + (2.0*pow(R4[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R4[z])/(pow(Q2,0.5)*R4[z])) )
-+ (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
-    + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) );
-  //+ (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
-  //+ (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
-  //+ (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
-  //    + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
-  //   + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
+    + (Q1ch[z]/(1.0+2.0*pow(R1[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R1[z]) + (2.0*pow(R1[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R1[z])/(pow(Q2,0.5)*R1[z])) )
+    + (Q2ch[z]/(1.0+2.0*pow(R2[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R2[z]) + (2.0*pow(R2[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R2[z])/(pow(Q2,0.5)*R2[z])) )
+    + (Q3ch[z]/(1.0+2.0*pow(R3[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R3[z]) + (2.0*pow(R3[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R3[z])/(pow(Q2,0.5)*R3[z])) )
+    + (Q4ch[z]/(1.0+2.0*pow(R4[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R4[z]) + (2.0*pow(R4[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R4[z])/(pow(Q2,0.5)*R4[z])) )
+    + (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
+    + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
+    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) );
+  // + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
+  // + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
+  // + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
+  // + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) )
+  // + (Q12ch[z]/(1.0+2.0*pow(R12[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R12[z]) + (2.0*pow(R12[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R12[z])/(pow(Q2,0.5)*R12[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
  
   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
   //fitch = fabs(fitch);
@@ -319,6 +321,7 @@ void Multifit_FF_Plots()
     
 
   //3He
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=13_100_12_21_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
@@ -327,8 +330,10 @@ void Multifit_FF_Plots()
 
   //3H
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
-  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
+  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Wider_Ri_100_12_20_2018.txt","r");
+  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
@@ -346,11 +351,23 @@ void Multifit_FF_Plots()
     else
       {
 	//Read in the number of columns of data in your data file. 
+
+	//Reading in the normal datafile with max ngaus=12.
 	ncols = fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Chi2temp, &rChi2temp, &BICtemp, &AICtemp, &Qichtottemp, &Qimtottemp, &R0temp, &R1temp, &R2temp, &R3temp);
 	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &R4temp, &R5temp, &R6temp, &R7temp, &R8temp, &R9temp, &R10temp, &R11temp, &Q0chtemp, &Q1chtemp);
 	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q2chtemp, &Q3chtemp, &Q4chtemp, &Q5chtemp, &Q6chtemp, &Q7chtemp, &Q8chtemp, &Q9chtemp, &Q10chtemp, &Q11chtemp);
 	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q0mtemp, &Q1mtemp, &Q2mtemp, &Q3mtemp, &Q4mtemp, &Q5mtemp, &Q6mtemp, &Q7mtemp, &Q8mtemp, &Q9mtemp);
 	ncols = ncols + fscanf(fp,"%f %f", &Q10mtemp, &Q11mtemp);
+
+	//If using n=13 need to turn on reading the n=13 parameter columns.
+	/*
+	ncols = fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Chi2temp, &rChi2temp, &BICtemp, &AICtemp, &Qichtottemp, &Qimtottemp, &R0temp, &R1temp, &R2temp, &R3temp);
+	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &R4temp, &R5temp, &R6temp, &R7temp, &R8temp, &R9temp, &R10temp, &R11temp, &R12temp, &Q0chtemp);
+	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q1chtemp, &Q2chtemp, &Q3chtemp, &Q4chtemp, &Q5chtemp, &Q6chtemp, &Q7chtemp, &Q8chtemp, &Q9chtemp, &Q10chtemp);
+	ncols = ncols + fscanf(fp,"%f %f %f %f %f %f %f %f %f %f", &Q11chtemp, &Q12chtemp, &Q0mtemp, &Q1mtemp, &Q2mtemp, &Q3mtemp, &Q4mtemp, &Q5mtemp, &Q6mtemp, &Q7mtemp);
+	ncols = ncols + fscanf(fp,"%f %f %f %f %f", &Q8mtemp, &Q9mtemp, &Q10mtemp, &Q11mtemp, &Q12mtemp);
+	*/
+
 	//cout<<"ncols = "<<ncols<<endl;
 	if (ncols < 0) break;    
 
@@ -372,6 +389,7 @@ void Multifit_FF_Plots()
 	R9[nlines-skip] = R9temp;
 	R10[nlines-skip] = R10temp;
 	R11[nlines-skip] = R11temp;
+	//R12[nlines-skip] = R12temp;
 	Q0ch[nlines-skip] = Q0chtemp;
 	Q1ch[nlines-skip] = Q1chtemp;
 	Q2ch[nlines-skip] = Q2chtemp;
@@ -384,6 +402,7 @@ void Multifit_FF_Plots()
 	Q9ch[nlines-skip] = Q9chtemp;
 	Q10ch[nlines-skip] = Q10chtemp;
 	Q11ch[nlines-skip] = Q11chtemp;
+	//Q12ch[nlines-skip] = Q12chtemp;
 	Q0m[nlines-skip] = Q0mtemp;
 	Q1m[nlines-skip] = Q1mtemp;
 	Q2m[nlines-skip] = Q2mtemp;
@@ -396,6 +415,7 @@ void Multifit_FF_Plots()
 	Q9m[nlines-skip] = Q9mtemp;
 	Q10m[nlines-skip] = Q10mtemp;
 	Q11m[nlines-skip] = Q11mtemp;
+	//Q12m[nlines-skip] = Q12mtemp;
 	Rmulti[nlines-skip][0] = R0temp;
 	Rmulti[nlines-skip][1] = R1temp;
 	Rmulti[nlines-skip][2] = R2temp;
@@ -408,6 +428,7 @@ void Multifit_FF_Plots()
 	Rmulti[nlines-skip][9] = R9temp;
 	Rmulti[nlines-skip][10] = R10temp;
 	Rmulti[nlines-skip][11] = R11temp;
+	//Rmulti[nlines-skip][12] = R12temp;
 	Qichmulti[nlines-skip][0] = Q0chtemp;
 	Qichmulti[nlines-skip][1] = Q1chtemp;
 	Qichmulti[nlines-skip][2] = Q2chtemp;
@@ -420,6 +441,7 @@ void Multifit_FF_Plots()
 	Qichmulti[nlines-skip][9] = Q9chtemp;
 	Qichmulti[nlines-skip][10] = Q10chtemp;
 	Qichmulti[nlines-skip][11] = Q11chtemp;
+	//Qichmulti[nlines-skip][12] = Q12chtemp;
 	Qimmulti[nlines-skip][0] = Q0mtemp;
 	Qimmulti[nlines-skip][1] = Q1mtemp;
 	Qimmulti[nlines-skip][2] = Q2mtemp;
@@ -432,6 +454,7 @@ void Multifit_FF_Plots()
 	Qimmulti[nlines-skip][9] = Q9mtemp;
 	Qimmulti[nlines-skip][10] = Q10mtemp;
 	Qimmulti[nlines-skip][11] = Q11mtemp;
+	//Qimmulti[nlines-skip][12] = Q12mtemp;
 
 	nlines++;
       }
@@ -813,7 +836,14 @@ void Multifit_FF_Plots()
       //cout<<"loop after ++ = "<<current_loop<<endl;
     }
 
-  TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,yminFF,ymaxFF+54,1);
+  if(target == 0)
+    {
+      TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,yminFF,35.,1);
+    }
+  if(target == 1)
+    {
+      TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,yminFF,25.,1);
+    }
   fChFF_Amroun->SetNpx(npdraw);
   fChFF_Amroun->SetLineColor(4);
   fChFF_Amroun->SetLineWidth(linewidth);
@@ -958,7 +988,14 @@ void Multifit_FF_Plots()
     fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
   */
 
-  TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,yminFF,ymaxFF+54,1);
+  if(target == 0)
+    {
+      TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,yminFF,35.,1);
+    }
+  if(target == 1)
+    {
+      TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,yminFF,31.,1);
+    }
   //cout<<fMFF_Amroun->Eval(30)<<endl;
   fMFF_Amroun->SetNpx(npdraw);
   fMFF_Amroun->SetLineColor(4);
