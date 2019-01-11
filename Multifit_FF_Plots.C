@@ -25,10 +25,10 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
-Int_t target = 1; //3He = 0. 3H = 1. 
+Int_t target = 0; //3He = 0. 3H = 1. 
 
 const Int_t nfunc = 3000;
-Double_t maxchi2 = 603;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
+Double_t maxchi2 = 10000;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
 Double_t Qim_range = 5.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -44,7 +44,7 @@ Int_t showplots = 1;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -94,10 +94,13 @@ Double_t R[15] = {0.1,0.7,1.3,2.,2.7,3.6,4.4,5.6,0.,0.,0.,0.};//7
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 Double_t Qich[15] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
 Double_t Qim[15] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
-//Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
-//Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
-Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
-Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
+
+Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
+Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
+
+//Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
+//Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
+
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
 Double_t Qicherr[15]={}; 
@@ -250,11 +253,11 @@ Double_t ChFF_Deriv(Double_t Q2)
     + (Q4ch[z]/(1.0+2.0*pow(R4[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R4[z]) + (2.0*pow(R4[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R4[z])/(pow(Q2,0.5)*R4[z])) )
     + (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
     + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
-    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) );
-  // + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
-  // + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
-  // + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
-  // + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) )
+    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
+   + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
+   + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
+    + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
+    + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
   // + (Q12ch[z]/(1.0+2.0*pow(R12[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R12[z]) + (2.0*pow(R12[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R12[z])/(pow(Q2,0.5)*R12[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
  
   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
@@ -311,6 +314,7 @@ Double_t poisson(Double_t*x,Double_t*par)
 
 void Multifit_FF_Plots() 
 {
+
   FILE *fp;
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Chi2.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_BS_300_Ri_Chi2.txt","r");
@@ -319,25 +323,30 @@ void Multifit_FF_Plots()
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Closer_Ri_Fits_n=10_525_10_1_2018.txt","r");
   //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_Ri_Fits_n=9_300_9_28_2018.txt","r");
     
-
-  //3He
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=13_100_12_21_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=8_100_12_12_2018.txt","r");
-
-  //3H
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Wider_Ri_100_12_20_2018.txt","r");
-  fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
-  //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
-
+  if(target == 0)
+    {
+      //3He
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=13_100_12_21_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=8_100_12_12_2018.txt","r");
+    }
+  
+  if(target == 1)
+    {
+      //3H
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Save_3H_Ri_Fits_n=10_100_10_15_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Wider_Ri_100_12_20_2018.txt","r");
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
+    }
 
   //Read in data.
   while (1) {
@@ -659,7 +668,14 @@ void Multifit_FF_Plots()
 	      total_funcs++;
 	    }
 	  fChFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
-	  fChFF[current_loop]->SetTitle("^{3}He Charge Form Factor");
+	  if(target == 0)
+	    {
+	      fChFF[current_loop]->SetTitle("^{3}He Charge Form Factor");
+	    }
+	  if(target == 1)
+	    {
+	      fChFF[current_loop]->SetTitle("^{3}H Charge Form Factor");
+	    }
 	  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
 	  fChFF[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
 	  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -672,7 +688,14 @@ void Multifit_FF_Plots()
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
 
 	  frho_ch[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
-	  frho_ch[current_loop]->SetTitle("^{3}He Charge Density");
+	  if(target == 0)
+	    {
+	      frho_ch[current_loop]->SetTitle("^{3}He Charge Density");
+	    }
+	  if(target == 1)
+	    {
+	      frho_ch[current_loop]->SetTitle("^{3}H Charge Density");
+	    }
 	  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetTitle("e/fm^{3}");
 	  frho_ch[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
 	  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -738,7 +761,14 @@ void Multifit_FF_Plots()
 		{
 		  cFch->cd();
 		  fChFF[current_loop]->Draw("L");
-		  fChFF[current_loop]->SetTitle("^{3}He Charge Form Factor");
+		  if(target == 0)
+		    {
+		      fChFF[current_loop]->SetTitle("^{3}He Charge Form Factor");
+		    }
+		  if(target == 1)
+		    {
+		      fChFF[current_loop]->SetTitle("^{3}H Charge Form Factor");
+		    }
 		  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
 		  fChFF[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
 		  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -752,7 +782,14 @@ void Multifit_FF_Plots()
 		  
 		  cCh_den->cd();
 		  frho_ch[current_loop]->Draw("L");
-		  frho_ch[current_loop]->SetTitle("^{3}He Charge Density");
+		  if(target == 0)
+		    {
+		      frho_ch[current_loop]->SetTitle("^{3}He Charge Density");
+		    }
+		  if(target == 1)
+		    {
+		      frho_ch[current_loop]->SetTitle("^{3}H Charge Density");
+		    }
 		  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetTitle("e/fm^{3}");
 		  frho_ch[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
 		  frho_ch[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -850,8 +887,16 @@ void Multifit_FF_Plots()
   cFch->cd();
   fChFF_Amroun->Draw("L SAME");
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  ChFF_leg->AddEntry(fChFF[0],"New ^{3}He |F_{ch}(q^{2})| Fit","l");
-  ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
+  if(target == 0)
+    {
+      ChFF_leg->AddEntry(fChFF[0],"New ^{3}He |F_{ch}(q^{2})| Fits","l");
+      ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al.","l");
+    }
+  if(target == 1)
+    {
+      ChFF_leg->AddEntry(fChFF[0],"New ^{3}H |F_{ch}(q^{2})| Fits","l");
+      ChFF_leg->AddEntry("fChFF_Amroun","^{3}H |F_{ch}(q^{2})| Fit from Amroun et al.","l");
+    }
   ChFF_leg->Draw();
 
   TCanvas* cFm=new TCanvas("cFm");
@@ -896,7 +941,14 @@ void Multifit_FF_Plots()
 
 	  //fMFF[current_loop]->SetLineColor(3);
 	  fMFF[current_loop]->SetNpx(npdraw);   //Sets number of points to use when drawing the function.
-	  fMFF[current_loop]->SetTitle("^{3}He Magnetic Form Factor");
+	  if(target == 0)
+	    {
+	      fMFF[current_loop]->SetTitle("^{3}He Magnetic Form Factor");
+	    }
+	  if(target == 1)
+	    {
+	      fMFF[current_loop]->SetTitle("^{3}H Magnetic Form Factor");
+	    }
 	  fMFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
 	  fMFF[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
 	  fMFF[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -931,7 +983,14 @@ void Multifit_FF_Plots()
 	      if(first==0)
 		{
 		  fMFF[current_loop]->Draw("L");
-		  fMFF[current_loop]->SetTitle("^{3}He Magnetic Form Factor");
+		  if(target == 0)
+		    {
+		      fMFF[current_loop]->SetTitle("^{3}He Magnetic Form Factor");
+		    }
+		  if(target == 1)
+		    {
+		      fMFF[current_loop]->SetTitle("^{3}H Magnetic Form Factor");
+		    }
 		  fMFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
 		  fMFF[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
 		  fMFF[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -1003,8 +1062,16 @@ void Multifit_FF_Plots()
   //fMFF_Amroun->SetLineColorAlpha(4,0.1);
   fMFF_Amroun->Draw("L SAME");
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  MFF_leg->AddEntry(fMFF[0],"New ^{3}He |F_{m}(q^{2})| Fit","l");
-  MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
+  if(target == 0)
+    {
+      MFF_leg->AddEntry(fMFF[0],"New ^{3}He |F_{m}(q^{2})| Fits","l");
+      MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al.","l");
+    }
+  if(target == 1)
+    {
+      MFF_leg->AddEntry(fMFF[0],"New ^{3}H |F_{m}(q^{2})| Fits","l");
+      MFF_leg->AddEntry("fMFF_Amroun","^{3}H |F_{m}(q^{2})| Fit from Amroun et al.","l");
+    }
   MFF_leg->Draw();
   
   //Plot distribution of charge radii derivative method.
