@@ -147,12 +147,12 @@ Int_t z = 0; //Counter for main loop.
 
 //Additional data file (error bands) variables.
 const Int_t size1 = 200;
-Int_t skip1 = 0;                         //Gives number of lines to skip at top of data file. 
-Int_t nlines1 = 0;                        //Counts number of lines in the data file. 
-Int_t ncols1;                             //Set how many columns of data we have in the data file.
-char* str1[1000];                         //Variable to read lines of the data file.
-Float_t x_3H_Fch_up[size1],y_3H_Fch_up[size1];    //Arrays for x,y of the 3H Fch upper error band.
-Float_t x_3H_Fch_up_temp,y_3H_Fch_up_temp;
+Int_t skip1,skip2 = 0;                         //Gives number of lines to skip at top of data file. 
+Int_t nlines1,nlines2 = 0;                        //Counts number of lines in the data file. 
+Int_t ncols1,ncols2;                             //Set how many columns of data we have in the data file.
+char* str1[1000],str2[1000];                         //Variable to read lines of the data file.
+Float_t x_3H_Fch_up[size1],y_3H_Fch_up[size1],x_3H_Fch_down[size1],y_3H_Fch_down[size1];    //Arrays for x,y of the 3H Fch upper error band.
+Float_t x_3H_Fch_up_temp,y_3H_Fch_up_temp,x_3H_Fch_down_temp,y_3H_Fch_down_temp;
 
 
 //Plot Charge FF Fch(Q^2) fm^-2.
@@ -544,7 +544,7 @@ void Multifit_FF_Plots()
   //Open and read in files for Amroun's Error Bands.
   //3H upper Fch error band.
   FILE *fp1;
-  fp1 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_Amroun_Error_Band_Upper.txt","r");
+  fp1 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_Amroun_Error_Band_Up.txt","r");
 
   //Read in data.
   while (1) 
@@ -570,11 +570,42 @@ void Multifit_FF_Plots()
 	}
     }
   fclose(fp1);
+  cout<<"nlines1 = "<<nlines1<<endl;
 
   for(Int_t i=0;i<nlines1;i++)
     {
       cout<<"x_3H_Fch_up["<<i<<"] = "<<x_3H_Fch_up[i]<<"   y_3H_Fch_up["<<i<<"] = "<<y_3H_Fch_up[i]<<endl;
     }
+
+  //3H upper Fch error band.
+  FILE *fp2;
+  fp2 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_Amroun_Error_Band_Down.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines2 < skip2)
+	{
+	  fgets(str2,1000,fp2);
+	  nlines2++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols2 = fscanf(fp2,"%f %f", &x_3H_Fch_down_temp, &y_3H_Fch_down_temp);
+	  
+	  if (ncols2 < 0) break;    
+	  
+	  x_3H_Fch_down[nlines2-skip2] = x_3H_Fch_down_temp;
+	  y_3H_Fch_down[nlines2-skip2] = y_3H_Fch_down_temp;
+	  //cout<<"!!! x_3H_Fch_up["<<nlines-skip<<"] = "<<x_3H_Fch_up[nlines-skip]<<"   x_3H_Fch_up_temp["<<nlines-skip<<"] = "<<x_3H_Fch_up_temp<<endl;
+	  nlines2++;
+	}
+    }
+  fclose(fp2);
+  cout<<"nlines2 = "<<nlines2<<endl;
 
   //Now plot all of the curves on one canvas to form an error band.
   TCanvas* cFch=new TCanvas("cFch");
@@ -950,9 +981,19 @@ void Multifit_FF_Plots()
 
   //Now draw Amroun's error bands.
   //3H Fch upper error band.
-  TGraph *gr1 = new TGraph (61, x_3H_Fch_up, y_3H_Fch_up);
-  gr1->Draw("SAME C*");
+  TGraph *gr1 = new TGraph (nlines1, x_3H_Fch_up, y_3H_Fch_up);
+  gr1->SetLineColor(kBlack);
+  gr1->SetLineWidth(2);
+  gr1->Draw("SAME *l");
+  //TSpline3 *s3 = new TSpline3("s3",gr1->GetX(),gr1->GetY(),gr1->GetN());
+  //s3->SetLineColor(kGreen);
+  //s3->Draw("l same");
 
+  //3H Fch upper error band.
+  TGraph *gr2 = new TGraph (nlines2, x_3H_Fch_down, y_3H_Fch_down);
+  gr2->SetLineColor(kBlack);
+  gr2->SetLineWidth(2);
+  gr2->Draw("SAME *l");
 
   TCanvas* cFm=new TCanvas("cFm");
   cFm->SetGrid();
