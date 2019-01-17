@@ -147,12 +147,12 @@ Int_t z = 0; //Counter for main loop.
 
 //Additional data file (error bands) variables.
 const Int_t size1 = 200;
-Int_t skip1,skip2 = 0;                         //Gives number of lines to skip at top of data file. 
-Int_t nlines1,nlines2 = 0;                        //Counts number of lines in the data file. 
-Int_t ncols1,ncols2;                             //Set how many columns of data we have in the data file.
-char* str1[1000],str2[1000];                         //Variable to read lines of the data file.
-Float_t x_3H_Fch_up[size1],y_3H_Fch_up[size1],x_3H_Fch_down[size1],y_3H_Fch_down[size1];    //Arrays for x,y of the 3H Fch upper error band.
-Float_t x_3H_Fch_up_temp,y_3H_Fch_up_temp,x_3H_Fch_down_temp,y_3H_Fch_down_temp;
+Int_t skip1,skip2,skip3,skip4 = 0;                         //Gives number of lines to skip at top of data file. 
+Int_t nlines1,nlines2,nlines3,nlines4 = 0;                        //Counts number of lines in the data file. 
+Int_t ncols1,ncols2,ncols3,ncols4;                             //Set how many columns of data we have in the data file.
+char* str1[1000],str2[1000],str3[1000],str4[1000];                         //Variable to read lines of the data file.
+Float_t x_Fch_up[size1],y_Fch_up[size1],x_Fch_down[size1],y_Fch_down[size1],x_Fm_up[size1],y_Fm_up[size1],x_Fm_down[size1],y_Fm_down[size1];    //Arrays for x,y of the 3H/3He Fch upper error band.
+Float_t x_Fch_up_temp,y_Fch_up_temp,x_Fch_down_temp,y_Fch_down_temp,x_Fm_up_temp,y_Fm_up_temp,x_Fm_down_temp,y_Fm_down_temp;
 
 
 //Plot Charge FF Fch(Q^2) fm^-2.
@@ -338,7 +338,8 @@ void Multifit_FF_Plots()
       //3He
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=13_100_12_21_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
@@ -352,8 +353,8 @@ void Multifit_FF_Plots()
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Wider_Ri_100_12_20_2018.txt","r");
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
@@ -542,9 +543,17 @@ void Multifit_FF_Plots()
   fclose(fp);
   
   //Open and read in files for Amroun's Error Bands.
-  //3H upper Fch error band.
+  //Upper Fch error band.
   FILE *fp1;
-  fp1 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_Amroun_Error_Band_Up.txt","r");
+
+  if(target == 0)
+    {
+      fp1 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_Amroun_Error_Band_Up.txt","r");
+    }
+  if(target == 1)
+    {
+      fp1 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_Amroun_Error_Band_Up.txt","r");
+    }
 
   //Read in data.
   while (1) 
@@ -559,12 +568,12 @@ void Multifit_FF_Plots()
       else
 	{
 	  //Read in the number of columns of data in your data file. 
-	  ncols1 = fscanf(fp1,"%f %f", &x_3H_Fch_up_temp, &y_3H_Fch_up_temp);
+	  ncols1 = fscanf(fp1,"%f %f", &x_Fch_up_temp, &y_Fch_up_temp);
 	  
 	  if (ncols1 < 0) break;    
 	  
-	  x_3H_Fch_up[nlines1-skip1] = x_3H_Fch_up_temp;
-	  y_3H_Fch_up[nlines1-skip1] = y_3H_Fch_up_temp;
+	  x_Fch_up[nlines1-skip1] = x_Fch_up_temp;
+	  y_Fch_up[nlines1-skip1] = y_Fch_up_temp;
 	  //cout<<"!!! x_3H_Fch_up["<<nlines-skip<<"] = "<<x_3H_Fch_up[nlines-skip]<<"   x_3H_Fch_up_temp["<<nlines-skip<<"] = "<<x_3H_Fch_up_temp<<endl;
 	  nlines1++;
 	}
@@ -574,12 +583,21 @@ void Multifit_FF_Plots()
 
   for(Int_t i=0;i<nlines1;i++)
     {
-      cout<<"x_3H_Fch_up["<<i<<"] = "<<x_3H_Fch_up[i]<<"   y_3H_Fch_up["<<i<<"] = "<<y_3H_Fch_up[i]<<endl;
+      cout<<"x_Fch_up["<<i<<"] = "<<x_Fch_up[i]<<"   y_Fch_up["<<i<<"] = "<<y_Fch_up[i]<<endl;
     }
 
-  //3H upper Fch error band.
+  //Lower Fch error band.
   FILE *fp2;
-  fp2 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_Amroun_Error_Band_Down.txt","r");
+
+  if(target == 0)
+    {
+      fp2 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_Amroun_Error_Band_Down.txt","r");
+    }
+
+  if(target == 1)
+    {
+      fp2 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_Amroun_Error_Band_Down.txt","r");
+    }
 
   //Read in data.
   while (1) 
@@ -594,18 +612,95 @@ void Multifit_FF_Plots()
       else
 	{
 	  //Read in the number of columns of data in your data file. 
-	  ncols2 = fscanf(fp2,"%f %f", &x_3H_Fch_down_temp, &y_3H_Fch_down_temp);
+	  ncols2 = fscanf(fp2,"%f %f", &x_Fch_down_temp, &y_Fch_down_temp);
 	  
 	  if (ncols2 < 0) break;    
 	  
-	  x_3H_Fch_down[nlines2-skip2] = x_3H_Fch_down_temp;
-	  y_3H_Fch_down[nlines2-skip2] = y_3H_Fch_down_temp;
-	  //cout<<"!!! x_3H_Fch_up["<<nlines-skip<<"] = "<<x_3H_Fch_up[nlines-skip]<<"   x_3H_Fch_up_temp["<<nlines-skip<<"] = "<<x_3H_Fch_up_temp<<endl;
+	  x_Fch_down[nlines2-skip2] = x_Fch_down_temp;
+	  y_Fch_down[nlines2-skip2] = y_Fch_down_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
 	  nlines2++;
 	}
     }
   fclose(fp2);
   cout<<"nlines2 = "<<nlines2<<endl;
+
+  //Upper Fm error band.
+  FILE *fp3;
+
+  if(target == 0)
+    {
+      fp3 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fm_Amroun_Error_Band_Up.txt","r");
+    }
+  if(target == 1)
+    {
+      fp3 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fm_Amroun_Error_Band_Up.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines3 < skip3)
+	{
+	  fgets(str3,1000,fp3);
+	  nlines3++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols3 = fscanf(fp3,"%f %f", &x_Fm_up_temp, &y_Fm_up_temp);
+	  
+	  if (ncols3 < 0) break;    
+	  
+	  x_Fm_up[nlines3-skip3] = x_Fm_up_temp;
+	  y_Fm_up[nlines3-skip3] = y_Fm_up_temp;
+	  //cout<<"!!! x_3H_Fch_up["<<nlines-skip<<"] = "<<x_3H_Fch_up[nlines-skip]<<"   x_3H_Fch_up_temp["<<nlines-skip<<"] = "<<x_3H_Fch_up_temp<<endl;
+	  nlines3++;
+	}
+    }
+  fclose(fp3);
+  cout<<"nlines3 = "<<nlines3<<endl;
+
+  //Lower Fm error band.
+  FILE *fp4;
+
+  if(target == 0)
+    {
+      fp4 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fm_Amroun_Error_Band_Down.txt","r");
+    }
+
+  if(target == 1)
+    {
+      fp4 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fm_Amroun_Error_Band_Down.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines4 < skip4)
+	{
+	  fgets(str4,1000,fp4);
+	  nlines4++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols4 = fscanf(fp4,"%f %f", &x_Fm_down_temp, &y_Fm_down_temp);
+	  
+	  if (ncols4 < 0) break;    
+	  
+	  x_Fm_down[nlines4-skip4] = x_Fm_down_temp;
+	  y_Fm_down[nlines4-skip4] = y_Fm_down_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines4++;
+	}
+    }
+  fclose(fp4);
+  cout<<"nlines4 = "<<nlines4<<endl;
 
   //Now plot all of the curves on one canvas to form an error band.
   TCanvas* cFch=new TCanvas("cFch");
@@ -980,20 +1075,23 @@ void Multifit_FF_Plots()
   ChFF_leg->Draw();
 
   //Now draw Amroun's error bands.
-  //3H Fch upper error band.
-  TGraph *gr1 = new TGraph (nlines1, x_3H_Fch_up, y_3H_Fch_up);
+  //Fch upper error band.
+  TGraph *gr1 = new TGraph (nlines1, x_Fch_up, y_Fch_up);
+    
   gr1->SetLineColor(kBlack);
   gr1->SetLineWidth(2);
-  gr1->Draw("SAME *l");
+  gr1->Draw("SAME l");
   //TSpline3 *s3 = new TSpline3("s3",gr1->GetX(),gr1->GetY(),gr1->GetN());
   //s3->SetLineColor(kGreen);
   //s3->Draw("l same");
 
-  //3H Fch upper error band.
-  TGraph *gr2 = new TGraph (nlines2, x_3H_Fch_down, y_3H_Fch_down);
+  //Fch Lower error band.
+
+  TGraph *gr2 = new TGraph (nlines2, x_Fch_down, y_Fch_down);
+
   gr2->SetLineColor(kBlack);
   gr2->SetLineWidth(2);
-  gr2->Draw("SAME *l");
+  gr2->Draw("SAME l");
 
   TCanvas* cFm=new TCanvas("cFm");
   cFm->SetGrid();
@@ -1169,6 +1267,20 @@ void Multifit_FF_Plots()
       MFF_leg->AddEntry("fMFF_Amroun","^{3}H |F_{m}(q^{2})| Fit from Amroun et al.","l");
     }
   MFF_leg->Draw();
+
+  //Now draw Amroun's error bands.
+  //Fm upper error band.
+  TGraph *gr3 = new TGraph (nlines3, x_Fm_up, y_Fm_up);
+  gr3->SetLineColor(kBlack);
+  gr3->SetLineWidth(2);
+  gr3->Draw("SAME l");
+
+  //Fm Lower error band.
+  TGraph *gr4 = new TGraph (nlines4, x_Fm_down, y_Fm_down);
+  gr4->SetLineColor(kBlack);
+  gr4->SetLineWidth(2);
+  gr4->Draw("SAME l");
+
   
   //Plot distribution of charge radii derivative method.
   TCanvas* crms_deriv=new TCanvas("crms_deriv");
