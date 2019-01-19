@@ -29,7 +29,7 @@ Float_t Chi2[size],rChi2[size],BIC[size],AIC[size],Qichtot[size],Qimtot[size],R0
 Float_t Chi2temp,rChi2temp,BICtemp,AICtemp,Qichtottemp,Qimtottemp,R0temp,R1temp,R2temp,R3temp,R4temp,R5temp,R6temp,R7temp,R8temp,R9temp,R10temp,R11temp,R12temp,Q0chtemp,Q1chtemp,Q2chtemp,Q3chtemp,Q4chtemp,Q5chtemp,Q6chtemp,Q7chtemp,Q8chtemp,Q9chtemp,Q10chtemp,Q11chtemp,Q12chtemp,Q0mtemp,Q1mtemp,Q2mtemp,Q3mtemp,Q4mtemp,Q5mtemp,Q6mtemp,Q7mtemp,Q8mtemp,Q9mtemp,Q10mtemp,Q11mtemp,Q12mtemp;
 Int_t repeats_temp = 0;
 Int_t Repeats[size];
-Double_t Top_Ten[10][2];  //Stores highest repeat number followed byt the first fit number with that Chi^2.
+Double_t Top_Ten[10][3];  //Stores the number of times a fit repeated followed by the Chi^2 of that fit followed by the first fit number with that Chi^2.
 Int_t max_repeat = 0;  //Stores the largest number of repeat fits (same Ri and Chi^2).
 Int_t replace = 0;
 
@@ -219,10 +219,12 @@ void Repeat_Fit_Analysis()
 		{
 		  Top_Ten[j][0] = Top_Ten[j-1][0];
 		  Top_Ten[j][1] = Top_Ten[j-1][1];
+		  Top_Ten[j][2] = Top_Ten[j-1][2];
 		}
 
 	      Top_Ten[0][0] = Repeats[i];
 	      Top_Ten[0][1] = Chi2[i];
+	      Top_Ten[0][2] = i;
 	      max_repeat = Repeats[i];
 	    }
       
@@ -236,10 +238,12 @@ void Repeat_Fit_Analysis()
 		    {
 		      Top_Ten[k][0] = Top_Ten[k-1][0];
 		      Top_Ten[k][1] = Top_Ten[k-1][1];
+		      Top_Ten[k][2] = Top_Ten[k-1][2];
 		    }
 		  replace = 1;
 		  Top_Ten[j][0] = Repeats[i];
 		  Top_Ten[j][1] = Chi2[i];
+		  Top_Ten[j][2] = i;
 
 		  //cout<<i<<endl;
 		  for(Int_t z=0;z<10;z++)
@@ -259,7 +263,7 @@ void Repeat_Fit_Analysis()
 
   for(Int_t i=0;i<10;i++)
     {
-      cout<<"Top_Ten["<<i<<"][0] = "<<Top_Ten[i][0]<<"   Top_Ten["<<i<<"][1] = "<<Top_Ten[i][1]<<endl;
+      cout<<"Top_Ten["<<i<<"][0] = "<<Top_Ten[i][0]<<"   Top_Ten["<<i<<"][1] = "<<Top_Ten[i][1]<<"   Top_Ten["<<i<<"][2] = "<<Top_Ten[i][2]<<endl;
     }
 }
 

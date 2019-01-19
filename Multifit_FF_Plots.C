@@ -19,13 +19,15 @@
 
 Double_t pi = 3.141592654;
 Double_t deg2rad = pi/180.0;
-Double_t GeV2fm = 1./0.0389;            //Convert Q^2 units from GeV^2 to fm^-2.
+Double_t GeV2fm = 1./0.0389;             //Convert Q^2 units from GeV^2 to fm^-2.
 Double_t hbar = 6.582*pow(10.0,-16.0);   //hbar in [eV*s].
 Double_t C = 299792458.0;                //Speed of light [m/s]. 
 Double_t e = 1.60217662E-19;             //Electron charge C.
-Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
-Double_t muHe3 = -2.1275*(3.0/2.0); //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
-Int_t target = 1; //3He = 0. 3H = 1. 
+Double_t alpha = 0.0072973525664;        //1.0/137.0;              //Fine structure constant.
+Double_t muHe3 = -2.1275*(3.0/2.0);      //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.       //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
+Int_t target = 1;                        //3He = 0. 3H = 1. 
+Int_t single_fit = 1;                    //Draw a single representative fit in a different color.
+Int_t rep_fit = 20;                      //Single fit chosen as the representative fit.
 
 const Int_t nfunc = 3000;
 Double_t maxchi2 = 603;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
@@ -40,7 +42,7 @@ Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
-Int_t showplots = 1;
+Int_t showplots = 0;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
@@ -510,6 +512,7 @@ void Multifit_FF_Plots()
 	  cout<<endl;
 	  cout<<"Qm[0] = "<<Q0m[i]<<"  Qm[1] = "<<Q1m[i]<<"  Qm[2] = "<<Q2m[i]<<"  Qm[3] = "<<Q3m[i]<<"  Qm[4] = "<<Q4m[i]<<"  Qm[5] = "<<Q5m[i]<<"  Qm[6] = "<<Q6m[i]<<"  Qm[7] = "<<Q7m[i]<<"  Qm[8] = "<<Q8m[i]<<"  Qm[9] = "<<Q9m[i]<<"  Qm[10] = "<<Q10m[i]<<"  Qm[11] = "<<Q11m[i]<<endl;
 	  cout<<"-----------------------------------------------------"<<endl;
+	 
 	}  
       /*
 	for(int i=0; i<(nlines-skip); i++)
@@ -580,12 +583,12 @@ void Multifit_FF_Plots()
     }
   fclose(fp1);
   cout<<"nlines1 = "<<nlines1<<endl;
-
+  /*
   for(Int_t i=0;i<nlines1;i++)
     {
       cout<<"x_Fch_up["<<i<<"] = "<<x_Fch_up[i]<<"   y_Fch_up["<<i<<"] = "<<y_Fch_up[i]<<endl;
     }
-
+  */
   //Lower Fch error band.
   FILE *fp2;
 
@@ -795,12 +798,13 @@ void Multifit_FF_Plots()
 	    {
 	      cFch->cd();
 	      fChFF[current_loop]->Draw("L");
+	
 	      cCh_den->cd();
 	      frho_ch[current_loop]->Draw("L");
-
+	      
 	      if(Chi2[current_loop]<min_chi2)
 		{
-		  cout<<"*****Hello there!*****"<<endl;
+		  //cout<<"*****Hello there!*****"<<endl;
 		  min_chi2 = Chi2[current_loop];
 		  min_chi2_fit = current_loop;
 		}
@@ -928,14 +932,16 @@ void Multifit_FF_Plots()
 	    {
 	      if(Chi2[current_loop]<min_chi2)
 		{
-		  cout<<"*****Hello there!*****"<<endl;
+		  //cout<<"*****Hello there!*****"<<endl;
 		  min_chi2 = Chi2[current_loop];
 		  min_chi2_fit = current_loop;
 		}
 	      if(first==0)
 		{
 		  cFch->cd();
+
 		  fChFF[current_loop]->Draw("L");
+	        
 		  if(target == 0)
 		    {
 		      fChFF[current_loop]->SetTitle("^{3}He Charge Form Factor");
@@ -956,7 +962,9 @@ void Multifit_FF_Plots()
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
 		  
 		  cCh_den->cd();
+
 		  frho_ch[current_loop]->Draw("L");
+
 		  if(target == 0)
 		    {
 		      frho_ch[current_loop]->SetTitle("^{3}He Charge Density");
@@ -982,7 +990,7 @@ void Multifit_FF_Plots()
 		{
 		  cFch->cd();
 		  fChFF[current_loop]->Draw("L SAME");
-
+		    
 		  cCh_den->cd();
 		  frho_ch[current_loop]->Draw("L SAME");
 		  //frho_ch_int[current_loop]->Draw("L SAME");
@@ -1059,6 +1067,7 @@ void Multifit_FF_Plots()
   fChFF_Amroun->SetNpx(npdraw);
   fChFF_Amroun->SetLineColor(4);
   fChFF_Amroun->SetLineWidth(linewidth);
+
   cFch->cd();
   fChFF_Amroun->Draw("L SAME");
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
@@ -1073,6 +1082,19 @@ void Multifit_FF_Plots()
       ChFF_leg->AddEntry("fChFF_Amroun","^{3}H |F_{ch}(q^{2})| Fit from Amroun et al.","l");
     }
   ChFF_leg->Draw();
+
+  if(single_fit == 1)
+    {
+      fChFF[rep_fit]->SetLineColor(6);
+      fChFF[rep_fit]->SetLineWidth(linewidth);
+      fChFF[rep_fit]->Draw("L SAME");
+
+      cCh_den->cd();
+      frho_ch[rep_fit]->SetLineColor(6);
+      frho_ch[rep_fit]->SetLineWidth(linewidth);
+      frho_ch[rep_fit]->Draw("L SAME");
+      cFch->cd();
+    }
 
   //Now draw Amroun's error bands.
   //Fch upper error band.
@@ -1130,7 +1152,7 @@ void Multifit_FF_Plots()
 	    {
 	      fMFF[current_loop]->Draw("L");
 	      first = 1; //No longer first plot.
-	      cout<<"Sum Qim = "<<Qimtot[current_loop]<<endl;
+	      //cout<<"Sum Qim = "<<Qimtot[current_loop]<<endl;
 	    }
 
 	  //fMFF[current_loop]->SetLineColor(3);
@@ -1176,7 +1198,9 @@ void Multifit_FF_Plots()
 	    {
 	      if(first==0)
 		{
+
 		  fMFF[current_loop]->Draw("L");
+		    
 		  if(target == 0)
 		    {
 		      fMFF[current_loop]->SetTitle("^{3}He Magnetic Form Factor");
@@ -1201,7 +1225,7 @@ void Multifit_FF_Plots()
 		{
 		  fMFF[current_loop]->Draw("L SAME");
 		}
-	      cout<<"Sum Qim = "<<Qimtot[current_loop]<<endl;
+	      //cout<<"Sum Qim = "<<Qimtot[current_loop]<<endl;
 	    }
 	}
       //fMFF[2]->Draw("L");
@@ -1268,6 +1292,13 @@ void Multifit_FF_Plots()
     }
   MFF_leg->Draw();
 
+  if(single_fit == 1)
+    {
+      fMFF[rep_fit]->SetLineColor(6);
+      fMFF[rep_fit]->SetLineWidth(linewidth);
+      fMFF[rep_fit]->Draw("L SAME");
+    }
+
   //Now draw Amroun's error bands.
   //Fm upper error band.
   TGraph *gr3 = new TGraph (nlines3, x_Fm_up, y_Fm_up);
@@ -1294,7 +1325,7 @@ void Multifit_FF_Plots()
 	{
 	  hrms_deriv->Fill(rms_deriv[i]);
 	}
-      cout<<"rms_deriv["<<i<<"] = "<<rms_deriv[i]<<endl;
+      //cout<<"rms_deriv["<<i<<"] = "<<rms_deriv[i]<<endl;
     }
   hrms_deriv->GetYaxis()->CenterTitle(true);
   hrms_deriv->GetYaxis()->SetLabelSize(0.05);
