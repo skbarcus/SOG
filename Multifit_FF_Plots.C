@@ -25,12 +25,12 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;        //1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0);      //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.       //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
-Int_t target = 1;                        //3He = 0. 3H = 1. 
+Int_t target = 0;                        //3He = 0. 3H = 1. 
 Int_t single_fit = 1;                    //Draw a single representative fit in a different color.
 Int_t rep_fit = 20;                      //Single fit chosen as the representative fit.
 
 const Int_t nfunc = 3000;
-Double_t maxchi2 = 603;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
+Double_t maxchi2 = 500;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
 Double_t Qim_range = 50.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -46,7 +46,7 @@ Int_t showplots = 0;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -97,11 +97,11 @@ Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amro
 Double_t Qich[15] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
 Double_t Qim[15] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
 
-//Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
-//Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
+Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
+Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
 
-Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
-Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
+//Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
+//Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
 
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
@@ -149,12 +149,14 @@ Int_t z = 0; //Counter for main loop.
 
 //Additional data file (error bands) variables.
 const Int_t size1 = 200;
-Int_t skip1,skip2,skip3,skip4 = 0;                         //Gives number of lines to skip at top of data file. 
-Int_t nlines1,nlines2,nlines3,nlines4 = 0;                        //Counts number of lines in the data file. 
-Int_t ncols1,ncols2,ncols3,ncols4;                             //Set how many columns of data we have in the data file.
-char* str1[1000],str2[1000],str3[1000],str4[1000];                         //Variable to read lines of the data file.
+Int_t skip1,skip2,skip3,skip4,skip5,skip6,skip7,skip8 = 0;                         //Gives number of lines to skip at top of data file. 
+Int_t nlines1,nlines2,nlines3,nlines4,nlines5,nlines6,nlines7,nlines8 = 0;                        //Counts number of lines in the data file. 
+Int_t ncols1,ncols2,ncols3,ncols4,ncols5,ncols6,ncols7,ncols8;                             //Set how many columns of data we have in the data file.
+char* str1[1000],str2[1000],str3[1000],str4[1000],str5[1000],str6[1000],str7[1000],str8[1000];                         //Variable to read lines of the data file.
 Float_t x_Fch_up[size1],y_Fch_up[size1],x_Fch_down[size1],y_Fch_down[size1],x_Fm_up[size1],y_Fm_up[size1],x_Fm_down[size1],y_Fm_down[size1];    //Arrays for x,y of the 3H/3He Fch upper error band.
 Float_t x_Fch_up_temp,y_Fch_up_temp,x_Fch_down_temp,y_Fch_down_temp,x_Fm_up_temp,y_Fm_up_temp,x_Fm_down_temp,y_Fm_down_temp;
+Float_t x_Fm_3He_IA_MEC[size1],x_Fch_3He_IA_MEC[size1],x_Fm_3He_IA[size1],x_Fch_3He_IA[size1],y_Fm_3He_IA_MEC[size1],y_Fch_3He_IA_MEC[size1],y_Fm_3He_IA[size1],y_Fch_3He_IA[size1];
+Float_t x_Fm_3He_IA_MEC_temp,x_Fch_3He_IA_MEC_temp,x_Fm_3He_IA_temp,x_Fch_3He_IA_temp,y_Fm_3He_IA_MEC_temp,y_Fch_3He_IA_MEC_temp,y_Fm_3He_IA_temp,y_Fch_3He_IA_temp;
 
 
 //Plot Charge FF Fch(Q^2) fm^-2.
@@ -265,11 +267,11 @@ Double_t ChFF_Deriv(Double_t Q2)
     + (Q4ch[z]/(1.0+2.0*pow(R4[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R4[z]) + (2.0*pow(R4[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R4[z])/(pow(Q2,0.5)*R4[z])) )
     + (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
     + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
-    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) );
-    //+ (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
-    //+ (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
-    //+ (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
-    //+ (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
+    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
+    + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
+    + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
+    + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
+    + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
   // + (Q12ch[z]/(1.0+2.0*pow(R12[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R12[z]) + (2.0*pow(R12[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R12[z])/(pow(Q2,0.5)*R12[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
  
   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
@@ -340,8 +342,8 @@ void Multifit_FF_Plots()
       //3He
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=13_100_12_21_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
@@ -704,6 +706,130 @@ void Multifit_FF_Plots()
     }
   fclose(fp4);
   cout<<"nlines4 = "<<nlines4<<endl;
+
+  //3He Fm IA+MEC from Alex's paper.
+  FILE *fp5;
+
+  fp5 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fm_IA+MEC.txt","r");
+   
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines5 < skip5)
+	{
+	  fgets(str5,1000,fp5);
+	  nlines5++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols5 = fscanf(fp5,"%f %f", &x_Fm_3He_IA_MEC_temp, &y_Fm_3He_IA_MEC_temp);
+	  
+	  if (ncols5 < 0) break;    
+	  
+	  x_Fm_3He_IA_MEC[nlines5-skip5] = x_Fm_3He_IA_MEC_temp;
+	  y_Fm_3He_IA_MEC[nlines5-skip5] = y_Fm_3He_IA_MEC_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines5++;
+	}
+    }
+  fclose(fp5);
+  cout<<"nlines5 = "<<nlines5<<endl;
+
+  //3He Fm IA from Alex's paper.
+  FILE *fp6;
+
+  fp6 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fm_IA.txt","r");
+   
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines6 < skip6)
+	{
+	  fgets(str6,1000,fp6);
+	  nlines6++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols6 = fscanf(fp6,"%f %f", &x_Fm_3He_IA_temp, &y_Fm_3He_IA_temp);
+	  
+	  if (ncols6 < 0) break;    
+	  
+	  x_Fm_3He_IA[nlines6-skip6] = x_Fm_3He_IA_temp;
+	  y_Fm_3He_IA[nlines6-skip6] = y_Fm_3He_IA_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines6++;
+	}
+    }
+  fclose(fp6);
+  cout<<"nlines6 = "<<nlines6<<endl;
+
+  //3He Fch IA+MEC from Alex's paper.
+  FILE *fp7;
+
+  fp7 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_IA+MEC.txt","r");
+   
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines7 < skip7)
+	{
+	  fgets(str7,1000,fp7);
+	  nlines7++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols7 = fscanf(fp7,"%f %f", &x_Fch_3He_IA_MEC_temp, &y_Fch_3He_IA_MEC_temp);
+	  
+	  if (ncols7 < 0) break;    
+	  
+	  x_Fch_3He_IA_MEC[nlines7-skip7] = x_Fch_3He_IA_MEC_temp;
+	  y_Fch_3He_IA_MEC[nlines7-skip7] = y_Fch_3He_IA_MEC_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines7++;
+	}
+    }
+  fclose(fp7);
+  cout<<"nlines7 = "<<nlines7<<endl;
+
+  //3He Fch IA from Alex's paper.
+  FILE *fp8;
+
+  fp8 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_IA.txt","r");
+   
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines8 < skip8)
+	{
+	  fgets(str8,1000,fp8);
+	  nlines8++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols8 = fscanf(fp8,"%f %f", &x_Fch_3He_IA_temp, &y_Fch_3He_IA_temp);
+	  
+	  if (ncols8 < 0) break;    
+	  
+	  x_Fch_3He_IA[nlines8-skip8] = x_Fch_3He_IA_temp;
+	  y_Fch_3He_IA[nlines8-skip8] = y_Fch_3He_IA_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines8++;
+	}
+    }
+  fclose(fp8);
+  cout<<"nlines8 = "<<nlines8<<endl;
 
   //Now plot all of the curves on one canvas to form an error band.
   TCanvas* cFch=new TCanvas("cFch");
@@ -1098,8 +1224,7 @@ void Multifit_FF_Plots()
 
   //Now draw Amroun's error bands.
   //Fch upper error band.
-  TGraph *gr1 = new TGraph (nlines1, x_Fch_up, y_Fch_up);
-    
+  TGraph *gr1 = new TGraph (nlines1, x_Fch_up, y_Fch_up);  
   gr1->SetLineColor(kBlack);
   gr1->SetLineWidth(2);
   gr1->Draw("SAME l");
@@ -1110,10 +1235,25 @@ void Multifit_FF_Plots()
   //Fch Lower error band.
 
   TGraph *gr2 = new TGraph (nlines2, x_Fch_down, y_Fch_down);
-
   gr2->SetLineColor(kBlack);
   gr2->SetLineWidth(2);
   gr2->Draw("SAME l");
+
+  if(target == 0)
+    {
+      TGraph *gr7 = new TGraph (nlines7, x_Fch_3He_IA_MEC, y_Fch_3He_IA_MEC); 
+      gr7->SetLineColor(3);
+      gr7->SetLineWidth(2);
+      gr7->Draw("SAME l");
+    }
+
+  if(target == 0)
+    {
+      TGraph *gr8 = new TGraph (nlines8, x_Fch_3He_IA, y_Fch_3He_IA); 
+      gr8->SetLineColor(8);
+      gr8->SetLineWidth(2);
+      gr8->Draw("SAME l");
+    }
 
   TCanvas* cFm=new TCanvas("cFm");
   cFm->SetGrid();
@@ -1312,6 +1452,23 @@ void Multifit_FF_Plots()
   gr4->SetLineWidth(2);
   gr4->Draw("SAME l");
 
+  if(target == 0)
+    {
+      //Fm Lower error band.
+      TGraph *gr5 = new TGraph (nlines5, x_Fm_3He_IA_MEC, y_Fm_3He_IA_MEC);
+      gr5->SetLineColor(3);
+      gr5->SetLineWidth(2);
+      gr5->Draw("SAME l");
+    }
+
+  if(target == 0)
+    {
+      //Fm Lower error band.
+      TGraph *gr6 = new TGraph (nlines6, x_Fm_3He_IA, y_Fm_3He_IA);
+      gr6->SetLineColor(8);
+      gr6->SetLineWidth(2);
+      gr6->Draw("SAME l");
+    }
   
   //Plot distribution of charge radii derivative method.
   TCanvas* crms_deriv=new TCanvas("crms_deriv");
