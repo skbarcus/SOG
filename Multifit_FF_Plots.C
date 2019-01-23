@@ -25,12 +25,12 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;        //1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0);      //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.       //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
-Int_t target = 0;                        //3He = 0. 3H = 1. 
+Int_t target = 1;                        //3He = 0. 3H = 1. 
 Int_t single_fit = 1;                    //Draw a single representative fit in a different color.
-Int_t rep_fit = 20;                      //Single fit chosen as the representative fit.
+Int_t rep_fit = 2;                      //Single fit chosen as the representative fit.
 
 const Int_t nfunc = 3000;
-Double_t maxchi2 = 500;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
+Double_t maxchi2 = 603;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
 Double_t Qim_range = 50.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -46,7 +46,7 @@ Int_t showplots = 0;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -97,11 +97,11 @@ Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amro
 Double_t Qich[15] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
 Double_t Qim[15] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
 
-Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
-Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
+//Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
+//Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
 
-//Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
-//Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
+Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
+Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
 
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
@@ -267,11 +267,11 @@ Double_t ChFF_Deriv(Double_t Q2)
     + (Q4ch[z]/(1.0+2.0*pow(R4[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R4[z]) + (2.0*pow(R4[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R4[z])/(pow(Q2,0.5)*R4[z])) )
     + (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
     + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
-    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
-    + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
-    + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
-    + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
-    + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
+    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) );
+  //+ (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
+  //+ (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
+  //+ (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
+  //+ (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
   // + (Q12ch[z]/(1.0+2.0*pow(R12[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R12[z]) + (2.0*pow(R12[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R12[z])/(pow(Q2,0.5)*R12[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
  
   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
@@ -357,8 +357,8 @@ void Multifit_FF_Plots()
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Wider_Ri_100_12_20_2018.txt","r");
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
@@ -981,12 +981,12 @@ void Multifit_FF_Plots()
 	    {
 	      fChFF[current_loop]->SetTitle("^{3}H Charge Form Factor");
 	    }
-	  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
+	  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(Q^{2})|");
 	  fChFF[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
 	  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
 	  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
 	  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->CenterTitle(true);
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
 	  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -1076,12 +1076,12 @@ void Multifit_FF_Plots()
 		    {
 		      fChFF[current_loop]->SetTitle("^{3}H Charge Form Factor");
 		    }
-		  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
+		  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(Q^{2})|");
 		  fChFF[current_loop]->GetHistogram()->GetYaxis()->CenterTitle(true);
 		  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
 		  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
 		  fChFF[current_loop]->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->CenterTitle(true);
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
 		  fChFF[current_loop]->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -1225,7 +1225,7 @@ void Multifit_FF_Plots()
   //Now draw Amroun's error bands.
   //Fch upper error band.
   TGraph *gr1 = new TGraph (nlines1, x_Fch_up, y_Fch_up);  
-  gr1->SetLineColor(kBlack);
+  gr1->SetLineColorAlpha(kBlue, 0.35);
   gr1->SetLineWidth(2);
   gr1->Draw("SAME l");
   //TSpline3 *s3 = new TSpline3("s3",gr1->GetX(),gr1->GetY(),gr1->GetN());
@@ -1235,9 +1235,63 @@ void Multifit_FF_Plots()
   //Fch Lower error band.
 
   TGraph *gr2 = new TGraph (nlines2, x_Fch_down, y_Fch_down);
-  gr2->SetLineColor(kBlack);
+  gr2->SetLineColorAlpha(kBlue, 0.35);
   gr2->SetLineWidth(2);
   gr2->Draw("SAME l");
+  /*
+  TGraph *grshade1 = new TGraph(2*nlines1);
+  for (i=0;i<nlines1;i++) {
+    grshade1->SetPoint(i,x_Fch_up[i],y_Fch_up[i]);
+    grshade1->SetPoint(nlines1+i,x_Fch_down[nlines2-i-1],y_Fch_down[nlines2-i-1]);
+  }
+  grshade1->SetFillStyle(1001);
+  grshade1->SetFillColorAlpha(kBlue, 0.35);
+  grshade1->Draw("f");*/
+
+  if(target == 0)
+    {
+      TGraph *grshade1 = new TGraph(43);
+      Int_t offset1 = 60;
+      
+      
+      for (Int_t i=0;i<nlines1-offset1;i++) 
+	{
+	  grshade1->SetPoint(i,x_Fch_up[i+offset1],y_Fch_up[i+offset1]);
+	  cout<<"i = "<<i<<"   x_Fch_up["<<i+offset1<<"] = "<<x_Fch_up[i+offset1]<<"   y_Fch_up["<<i+offset1<<"] = "<<y_Fch_up[i+offset1]<<endl;
+	}
+      
+      Int_t offset2 = 30;
+      
+      for(Int_t i=0;i<offset2;i++)
+	{
+	  grshade1->SetPoint(nlines1-offset1+i,x_Fch_down[nlines2-i-1],y_Fch_down[nlines2-i-1]);
+	  cout<<"nlines1-offset1+i = "<<nlines1-offset1+i<<"   x_Fch_down[nlines2-offset-i-1] = "<<x_Fch_down[nlines2-i-1]<<"   y_Fch_down[nlines2-offset-i-1] = "<<y_Fch_down[nlines2-i-1]<<endl;
+	}
+    }
+
+  if(target == 1)
+    {
+      TGraph *grshade1 = new TGraph(56);
+      Int_t offset1 = 35;//35
+      
+      for (Int_t i=0;i<nlines1-offset1;i++) 
+	{
+	  grshade1->SetPoint(i,x_Fch_up[i+offset1],y_Fch_up[i+offset1]);
+	  cout<<"i = "<<i<<"   x_Fch_up["<<i+offset1<<"] = "<<x_Fch_up[i+offset1]<<"   y_Fch_up["<<i+offset1<<"] = "<<y_Fch_up[i+offset1]<<endl;
+	}
+      
+      Int_t offset2 = 30;//30
+      
+      for(Int_t i=0;i<offset2;i++)
+	{
+	  grshade1->SetPoint(nlines1-offset1+i,x_Fch_down[nlines2-i-1],y_Fch_down[nlines2-i-1]);
+	  cout<<"nlines1-offset1+i = "<<nlines1-offset1+i<<"   x_Fch_down[nlines2-offset-i-1] = "<<x_Fch_down[nlines2-i-1]<<"   y_Fch_down[nlines2-offset-i-1] = "<<y_Fch_down[nlines2-i-1]<<endl;
+	}
+    }
+
+  grshade1->SetFillStyle(1001);
+  grshade1->SetFillColorAlpha(kBlue, 0.35);
+  grshade1->Draw("F");
 
   if(target == 0)
     {
@@ -1442,15 +1496,59 @@ void Multifit_FF_Plots()
   //Now draw Amroun's error bands.
   //Fm upper error band.
   TGraph *gr3 = new TGraph (nlines3, x_Fm_up, y_Fm_up);
-  gr3->SetLineColor(kBlack);
+  gr3->SetLineColorAlpha(kBlue, 0.35);
   gr3->SetLineWidth(2);
   gr3->Draw("SAME l");
 
   //Fm Lower error band.
   TGraph *gr4 = new TGraph (nlines4, x_Fm_down, y_Fm_down);
-  gr4->SetLineColor(kBlack);
+  gr4->SetLineColorAlpha(kBlue, 0.35);
   gr4->SetLineWidth(2);
   gr4->Draw("SAME l");
+
+  if(target == 0)
+    {
+      TGraph *grshade2 = new TGraph(114);
+      Int_t offset3 = 50;
+      
+      for (Int_t i=0;i<nlines3-offset3;i++) 
+	{
+	  grshade2->SetPoint(i,x_Fm_up[i+offset3],y_Fm_up[i+offset3]);
+	  cout<<"i = "<<i<<"   x_Fm_up["<<i+offset3<<"] = "<<x_Fm_up[i+offset3]<<"   y_Fm_up["<<i+offset3<<"] = "<<y_Fm_up[i+offset3]<<endl;
+	}
+      
+      Int_t offset4 = 70;
+      
+      for(Int_t i=0;i<offset4;i++)
+	{
+	  grshade2->SetPoint(nlines3-offset3+i,x_Fm_down[nlines4-i-1],y_Fm_down[nlines4-i-1]);
+	  cout<<"nlines3-offset3+i = "<<nlines3-offset3+i<<"   x_Fm_down[nlines4-i-1] = "<<x_Fm_down[nlines4-i-1]<<"   y_Fm_down[nlines4-i-1] = "<<y_Fm_down[nlines4-i-1]<<endl;
+	}
+    }
+
+  if(target == 1)
+    {
+      TGraph *grshade2 = new TGraph(114);
+      Int_t offset3 = 66; 
+      
+      for (Int_t i=0;i<nlines3-offset3;i++) 
+	{
+	  grshade2->SetPoint(i,x_Fm_up[i+offset3],y_Fm_up[i+offset3]);
+	  cout<<"i = "<<i<<"   x_Fm_up["<<i+offset3<<"] = "<<x_Fm_up[i+offset3]<<"   y_Fm_up["<<i+offset3<<"] = "<<y_Fm_up[i+offset3]<<endl;
+	}
+      
+      Int_t offset4 = 30;
+      
+      for(Int_t i=0;i<offset4;i++)
+	{
+	  grshade2->SetPoint(nlines3-offset3+i,x_Fm_down[nlines4-i-1],y_Fm_down[nlines4-i-1]);
+	  cout<<"nlines3-offset3+i = "<<nlines3-offset3+i<<"   x_Fm_down[nlines4-i-1] = "<<x_Fm_down[nlines4-i-1]<<"   y_Fm_down[nlines4-i-1] = "<<y_Fm_down[nlines4-i-1]<<endl;
+	}
+    }
+
+  grshade2->SetFillStyle(1001);
+  grshade2->SetFillColorAlpha(kBlue, 0.35);
+  grshade2->Draw("F");
 
   if(target == 0)
     {
