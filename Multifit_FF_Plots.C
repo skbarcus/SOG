@@ -26,8 +26,8 @@ Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;        //1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0);      //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.       //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
 Int_t target = 0;                        //3He = 0. 3H = 1. 
-Int_t single_fit = 0;                    //Draw a single representative fit in a different color.
-Int_t rep_fit = 2;                      //Single fit chosen as the representative fit.
+Int_t single_fit = 1;                    //Draw a single representative fit in a different color.
+Int_t rep_fit = 30;//3He = 30//3H = 15                      //Single fit chosen as the representative fit.
 
 const Int_t nfunc = 3000;
 Double_t maxchi2 = 500;//3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
@@ -268,10 +268,10 @@ Double_t ChFF_Deriv(Double_t Q2)
     + (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
     + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
     + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
-  + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
-  + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
-  + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
-  + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
+    + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
+    + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
+    + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
+    + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
   // + (Q12ch[z]/(1.0+2.0*pow(R12[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R12[z]) + (2.0*pow(R12[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R12[z])/(pow(Q2,0.5)*R12[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
  
   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
@@ -357,8 +357,8 @@ void Multifit_FF_Plots()
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Wider_Ri_100_12_20_2018.txt","r");
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
@@ -1212,12 +1212,12 @@ void Multifit_FF_Plots()
   */
   if(single_fit == 1)
     {
-      fChFF[rep_fit]->SetLineColor(6);
+      fChFF[rep_fit]->SetLineColor(1);
       fChFF[rep_fit]->SetLineWidth(linewidth);
       fChFF[rep_fit]->Draw("L SAME");
 
       cCh_den->cd();
-      frho_ch[rep_fit]->SetLineColor(6);
+      frho_ch[rep_fit]->SetLineColor(1);
       frho_ch[rep_fit]->SetLineWidth(linewidth);
       frho_ch[rep_fit]->Draw("L SAME");
       cFch->cd();
@@ -1289,7 +1289,7 @@ void Multifit_FF_Plots()
   if(target == 0)
     {
       TGraph *gr7 = new TGraph (nlines7, x_Fch_3He_IA_MEC, y_Fch_3He_IA_MEC); 
-      gr7->SetLineColor(kCyan-3);
+      gr7->SetLineColor(6);//kCyan-3
       //gr7->SetLineColor(kOrange+10);
       //gr7->SetLineColor(kBlack);
       gr7->SetLineWidth(2);
@@ -1307,6 +1307,7 @@ void Multifit_FF_Plots()
   if(target == 0)
     {
       ChFF_leg->AddEntry(fChFF[0],"New ^{3}He |F_{ch}(q^{2})| Fits","l");
+      ChFF_leg->AddEntry(fChFF[rep_fit],"New Representative Fit","l");
       ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al.","l");
       ChFF_leg->AddEntry(grshade1,"^{3}H |F_{ch}(q^{2})| Fit Error Band from Amroun et al.","F");// No "" for anything that needs to be filled.
       ChFF_leg->AddEntry(gr8,"Impulse Approximation","l");
@@ -1315,6 +1316,7 @@ void Multifit_FF_Plots()
   if(target == 1)
     {
       ChFF_leg->AddEntry(fChFF[0],"New ^{3}H |F_{ch}(q^{2})| Fits","l");
+      ChFF_leg->AddEntry(fChFF[rep_fit],"New Representative Fit","l");
       ChFF_leg->AddEntry("fChFF_Amroun","^{3}H |F_{ch}(q^{2})| Fit from Amroun et al.","l");
       ChFF_leg->AddEntry(grshade1,"^{3}H |F_{ch}(q^{2})| Fit Error Band from Amroun et al.","F");// No "" for anything that needs to be filled.
     }
@@ -1501,7 +1503,7 @@ void Multifit_FF_Plots()
   */
   if(single_fit == 1)
     {
-      fMFF[rep_fit]->SetLineColor(6);
+      fMFF[rep_fit]->SetLineColor(1);
       fMFF[rep_fit]->SetLineWidth(linewidth);
       fMFF[rep_fit]->Draw("L SAME");
     }
@@ -1567,7 +1569,7 @@ void Multifit_FF_Plots()
     {
       //IA+MEC.
       TGraph *gr5 = new TGraph (nlines5, x_Fm_3He_IA_MEC, y_Fm_3He_IA_MEC);
-      gr5->SetLineColor(kCyan-3);
+      gr5->SetLineColor(6);
       gr5->SetLineWidth(2);
       gr5->Draw("SAME l");
     }
@@ -1585,6 +1587,7 @@ void Multifit_FF_Plots()
   if(target == 0)
     {
       MFF_leg->AddEntry(fMFF[0],"New ^{3}He |F_{m}(q^{2})| Fits","l");
+      MFF_leg->AddEntry(fMFF[rep_fit],"New Representative Fit","l");
       MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al.","l");
       MFF_leg->AddEntry(grshade2,"^{3}H |F_{m}(q^{2})| Fit Error Band from Amroun et al.","f");
       MFF_leg->AddEntry(gr6,"Impulse Approximation","l");
@@ -1593,6 +1596,7 @@ void Multifit_FF_Plots()
   if(target == 1)
     {
       MFF_leg->AddEntry(fMFF[0],"New ^{3}H |F_{m}(q^{2})| Fits","l");
+      MFF_leg->AddEntry(fMFF[rep_fit],"New Representative Fit","l");
       MFF_leg->AddEntry("fMFF_Amroun","^{3}H |F_{m}(q^{2})| Fit from Amroun et al.","l");
       MFF_leg->AddEntry(grshade2,"^{3}H |F_{m}(q^{2})| Fit Error Band from Amroun et al.","f");
     }
