@@ -163,8 +163,8 @@ Int_t skip9,skip10,skip11,skip12,skip13,skip14,skip15,skip16,skip17,skip18,skip1
 Int_t nlines9,nlines10,nlines11,nlines12,nlines13,nlines14,nlines15,nlines16,nlines17,nlines18,nlines19,nlines20,nlines21,nlines22,nlines23,nlines24 = 0;
 Int_t ncols9,ncols10,ncols11,ncols12,ncols13,ncols14,ncols15,ncols16,ncols17,ncols18,ncols19,ncols20,ncols21,ncols22,ncols23,ncols24;
 char* str9[1000],str10[1000],str11[1000],str12[1000],str13[1000],str14[1000],str15[1000],str16[1000],str17[1000],str18[1000],str19[1000],str20[1000],str21[1000],str22[1000],str23[1000],str24[1000];
-Float_t x_Fch_Conv[size1],x_Fch_Xeft500[size],x_Fch_Xeft600[size1],x_Fch_CST[size1],x_Fm_Conv[size1],x_Fm_Xeft500[size],x_Fm_Xeft600[size1],x_Fm_CST[size1],y_Fch_Conv[size1],y_Fch_Xeft500[size],y_Fch_Xeft600[size1],y_Fch_CST[size1],y_Fm_Conv[size1],y_Fm_Xeft500[size],y_Fm_Xeft600[size1],y_Fm_CST[size1];
-Float_t x_Fch_Conv_temp,x_Fch_Xeft500_temp,x_Fch_Xeft600_temp,x_Fch_CST_temp,x_Fm_Conv_temp,x_Fm_Xeft500_temp,x_Fm_Xeft600_temp,x_Fm_CST_temp,y_Fch_Conv_temp,y_Fch_Xeft500_temp,y_Fch_Xeft600_temp,y_Fch_CST_temp,y_Fm_Conv_temp,y_Fm_Xeft500_temp,y_Fm_Xeft600_temp,y_Fm_CST_temp;
+Float_t x_Fch_Conv[size1],x_Fch_XEFT500[size],x_Fch_XEFT600[size1],x_Fch_CST[size1],x_Fm_Conv[size1],x_Fm_XEFT500[size],x_Fm_XEFT600[size1],x_Fm_CST[size1],y_Fch_Conv[size1],y_Fch_XEFT500[size],y_Fch_XEFT600[size1],y_Fch_CST[size1],y_Fm_Conv[size1],y_Fm_XEFT500[size],y_Fm_XEFT600[size1],y_Fm_CST[size1];
+Float_t x_Fch_Conv_temp,x_Fch_XEFT500_temp,x_Fch_XEFT600_temp,x_Fch_CST_temp,x_Fm_Conv_temp,x_Fm_XEFT500_temp,x_Fm_XEFT600_temp,x_Fm_CST_temp,y_Fch_Conv_temp,y_Fch_XEFT500_temp,y_Fch_XEFT600_temp,y_Fch_CST_temp,y_Fm_Conv_temp,y_Fm_XEFT500_temp,y_Fm_XEFT600_temp,y_Fm_CST_temp;
 
 //Plot Charge FF Fch(Q^2) fm^-2.
 Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
@@ -876,8 +876,271 @@ void Multifit_FF_Plots()
   fclose(fp9);
   cout<<"nlines9 = "<<nlines9<<endl;
 
+  //Fch CST Marcucci 2016.
+  FILE *fp10;
 
+  if(target == 0)
+    {
+      fp10 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_CST_Q2.txt","r");
+    }
+  if(target == 1)
+    {
+      fp10 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_CST_Q2.txt","r");
+    }
 
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines10 < skip10)
+	{
+	  fgets(str10,1000,fp10);
+	  nlines10++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols10 = fscanf(fp10,"%f %f", &x_Fch_CST_temp, &y_Fch_CST_temp);
+	  
+	  if (ncols10 < 0) break;    
+	  
+	  x_Fch_CST[nlines10-skip10] = x_Fch_CST_temp;
+	  y_Fch_CST[nlines10-skip10] = y_Fch_CST_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines10++;
+	}
+    }
+  fclose(fp10);
+  cout<<"nlines10 = "<<nlines10<<endl;
+
+  //Fch XEFT 500 Marcucci 2016.
+  FILE *fp11;
+
+  if(target == 0)
+    {
+      fp11 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_XEFT500_Q2.txt","r");
+    }
+  if(target == 1)
+    {
+      fp11 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_XEFT500_Q2.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines11 < skip11)
+	{
+	  fgets(str11,1000,fp11);
+	  nlines11++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols11 = fscanf(fp11,"%f %f", &x_Fch_XEFT500_temp, &y_Fch_XEFT500_temp);
+	  
+	  if (ncols11 < 0) break;    
+	  
+	  x_Fch_XEFT500[nlines11-skip11] = x_Fch_XEFT500_temp;
+	  y_Fch_XEFT500[nlines11-skip11] = y_Fch_XEFT500_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines11++;
+	}
+    }
+  fclose(fp11);
+  cout<<"nlines11 = "<<nlines11<<endl;
+
+  //Fch XEFT 600 Marcucci 2016.
+  FILE *fp12;
+
+  if(target == 0)
+    {
+      fp12 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_XEFT600_Q2.txt","r");
+    }
+  if(target == 1)
+    {
+      fp12 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_XEFT600_Q2.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines12 < skip12)
+	{
+	  fgets(str12,1000,fp12);
+	  nlines12++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols12 = fscanf(fp12,"%f %f", &x_Fch_XEFT600_temp, &y_Fch_XEFT600_temp);
+	  
+	  if (ncols12 < 0) break;    
+	  
+	  x_Fch_XEFT600[nlines12-skip12] = x_Fch_XEFT600_temp;
+	  y_Fch_XEFT600[nlines12-skip12] = y_Fch_XEFT600_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines12++;
+	}
+    }
+  fclose(fp12);
+  cout<<"nlines12 = "<<nlines12<<endl;
+
+  //Fm conventional approach Marcucci 2016.
+  FILE *fp13;
+
+  if(target == 0)
+    {
+      fp13 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fm_Conventional_Q2.txt","r");
+    }
+  if(target == 1)
+    {
+      fp13 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fm_Conventional_Q2.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines13 < skip13)
+	{
+	  fgets(str13,1000,fp13);
+	  nlines13++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols13 = fscanf(fp13,"%f %f", &x_Fm_Conv_temp, &y_Fm_Conv_temp);
+	  
+	  if (ncols13 < 0) break;    
+	  
+	  x_Fm_Conv[nlines13-skip13] = x_Fm_Conv_temp;
+	  y_Fm_Conv[nlines13-skip13] = y_Fm_Conv_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines13++;
+	}
+    }
+  fclose(fp13);
+  cout<<"nlines13 = "<<nlines13<<endl;
+
+  //Fm CST Marcucci 2016.
+  FILE *fp14;
+
+  if(target == 0)
+    {
+      fp14 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fm_CST_Q2.txt","r");
+    }
+  if(target == 1)
+    {
+      fp14 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fm_CST_Q2.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines14 < skip14)
+	{
+	  fgets(str14,1000,fp14);
+	  nlines14++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols14 = fscanf(fp14,"%f %f", &x_Fm_CST_temp, &y_Fm_CST_temp);
+	  
+	  if (ncols14 < 0) break;    
+	  
+	  x_Fm_CST[nlines14-skip14] = x_Fm_CST_temp;
+	  y_Fm_CST[nlines14-skip14] = y_Fm_CST_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines14++;
+	}
+    }
+  fclose(fp14);
+  cout<<"nlines14 = "<<nlines14<<endl;
+
+  //Fm XEFT 500 Marcucci 2016.
+  FILE *fp15;
+
+  if(target == 0)
+    {
+      fp15 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fm_XEFT500_Q2.txt","r");
+    }
+  if(target == 1)
+    {
+      fp15 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fm_XEFT500_Q2.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines15 < skip15)
+	{
+	  fgets(str15,1000,fp15);
+	  nlines15++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols15 = fscanf(fp15,"%f %f", &x_Fm_XEFT500_temp, &y_Fm_XEFT500_temp);
+	  
+	  if (ncols15 < 0) break;    
+	  
+	  x_Fm_XEFT500[nlines15-skip15] = x_Fm_XEFT500_temp;
+	  y_Fm_XEFT500[nlines15-skip15] = y_Fm_XEFT500_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines15++;
+	}
+    }
+  fclose(fp15);
+  cout<<"nlines15 = "<<nlines15<<endl;
+
+  //Fm XEFT 600 Marcucci 2016.
+  FILE *fp16;
+
+  if(target == 0)
+    {
+      fp16 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fm_XEFT600_Q2.txt","r");
+    }
+  if(target == 1)
+    {
+      fp16 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fm_XEFT600_Q2.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines16 < skip16)
+	{
+	  fgets(str16,1000,fp16);
+	  nlines16++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols16 = fscanf(fp16,"%f %f", &x_Fm_XEFT600_temp, &y_Fm_XEFT600_temp);
+	  
+	  if (ncols16 < 0) break;    
+	  
+	  x_Fm_XEFT600[nlines16-skip16] = x_Fm_XEFT600_temp;
+	  y_Fm_XEFT600[nlines16-skip16] = y_Fm_XEFT600_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines16++;
+	}
+    }
+  fclose(fp16);
+  cout<<"nlines16 = "<<nlines16<<endl;
 
   //Now plot all of the curves on one canvas to form an error band.
   TCanvas* cFch=new TCanvas("cFch");
@@ -1352,10 +1615,29 @@ void Multifit_FF_Plots()
       gr8->Draw("SAME l");
     }
 
+  //Plot Marcucci conventional theory line.
   TGraph *gr9 = new TGraph (nlines9, x_Fch_Conv, y_Fch_Conv); 
   gr9->SetLineColor(3);
   gr9->SetLineWidth(2);
   gr9->Draw("SAME l");
+
+  //Plot Marcucci CST theory line.
+  TGraph *gr10 = new TGraph (nlines10, x_Fch_CST, y_Fch_CST); 
+  gr10->SetLineColor(30);
+  gr10->SetLineWidth(2);
+  gr10->Draw("SAME l");
+
+  //Plot Marcucci XEFT 500 theory line.
+  TGraph *gr11 = new TGraph (nlines11, x_Fch_XEFT500, y_Fch_XEFT500); 
+  gr11->SetLineColor(40);
+  gr11->SetLineWidth(2);
+  gr11->Draw("SAME l");
+
+  //Plot Marcucci XEFT 600 theory line.
+  TGraph *gr12 = new TGraph (nlines12, x_Fch_XEFT600, y_Fch_XEFT600); 
+  gr12->SetLineColor(46);
+  gr12->SetLineWidth(2);
+  gr12->Draw("SAME l");
   
 
   if(target == 0)
@@ -1636,6 +1918,26 @@ void Multifit_FF_Plots()
       gr6->SetLineWidth(2);
       gr6->Draw("SAME l");
     }
+
+  TGraph *gr13 = new TGraph (nlines13, x_Fm_Conv, y_Fm_Conv);
+  gr13->SetLineColor(3);
+  gr13->SetLineWidth(2);
+  gr13->Draw("SAME l");
+
+  TGraph *gr14 = new TGraph (nlines14, x_Fm_CST, y_Fm_CST);
+  gr14->SetLineColor(30);
+  gr14->SetLineWidth(2);
+  gr14->Draw("SAME l");
+
+  TGraph *gr15 = new TGraph (nlines15, x_Fm_XEFT500, y_Fm_XEFT500);
+  gr15->SetLineColor(40);
+  gr15->SetLineWidth(2);
+  gr15->Draw("SAME l");
+
+  TGraph *gr16 = new TGraph (nlines16, x_Fm_XEFT600, y_Fm_XEFT600);
+  gr16->SetLineColor(46);
+  gr16->SetLineWidth(2);
+  gr16->Draw("SAME l");
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   if(target == 0)
