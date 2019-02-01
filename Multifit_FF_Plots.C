@@ -158,6 +158,13 @@ Float_t x_Fch_up_temp,y_Fch_up_temp,x_Fch_down_temp,y_Fch_down_temp,x_Fm_up_temp
 Float_t x_Fm_3He_IA_MEC[size1],x_Fch_3He_IA_MEC[size1],x_Fm_3He_IA[size1],x_Fch_3He_IA[size1],y_Fm_3He_IA_MEC[size1],y_Fch_3He_IA_MEC[size1],y_Fm_3He_IA[size1],y_Fch_3He_IA[size1];
 Float_t x_Fm_3He_IA_MEC_temp,x_Fch_3He_IA_MEC_temp,x_Fm_3He_IA_temp,x_Fch_3He_IA_temp,y_Fm_3He_IA_MEC_temp,y_Fch_3He_IA_MEC_temp,y_Fm_3He_IA_temp,y_Fch_3He_IA_temp;
 
+//Adding theory curves from Marcucci 2016. 4 theory predictions per target (2) per form factor (2) = 16 lines.
+Int_t skip9,skip10,skip11,skip12,skip13,skip14,skip15,skip16,skip17,skip18,skip19,skip20,skip21,skip22,skip23,skip24 = 0; 
+Int_t nlines9,nlines10,nlines11,nlines12,nlines13,nlines14,nlines15,nlines16,nlines17,nlines18,nlines19,nlines20,nlines21,nlines22,nlines23,nlines24 = 0;
+Int_t ncols9,ncols10,ncols11,ncols12,ncols13,ncols14,ncols15,ncols16,ncols17,ncols18,ncols19,ncols20,ncols21,ncols22,ncols23,ncols24;
+char* str9[1000],str10[1000],str11[1000],str12[1000],str13[1000],str14[1000],str15[1000],str16[1000],str17[1000],str18[1000],str19[1000],str20[1000],str21[1000],str22[1000],str23[1000],str24[1000];
+Float_t x_Fch_Conv[size1],x_Fch_Xeft500[size],x_Fch_Xeft600[size1],x_Fch_CST[size1],x_Fm_Conv[size1],x_Fm_Xeft500[size],x_Fm_Xeft600[size1],x_Fm_CST[size1],y_Fch_Conv[size1],y_Fch_Xeft500[size],y_Fch_Xeft600[size1],y_Fch_CST[size1],y_Fm_Conv[size1],y_Fm_Xeft500[size],y_Fm_Xeft600[size1],y_Fm_CST[size1];
+Float_t x_Fch_Conv_temp,x_Fch_Xeft500_temp,x_Fch_Xeft600_temp,x_Fch_CST_temp,x_Fm_Conv_temp,x_Fm_Xeft500_temp,x_Fm_Xeft600_temp,x_Fm_CST_temp,y_Fch_Conv_temp,y_Fch_Xeft500_temp,y_Fch_Xeft600_temp,y_Fch_CST_temp,y_Fm_Conv_temp,y_Fm_Xeft500_temp,y_Fm_Xeft600_temp,y_Fm_CST_temp;
 
 //Plot Charge FF Fch(Q^2) fm^-2.
 Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
@@ -342,8 +349,8 @@ void Multifit_FF_Plots()
       //3He
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=13_100_12_21_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
@@ -831,6 +838,47 @@ void Multifit_FF_Plots()
   fclose(fp8);
   cout<<"nlines8 = "<<nlines8<<endl;
 
+  //Fch conventional approach Marcucci 2016.
+  FILE *fp9;
+
+  if(target == 0)
+    {
+      fp9 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_Conventional_Q2.txt","r");
+    }
+  if(target == 1)
+    {
+      fp9 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_Conventional_Q2.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines9 < skip9)
+	{
+	  fgets(str9,1000,fp9);
+	  nlines9++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols9 = fscanf(fp9,"%f %f", &x_Fch_Conv_temp, &y_Fch_Conv_temp);
+	  
+	  if (ncols9 < 0) break;    
+	  
+	  x_Fch_Conv[nlines9-skip9] = x_Fch_Conv_temp;
+	  y_Fch_Conv[nlines9-skip9] = y_Fch_Conv_temp;
+	  //cout<<"!!! x_Fch_up["<<nlines-skip<<"] = "<<x_Fch_up[nlines-skip]<<"   x_Fch_up_temp["<<nlines-skip<<"] = "<<x_Fch_up_temp<<endl;
+	  nlines9++;
+	}
+    }
+  fclose(fp9);
+  cout<<"nlines9 = "<<nlines9<<endl;
+
+
+
+
   //Now plot all of the curves on one canvas to form an error band.
   TCanvas* cFch=new TCanvas("cFch");
   cFch->SetGrid();
@@ -1303,6 +1351,12 @@ void Multifit_FF_Plots()
       gr8->SetLineWidth(2);
       gr8->Draw("SAME l");
     }
+
+  TGraph *gr9 = new TGraph (nlines9, x_Fch_Conv, y_Fch_Conv); 
+  gr9->SetLineColor(3);
+  gr9->SetLineWidth(2);
+  gr9->Draw("SAME l");
+  
 
   if(target == 0)
     {
