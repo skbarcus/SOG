@@ -40,7 +40,7 @@ Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason,
 Double_t mu3H = 2.9788*(3.0/1.0); //Magnetic moment of trinucleon (H3 or He3). NIST: http://physics.nist.gov/cgi-bin/cuu/Results?search_for=magnet+moment   //MCEEP Code for H3 and He3 eleastic FFs has magnetic moments multiplied by 3.0/Z. I don't know why but it works. Maybe it's a factor of A/Z?
 
 Int_t loops = 1;
-Int_t userand = 5;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11.
+Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
@@ -54,7 +54,7 @@ Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter 
 Int_t optimize_Ri = 0;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.
 Int_t bootstrap = 0;                     //0 = No bootstrapping. 1 = Using a fixed Ri set randomly select points in the dataset a number of times equal to the number of points in the dataset and then use those points for a fit.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 9;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 10;
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 //Double_t Z = 2.;                         //Atomic number He3.
@@ -98,7 +98,7 @@ Int_t Amroun_pts = 150;
 Int_t Collard_pts = 72;
 Int_t Beck_1984_pts = 12;
 Int_t Beck_1982_pts = 11;
-const Int_t datapts = 234;//245;//Amroun_pts+Collard_pts+Beck_1984_pts+Beck_1982_pts;//245.
+const Int_t datapts = 234;//Tritium_Data.txt 248//Tritium_Data_Amroun.txt 236;//234;//245;//Amroun_pts+Collard_pts+Beck_1984_pts+Beck_1982_pts;//245.
 
 Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
@@ -117,8 +117,11 @@ Double_t R_best_chi2 = 0;
 //Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
 
 //3H
-Double_t Qich[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
-Double_t Qim[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
+Double_t Qich[12] = {0.151488,0.348372,0.29635,0.0978631,0.121983,0.0242654,0.049329,0.0001};//4.40751e-11};//3H representative fit.
+Double_t Qim[12] = {0.190646,0.301416,0.318972,0.159433,0.173933,0.106361,0.0665564,0.0148866};//3H representative fit.
+
+//Double_t Qich[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
+//Double_t Qim[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
 
 Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
 Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
@@ -370,7 +373,8 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 	  chisq += delta*delta;
 	  Chi2[i] = delta*delta;
 	  //residual[i] = (sigexp[i] - XS(E0[i],theta[i],par))/sigexp[i]; 
-	  residual[i] = fabs(sigexp[i] - XS(E0[i],theta[i],par))/XS(E0[i],theta[i],par); 
+	  residual[i] = (sigexp[i] - XS(E0[i],theta[i],par))/XS(E0[i],theta[i],par);
+	  //residual[i] = fabs(sigexp[i] - XS(E0[i],theta[i],par))/XS(E0[i],theta[i],par); 
 	  xsfit[i] = XS(E0[i],theta[i],par);
 	  //cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
 	}
@@ -383,7 +387,8 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 	  chisq += delta*delta;
 	  Chi2[i] = delta*delta;
 	  //residual[i] = (sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/sigexp_bs[i];
-	  residual[i] = fabs(sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/XS(E0_bs[i],theta_bs[i],par);
+	  residual[i] = (sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/XS(E0_bs[i],theta_bs[i],par);
+	  //residual[i] = fabs(sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/XS(E0_bs[i],theta_bs[i],par);
 	  xsfit[i] = XS(E0_bs[i],theta_bs[i],par);
 	  //cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
 	}
@@ -407,7 +412,8 @@ void fcn_FB(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
       chisq += delta*delta;
       Chi2_FB[i] = delta*delta;
       //residual_FB[i] = (sigexp[i] - FB(E0[i],theta[i],par))/sigexp[i];
-      residual_FB[i] = fabs(sigexp[i] - FB(E0[i],theta[i],par))/FB(E0[i],theta[i],par);
+      residual_FB[i] = (sigexp[i] - FB(E0[i],theta[i],par))/FB(E0[i],theta[i],par);
+      //residual_FB[i] = fabs(sigexp[i] - FB(E0[i],theta[i],par))/FB(E0[i],theta[i],par);
       FBfit[i] = FB(E0[i],theta[i],par);
       //cout<<"FBfit["<<i<<"] = "<<FBfit[i]<<endl;
     }
@@ -574,7 +580,7 @@ void print_fit()//Never finished since I'm not sure this will be useful.
   fChFF1->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fChFF1->Draw("L");
   c_FF->SetTitle("Current Fit Form Factors");
-  fChFF1->SetTitle("^{3}He Charge Form Factor");
+  fChFF1->SetTitle("^{3}H Charge Form Factor");
   fChFF1->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
   fChFF1->GetHistogram()->GetYaxis()->CenterTitle(true);
   fChFF1->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -594,7 +600,7 @@ void print_fit()//Never finished since I'm not sure this will be useful.
     fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
     fMFF->Draw("L");
     //c4->SetTitle("He3 Magnetic Form Factor");
-    fMFF->SetTitle("^{3}He Magnetic Form Factor");
+    fMFF->SetTitle("^{3}H Magnetic Form Factor");
     fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
     fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
     fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -968,14 +974,14 @@ void Global_Fit_3H_SOG()
      
       if(userand == 3)
 	{
-	  R[0] = 0.1;
-	  R[1] = 0.5;
-	  R[2] = 0.9;
-	  R[3] = 1.3;
-	  R[4] = 1.6;
-	  R[5] = 2.;	  
-	  R[6] = 2.4;
-	  R[7] = 2.9;
+	  R[0] = 0.3;//0.1;
+	  R[1] = 0.8;//0.5;
+	  R[2] = 1.4;//0.9;
+	  R[3] = 1.9;//1.3;
+	  R[4] = 2.5;//1.6;
+	  R[5] = 3.3;//2.;	  
+	  R[6] = 4.1;//2.4;
+	  R[7] = 4.8;//2.9;
 	  R[8] = 3.4;
 	  R[9] = 4.;
 	  R[10] = 4.6;
@@ -1428,7 +1434,7 @@ void Global_Fit_3H_SOG()
 	      m3->SetMarkerSize(1);
 	      m3->Draw();
 	    }
-
+	  /*
 	  //Plot 27 Dunn 1983 (Amroun ref 10) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Beck_1984_pts);i<(Amroun_pts+Collard_pts+Beck_1984_pts+Beck_1982_pts);i++) 
 	    {
@@ -1437,13 +1443,13 @@ void Global_Fit_3H_SOG()
 	      m4->SetMarkerSize(1);
 	      m4->Draw();
 	    }
-
+	  */
 	  //auto legend1 = new TLegend(0.1,0.7,0.48,0.9); //Places legend in upper left corner of histogram.
 	  TLegend *legend1;
 	  legend1 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
 	  legend1->AddEntry(m2,"Collard 1965","p");
 	  legend1->AddEntry(m3,"Beck 1984","p");
-	  legend1->AddEntry(m4,"Beck 1982","p");
+	  //legend1->AddEntry(m4,"Beck 1982","p");
 	  legend1->AddEntry(m1,"Amroun 1994","p");
 	  legend1->Draw();
 
@@ -1455,7 +1461,7 @@ void Global_Fit_3H_SOG()
 	  TCanvas* cQ2=new TCanvas("cQ2");
 	  cQ2->SetGrid();
 
-	  TH2D *hQ2 = new TH2D("hQ2","\Chi^{2} vs. Q^{2}" , datapts+1, 0., maxQ2+2, 500, 0., maxchi2+10);
+	  TH2D *hQ2 = new TH2D("hQ2","Representative Fit #chi^{2} vs. Q^{2}" , datapts+1, 0., maxQ2+2, 500, 0., maxchi2+10);
 	  for(Int_t i=0;i<datapts;i++)
 	    {
 	      //hQ2->Fill(Q2[i],Chi2[i]);
@@ -1496,7 +1502,7 @@ void Global_Fit_3H_SOG()
 	      m3->SetMarkerSize(1);
 	      m3->Draw();
 	    }
-
+	  /*
 	  //Plot 27 Dunn 1983 (Amroun ref 10) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Beck_1984_pts);i<(Amroun_pts+Collard_pts+Beck_1984_pts+Beck_1982_pts);i++) 
 	    {
@@ -1505,12 +1511,12 @@ void Global_Fit_3H_SOG()
 	      m4->SetMarkerSize(1);
 	      m4->Draw();
 	    }
-
+	  */
 	  TLegend *legend2;
 	  legend2 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
 	  legend2->AddEntry(m2,"Collard 1965","p");
 	  legend2->AddEntry(m3,"Beck 1984","p");
-	  legend2->AddEntry(m4,"Beck 1982","p");
+	  //legend2->AddEntry(m4,"Beck 1982","p");
 	  legend2->AddEntry(m1,"Amroun 1994","p");
 	  legend2->Draw();
 
@@ -1568,7 +1574,7 @@ void Global_Fit_3H_SOG()
 	      m3->SetMarkerSize(1);
 	      m3->Draw();
 	    }
-
+	  /*
 	  //Plot 27 Dunn 1983 (Amroun ref 10) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Beck_1984_pts);i<(Amroun_pts+Collard_pts+Beck_1984_pts+Beck_1982_pts);i++) 
 	    {
@@ -1577,12 +1583,12 @@ void Global_Fit_3H_SOG()
 	      m4->SetMarkerSize(1);
 	      m4->Draw();
 	    }
-
+	  */
 	  TLegend *legend3;
 	  legend3 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
 	  legend3->AddEntry(m2,"Collard 1965","p");
 	  legend3->AddEntry(m3,"Beck 1984","p");
-	  legend3->AddEntry(m4,"Beck 1982","p");
+	  //legend3->AddEntry(m4,"Beck 1982","p");
 	  legend3->AddEntry(m1,"Amroun 1994","p");
 	  legend3->Draw();
 
@@ -1631,7 +1637,7 @@ void Global_Fit_3H_SOG()
 	      m3->SetMarkerSize(1);
 	      m3->Draw();
 	    }
-
+	  /*
 	  //Plot 27 Dunn 1983 (Amroun ref 10) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Beck_1984_pts);i<(Amroun_pts+Collard_pts+Beck_1984_pts+Beck_1982_pts);i++) 
 	    {
@@ -1640,12 +1646,12 @@ void Global_Fit_3H_SOG()
 	      m4->SetMarkerSize(1);
 	      m4->Draw();
 	    }
-
+	  */
 	  TLegend *legend4;
 	  legend4 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
 	  legend4->AddEntry(m2,"Collard 1965","p");
 	  legend4->AddEntry(m3,"Beck 1984","p");
-	  legend4->AddEntry(m4,"Beck 1982","p");
+	  //legend4->AddEntry(m4,"Beck 1982","p");
 	  legend4->AddEntry(m1,"Amroun 1994","p");
 	  legend4->Draw();
 
@@ -1657,7 +1663,8 @@ void Global_Fit_3H_SOG()
 	  TCanvas* cresidual=new TCanvas("cresidual");
 	  cresidual->SetGrid();
 
-	  TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Experimental XS to XS from SOG Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, 0., 3.);
+	  //TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Experimental XS to XS from SOG Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, 0., 3.);
+	  TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Representative Fit vs. Q^{2}" , 1000, 0., maxQ2+2, 100, -0.42, 0.5);
 	  for(Int_t i=0;i<(datapts);i++)
 	    {
 	      //hxsresidualQ2->Fill(theta[i],sigexp[i]/xsfit[i]);
@@ -1670,7 +1677,8 @@ void Global_Fit_3H_SOG()
 	  //Plot 150 Amroun data points. 
 	  for (Int_t i=0;i<Amroun_pts;i++) 
 	    {
-	      m1 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      m1 = new TMarker(Q2[i], residual[i], 20);
+	      //m1 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m1->SetMarkerColor(2);
 	      m1->SetMarkerSize(1);
 	      m1->Draw();
@@ -1679,7 +1687,8 @@ void Global_Fit_3H_SOG()
 	  //Plot 72 Collard 1965 (Amroun ref 5) data points.
 	  for (Int_t i=Amroun_pts;i<(Amroun_pts+Collard_pts);i++) 
 	    {
-	      m2 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      m2 = new TMarker(Q2[i], residual[i], 20);
+	      //m2 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m2->SetMarkerColor(4);
 	      m2->SetMarkerSize(1);
 	      m2->Draw();
@@ -1688,26 +1697,28 @@ void Global_Fit_3H_SOG()
 	  //Plot 12 Beck 1984 (Amroun ref 12) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts);i<(Amroun_pts+Collard_pts+Beck_1984_pts);i++) 
 	    {
-	      m3 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      m3 = new TMarker(Q2[i], residual[i], 20);
+	      //m3 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m3->SetMarkerColor(3);
 	      m3->SetMarkerSize(1);
 	      m3->Draw();
 	    }
-
+	  /*
 	  //Plot 27 Dunn 1983 (Amroun ref 10) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Beck_1984_pts);i<(Amroun_pts+Collard_pts+Beck_1984_pts+Beck_1982_pts);i++) 
 	    {
-	      m4 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      m4 = new TMarker(Q2[i], residual[i], 20);
+	      //m4 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m4->SetMarkerColor(6);
 	      m4->SetMarkerSize(1);
 	      m4->Draw();
 	    }
-
+	  */
 	  TLegend *legend5;
 	  legend5 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
 	  legend5->AddEntry(m2,"Collard 1965","p");
 	  legend5->AddEntry(m3,"Beck 1984","p");
-	  legend5->AddEntry(m4,"Beck 1982","p");
+	  //legend5->AddEntry(m4,"Beck 1982","p");
 	  legend5->AddEntry(m1,"Amroun 1994","p");
 	  legend5->Draw();
 
@@ -1883,7 +1894,7 @@ void Global_Fit_3H_SOG()
       fChFF->Draw("L");
       //c2->SetTitle("Charge Form Factor");
       //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
-      fChFF->SetTitle("^{3}He Charge Form Factor");
+      fChFF->SetTitle("^{3}H Charge Form Factor");
       fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
       fChFF->GetHistogram()->GetYaxis()->CenterTitle(true);
       fChFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -1912,8 +1923,8 @@ void Global_Fit_3H_SOG()
       fMFF->Draw("L");
       c4->SetTitle("He3 Magnetic Form Factor");
       //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
-      //fMFF->GetHistogram()->SetTitle("^{3}He Magnetic Form Factor");
-      fMFF->SetTitle("^{3}He Magnetic Form Factor");
+      //fMFF->GetHistogram()->SetTitle("^{3}H Magnetic Form Factor");
+      fMFF->SetTitle("^{3}H Magnetic Form Factor");
       fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
       fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
       fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -1953,8 +1964,8 @@ void Global_Fit_3H_SOG()
       fChFF_Amroun->Draw("L same");
       TLegend *ChFF_leg;
       ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
-      ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
-      ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
+      ChFF_leg->AddEntry("fChFF","New ^{3}H |F_{ch}(q^{2})| Fit","l");
+      ChFF_leg->AddEntry("fChFF_Amroun","^{3}H |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
       ChFF_leg->Draw();
      
       c5->cd(2);
@@ -1974,8 +1985,8 @@ void Global_Fit_3H_SOG()
       fMFF_Amroun->Draw("L same");
       TLegend *MFF_leg;
       MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
-      MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
-      MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
+      MFF_leg->AddEntry("fMFF","New ^{3}H |F_{m}(q^{2})| Fit","l");
+      MFF_leg->AddEntry("fMFF_Amroun","^{3}H |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
       MFF_leg->Draw();
 
       c5->cd(3);
@@ -2150,7 +2161,7 @@ void Global_Fit_3H_SOG()
 	      m3->SetMarkerSize(1);
 	      m3->Draw();
 	    }
-
+	  /*
 	  //Plot 27 Dunn 1983 (Amroun ref 10) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Beck_1984_pts);i<(Amroun_pts+Collard_pts+Beck_1984_pts+Beck_1982_pts);i++) 
 	    {
@@ -2159,12 +2170,12 @@ void Global_Fit_3H_SOG()
 	      m4->SetMarkerSize(1);
 	      m4->Draw();
 	    }
-	 
+	  */
 	  TLegend *legend6;
 	  legend6 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
 	  legend6->AddEntry(m2,"Collard 1965","p");
 	  legend6->AddEntry(m3,"Beck 1984","p");
-	  legend6->AddEntry(m4,"Beck 1982","p");
+	  //legend6->AddEntry(m4,"Beck 1982","p");
 	  legend6->AddEntry(m1,"Amroun 1994","p");
 	  legend6->Draw();
 

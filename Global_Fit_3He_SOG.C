@@ -41,7 +41,7 @@ Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason,
 //Double_t mu3H = 2.9788*(3.0/1.0); //Magnetic moment of trinucleon (H3 or He3). NIST: http://physics.nist.gov/cgi-bin/cuu/Results?search_for=magnet+moment   //MCEEP Code for H3 and He3 eleastic FFs has magnetic moments multiplied by 3.0/Z. I don't know why but it works. Maybe it's a factor of A/Z?
 
 Int_t loops = 1;
-Int_t userand = 6;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11.
+Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
 Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
@@ -52,10 +52,10 @@ Int_t useFB = 0;                         //Turn on Fourier Bessel fit.
 Int_t useFB_FM = 1;                      //0 = Turn on Fourier Bessel fit just for FC. 1 = Turn on Fourier Bessel fit attempting FC and FM.
 Int_t improve = 0;                       //1 = use mnimpr() to check for other minima around the one MIGRAD finds.
 Int_t MINOS = 0;                         //1 = use MINOS to calculate parameter errors. With ERRordef=30, npar=24, 10000 calls took about 1.5 hours and gave results only slightly different from intial parameter errors given. Several pars were hitting limits. 
-Int_t optimize_Ri = 1;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.
+Int_t optimize_Ri = 0;                   //1 = Have code loop over each Ri value shifting it 0.1 higher and 0.1 lower until chi2 stops improving.
 Int_t bootstrap = 0;                     //0 = No bootstrapping. 1 = Using a fixed Ri set randomly select points in the dataset a number of times equal to the number of points in the dataset and then use those points for a fit.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 10;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -98,8 +98,11 @@ Int_t Arnold_pts = 11;                 //These XSs had to be calculated from A^1
 const Int_t datapts = 259;//Amroun_pts+Collard_pts+Szlata+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts+Arnold_pts;//248,257
 
 Double_t m = 2.;
+
+Double_t R[12] = {0.3,0.7,0.9,1.1,1.5,1.9,2.2,2.7,3.3,4.2,4.3,4.8};//Final 3He representative fit.
+
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].
-Double_t R[12] = {0.1,0.6,0.7,1.3,1.4,2.,2.7,3.4,4.3,5.2,0.,0.};//51
+//Double_t R[12] = {0.1,0.6,0.7,1.3,1.4,2.,2.7,3.4,4.3,5.2,0.,0.};//51
 //Double_t R[12] = {0.2,0.7,1.3,1.5,2.1,2.8,3.6,4.2,5.2,0.,0.,0.};
 //Double_t R[12] = {0.1,0.6,1.,1.5,2.1,2.4,3.,3.7,4.4,4.7,0.,0.};//9/12/18 pretty good 2.
 //Double_t R[12] = {0.1,0.6,1.,1.5,2.0,2.4,3.1,3.9,4.5,4.8,0.,0.}; //9/12/18 pretty good 1. Also these Ri work well with Qi 2. Very smooth Fm.
@@ -115,8 +118,11 @@ Double_t R_best_chi2 = 0;
 //Double_t Qim[12] = {0.0585454,0.160715,0.222426,0.156211,0.191486,0.125172,0.00162158,0.0602476,0.0228372,6.94389E-13,0.0192538,1.03119E-11};
 
 //3He
-Double_t Qich[12] = {0.0440183,0.116665,0.202577,0.26934,0.0690628,0.179559,0.0854789,0.0318623,0.00963141,9.4369e-16,0.,0.};//9/15/18 51.
-Double_t Qim[12] = {0.0725889,0.0926902,0.209459,0.231037,0.079899,0.188591,0.0836548,0.0440054,0.0235449,2.42131e-10,0.,0.};
+Double_t Qich[12] = {0.0996392,0.214304,0.0199385,0.195676,0.0785533,0.167223,0.126926,0.0549379,0.0401401,0.0100803,0.0007217,4.98962e-12};//3He final #30..
+Double_t Qim[12] = {0.159649,0.0316168,0.277843,0.0364955,0.0329718,0.233469,0.117059,0.0581085,0.0485212,1.77602e-12,0.0240927,8.94934e-12};
+
+//Double_t Qich[12] = {0.0440183,0.116665,0.202577,0.26934,0.0690628,0.179559,0.0854789,0.0318623,0.00963141,9.4369e-16,0.,0.};//9/15/18 51.
+//Double_t Qim[12] = {0.0725889,0.0926902,0.209459,0.231037,0.079899,0.188591,0.0836548,0.0440054,0.0235449,2.42131e-10,0.,0.};
 //Double_t Qich[12] = {0.0877489,0.157569,0.251965,0.153987,0.18569,0.114409,0.042258,0.0141493,5.25852e-12,0.,0.,0.};//9/14/18 42
 //Double_t Qim[12] = {0.151938,0.0687805,0.318107,0.0627664,0.234607,0.100287,0.0562909,0.00777628,0.018992,0.,0.,0.};
 //Double_t Qich[12] = {0.087498,0.157869,0.245378,0.101457,0.223892,0.123962,0.0483213,0.014929,0.00494579,0.,0.,0.};//9/14/18 40
@@ -400,7 +406,8 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 	  chisq += delta*delta;
 	  Chi2[i] = delta*delta;
 	  //residual[i] = (sigexp[i] - XS(E0[i],theta[i],par))/sigexp[i]; 
-	  residual[i] = fabs(sigexp[i] - XS(E0[i],theta[i],par))/XS(E0[i],theta[i],par); 
+	  //residual[i] = fabs(sigexp[i] - XS(E0[i],theta[i],par))/XS(E0[i],theta[i],par);
+	  residual[i] = (sigexp[i] - XS(E0[i],theta[i],par))/XS(E0[i],theta[i],par); 
 	  xsfit[i] = XS(E0[i],theta[i],par);
 	  //cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
 	}
@@ -413,7 +420,8 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 	  chisq += delta*delta;
 	  Chi2[i] = delta*delta;
 	  //residual[i] = (sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/sigexp_bs[i];
-	  residual[i] = fabs(sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/XS(E0_bs[i],theta_bs[i],par);
+	  //residual[i] = fabs(sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/XS(E0_bs[i],theta_bs[i],par);
+	  residual[i] = (sigexp_bs[i] - XS(E0_bs[i],theta_bs[i],par))/XS(E0_bs[i],theta_bs[i],par);
 	  xsfit[i] = XS(E0_bs[i],theta_bs[i],par);
 	  //cout<<"xsfit["<<i<<"] = "<<xsfit[i]<<endl;
 	}
@@ -437,7 +445,8 @@ void fcn_FB(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
       chisq += delta*delta;
       Chi2_FB[i] = delta*delta;
       //residual_FB[i] = (sigexp[i] - FB(E0[i],theta[i],par))/sigexp[i];
-      residual_FB[i] = fabs(sigexp[i] - FB(E0[i],theta[i],par))/FB(E0[i],theta[i],par);
+      //residual_FB[i] = fabs(sigexp[i] - FB(E0[i],theta[i],par))/FB(E0[i],theta[i],par);
+      residual_FB[i] = (sigexp[i] - FB(E0[i],theta[i],par))/FB(E0[i],theta[i],par);
       FBfit[i] = FB(E0[i],theta[i],par);
       //cout<<"FBfit["<<i<<"] = "<<FBfit[i]<<endl;
     }
@@ -1001,40 +1010,40 @@ void Global_Fit_3He_SOG()
 	  Double_t step = 0.5;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand = new TF1("rand","x",0.,.01);
-	  R[0] = 0.1;//0.1;//0.1;//0.1;
+	  R[0] = 0.3;//0.1;//0.1;//0.1;//0.1;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand1 = new TF1("rand1","x",3.,4.);
-	  R[1] = 0.5;//0.5;//0.5;//0.5;
+	  R[1] = 0.7;//0.5;//0.5;//0.5;//0.5;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand2 = new TF1("rand2","x",3.,4.);
-	  R[2] = 0.9;//0.9;//0.9;//0.9;
+	  R[2] = 0.9;//0.9;//0.9;//0.9;//0.9;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand3 = new TF1("rand3","x",3.,4.);
-	  R[3] = 1.3;//1.3;//1.3;//1.3;
+	  R[3] = 1.1;//1.3;//1.3;//1.3;//1.3;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand4 = new TF1("rand4","x",3.,4.);
-	  R[4] = 1.7;//1.5;//1.6;//1.5;
+	  R[4] = 1.5;//1.7;//1.5;//1.6;//1.5;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand5 = new TF1("rand5","x",3.,4.);
-	  R[5] = 2.3;//1.9;//2.1;//1.9;
+	  R[5] = 1.6;//2.3;//1.9;//2.1;//1.9;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand6 = new TF1("rand6","x",3.,4.);
-	  R[6] = 2.4;//2.3;//2.4;//2.3;
+	  R[6] = 2.2;//2.4;//2.3;//2.4;//2.3;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand7 = new TF1("rand7","x",5.,6.);
-	  R[7] = 3.;//2.8;//2.9;//2.8;
+	  R[7] = 2.7;//3.;//2.8;//2.9;//2.8;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand8 = new TF1("rand8","x",5.,6.);
-	  R[8] = 3.6;//3.1;//3.4;//3.1;
+	  R[8] = 3.3;//3.6;//3.1;//3.4;//3.1;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand9 = new TF1("rand9","x",5.,6.);
-	  R[9] = 3.9;//3.8;//3.8;//3.8;
+	  R[9] = 4.2;//3.9;//3.8;//3.8;//3.8;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand10 = new TF1("rand10","x",5.,6.);
-	  R[10] = 4.3;//4.3;//4.6;//4.3;
+	  R[10] = 4.3;//4.3;//4.3;//4.6;//4.3;
 	  gRandom->SetSeed(0);                    //Sets new random seed.
 	  TF1 *rand11 = new TF1("rand11","x",5.,6.);
-	  R[11] = 5.2;//5.;//5.;//5.;
+	  R[11] = 4.8;//5.2;//5.;//5.;//5.;
 	}
      
       if(userand == 4) //ngaus = 8
@@ -1550,7 +1559,7 @@ void Global_Fit_3He_SOG()
 	  TCanvas* cQ2=new TCanvas("cQ2");
 	  cQ2->SetGrid();
 
-	  TH2D *hQ2 = new TH2D("hQ2","\Chi^{2} vs. Q^{2}" , datapts+1, 0., maxQ2+2, 500, 0., maxchi2+10);
+	  TH2D *hQ2 = new TH2D("hQ2","Representative Fit #chi^{2} vs. Q^{2}" , datapts+1, 0., maxQ2+2, 500, 0., maxchi2+10);
 	  for(Int_t i=0;i<datapts;i++)
 	    {
 	      //hQ2->Fill(Q2[i],Chi2[i]);
@@ -1874,7 +1883,8 @@ void Global_Fit_3He_SOG()
 	  TCanvas* cresidual=new TCanvas("cresidual");
 	  cresidual->SetGrid();
 
-	  TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Experimental XS to XS from SOG Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, 0., 3.);
+	  //TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Experimental XS to XS from SOG Fit vs. q" , 1000, 0., pow(maxQ2,0.5)+0.5, 100, -3., 3.);
+	  TH2D *hxsresidualQ2 = new TH2D("hxsresidualQ2","Residual of Representative Fit vs. Q^{2}" , 1000, 0., maxQ2+2., 100, -10., 10.);
 	  for(Int_t i=0;i<(datapts);i++)
 	    {
 	      //hxsresidualQ2->Fill(theta[i],sigexp[i]/xsfit[i]);
@@ -1887,8 +1897,8 @@ void Global_Fit_3He_SOG()
 	  //Plot 59 Amroun data points.
 	  for (Int_t i=0;i<Amroun_pts;i++) 
 	    {
-	      //TMarker *m1 = new TMarker(Q2[i], residual[i], 20);
-	      TMarker *m1 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      TMarker *m1 = new TMarker(Q2[i], residual[i], 20);
+	      //TMarker *m1 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m1->SetMarkerColor(2);
 	      m1->SetMarkerSize(1);
 	      m1->Draw();
@@ -1897,8 +1907,8 @@ void Global_Fit_3He_SOG()
 	  //Plot 118 Collard 1965 (Amroun ref 5) data points.
 	  for (Int_t i=Amroun_pts;i<(Amroun_pts+Collard_pts);i++) 
 	    {
-	      //TMarker *m2 = new TMarker(Q2[i], residual[i], 20);
-	      TMarker *m2 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      TMarker *m2 = new TMarker(Q2[i], residual[i], 20);
+	      //TMarker *m2 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m2->SetMarkerColor(4);
 	      m2->SetMarkerSize(1);
 	      m2->Draw();
@@ -1907,8 +1917,8 @@ void Global_Fit_3He_SOG()
 	  //Plot 22 Szlata 1977 (Amroun ref 8) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts);i<(Amroun_pts+Collard_pts+Szlata_pts);i++) 
 	    {
-	      //TMarker *m3 = new TMarker(Q2[i], residual[i], 20);
-	      TMarker *m3 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      TMarker *m3 = new TMarker(Q2[i], residual[i], 20);
+	      //TMarker *m3 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m3->SetMarkerColor(3);
 	      m3->SetMarkerSize(1);
 	      m3->Draw();
@@ -1917,8 +1927,8 @@ void Global_Fit_3He_SOG()
 	  //Plot 27 Dunn 1983 (Amroun ref 10) data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i++) 
 	    {
-	      //TMarker *m4 = new TMarker(Q2[i], residual[i], 20);
-	      TMarker *m4 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      TMarker *m4 = new TMarker(Q2[i], residual[i], 20);
+	      //TMarker *m4 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m4->SetMarkerColor(6);
 	      m4->SetMarkerSize(1);
 	      m4->Draw();
@@ -1927,8 +1937,8 @@ void Global_Fit_3He_SOG()
 	  //Plot 16 (skipping 2) JLab data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i++) 
 	    {
-	      //TMarker *m5 = new TMarker(Q2[i], residual[i], 20);
-	      TMarker *m5 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      TMarker *m5 = new TMarker(Q2[i], residual[i], 20);
+	      //TMarker *m5 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m5->SetMarkerColor(1);
 	      m5->SetMarkerSize(1);
 	      m5->Draw();
@@ -1937,8 +1947,8 @@ void Global_Fit_3He_SOG()
 	  //Plot 5 Nakagawa 2001 data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i++) 
 	    {
-	      //TMarker *m6 = new TMarker(Q2[i], residual[i], 20);
-	      TMarker *m6 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      TMarker *m6 = new TMarker(Q2[i], residual[i], 20);
+	      //TMarker *m6 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m6->SetMarkerColor(7);
 	      m6->SetMarkerSize(1);
 	      m6->Draw();
@@ -1947,8 +1957,8 @@ void Global_Fit_3He_SOG()
 	  //Plot my data point.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i++) 
 	    {
-	      //TMarker *m7 = new TMarker(Q2[i], residual[i], 20);
-	      TMarker *m7 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      TMarker *m7 = new TMarker(Q2[i], residual[i], 20);
+	      //TMarker *m7 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m7->SetMarkerColor(kOrange+7);
 	      m7->SetMarkerSize(1);
 	      m7->Draw();
@@ -1957,14 +1967,16 @@ void Global_Fit_3He_SOG()
 	  //Plot 11 Arnold 1978 data points.
 	  for (Int_t i=(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts);i<(Amroun_pts+Collard_pts+Szlata_pts+Dunn_pts+Camsonne_pts+Nakagawa_pts+my_pts+Arnold_pts);i++) 
 	    {
-	      TMarker *m8 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
+	      TMarker *m8 = new TMarker(Q2[i], residual[i], 20);
+	      //TMarker *m8 = new TMarker(pow(Q2[i],0.5), residual[i], 20);
 	      m8->SetMarkerColor(kGreen+2);
 	      m8->SetMarkerSize(1);
 	      m8->Draw();
 	    }
 
 	  TLegend *legend5;
-	  legend5 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
+	  legend5 = new TLegend(0.1,0.7,0.48,0.9); //Places legend in upper left corner of histogram.
+	  //legend5 = new TLegend(0.62,0.7,0.9,0.9); //Places legend in upper right corner of histogram.
 	  legend5->AddEntry(m2,"Collard 1965","p");
 	  legend5->AddEntry(m3,"Szlata 1977","p");
 	  legend5->AddEntry(m8,"Arnold 1978","p");
@@ -2218,7 +2230,7 @@ void Global_Fit_3He_SOG()
       TLegend *ChFF_leg;
       ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
       ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
-      ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
+      ChFF_leg->AddEntry("fChFF_Amroun","Fit from Amroun et al.","l");
       ChFF_leg->Draw();
      
       c5->cd(2);
@@ -2239,7 +2251,7 @@ void Global_Fit_3He_SOG()
       TLegend *MFF_leg;
       MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
       MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
-      MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
+      MFF_leg->AddEntry("fMFF_Amroun","Fit from Amroun et al.","l");
       MFF_leg->Draw();
 
       c5->cd(3);

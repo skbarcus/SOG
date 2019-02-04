@@ -359,8 +359,8 @@ void Multifit_FF_Plots()
       //3He
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=13_100_12_21_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
@@ -1607,6 +1607,7 @@ void Multifit_FF_Plots()
   //grshade1->SetFillColor(kBlue);
   grshade1->Draw("F");
 
+  //IA
   if(target == 0)
     {
       TGraph *gr7 = new TGraph (nlines7, x_Fch_3He_IA_MEC, y_Fch_3He_IA_MEC); 
@@ -1614,15 +1615,16 @@ void Multifit_FF_Plots()
       //gr7->SetLineColor(kOrange+10);
       //gr7->SetLineColor(kBlack);
       gr7->SetLineWidth(2);
-      gr7->Draw("SAME l");
+      //gr7->Draw("SAME l");
     }
 
+  //IA+MEC
   if(target == 0)
     {
       TGraph *gr8 = new TGraph (nlines8, x_Fch_3He_IA, y_Fch_3He_IA); 
       gr8->SetLineColor(kGreen+1);
       gr8->SetLineWidth(2);
-      gr8->Draw("SAME l");
+      //gr8->Draw("SAME l");
     }
 
   //Plot Marcucci conventional theory line.
@@ -1656,8 +1658,8 @@ void Multifit_FF_Plots()
       ChFF_leg->AddEntry(fChFF[rep_fit],"New Representative Fit","l");
       ChFF_leg->AddEntry("fChFF_Amroun","Representative Fit from Amroun et al 1994","l");
       ChFF_leg->AddEntry(grshade1,"Error Band from Amroun et al 1994","F");// No "" for anything that needs to be filled.
-      ChFF_leg->AddEntry(gr8,"Impulse Approximation","l");
-      ChFF_leg->AddEntry(gr7,"Impulse Approximation + Meson Exchange Currents","l");
+      //ChFF_leg->AddEntry(gr8,"Impulse Approximation","l");
+      //ChFF_leg->AddEntry(gr7,"Impulse Approximation + Meson Exchange Currents","l");
       ChFF_leg->AddEntry(gr9,"Conventional Approach Marcucci et al 2016","l");
       ChFF_leg->AddEntry(gr10,"CST Marcucci et al 2016","l");
       ChFF_leg->AddEntry(gr11,"#chiEFT 500 Marcucci et al 2016","l");
@@ -1925,7 +1927,7 @@ void Multifit_FF_Plots()
       TGraph *gr5 = new TGraph (nlines5, x_Fm_3He_IA_MEC, y_Fm_3He_IA_MEC);
       gr5->SetLineColor(6);
       gr5->SetLineWidth(2);
-      gr5->Draw("SAME l");
+      //gr5->Draw("SAME l");
     }
 
   if(target == 0)
@@ -1934,7 +1936,7 @@ void Multifit_FF_Plots()
       TGraph *gr6 = new TGraph (nlines6, x_Fm_3He_IA, y_Fm_3He_IA);
       gr6->SetLineColor(kGreen+1);
       gr6->SetLineWidth(2);
-      gr6->Draw("SAME l");
+      //gr6->Draw("SAME l");
     }
 
   TGraph *gr13 = new TGraph (nlines13, x_Fm_Conv, y_Fm_Conv);
@@ -1964,8 +1966,8 @@ void Multifit_FF_Plots()
       MFF_leg->AddEntry(fMFF[rep_fit],"New Representative Fit","l");
       MFF_leg->AddEntry("fMFF_Amroun","Representative Fit from Amroun et al 1994","l");
       MFF_leg->AddEntry(grshade2,"Error Band from Amroun et al 1994","f");
-      MFF_leg->AddEntry(gr6,"Impulse Approximation","l");
-      MFF_leg->AddEntry(gr5,"Impulse Approximation + Meson Exchange Currents","l");
+      //MFF_leg->AddEntry(gr6,"Impulse Approximation","l");
+      //MFF_leg->AddEntry(gr5,"Impulse Approximation + Meson Exchange Currents","l");
       MFF_leg->AddEntry(gr13,"Conventional Approach Marcucci et al 2016","l");
       MFF_leg->AddEntry(gr14,"CST Marcucci et al 2016","l");
       MFF_leg->AddEntry(gr15,"#chiEFT 500 Marcucci et al 2016","l");
