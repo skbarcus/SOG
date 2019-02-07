@@ -166,6 +166,15 @@ char* str9[1000],str10[1000],str11[1000],str12[1000],str13[1000],str14[1000],str
 Float_t x_Fch_Conv[size1],x_Fch_XEFT500[size],x_Fch_XEFT600[size1],x_Fch_CST[size1],x_Fm_Conv[size1],x_Fm_XEFT500[size],x_Fm_XEFT600[size1],x_Fm_CST[size1],y_Fch_Conv[size1],y_Fch_XEFT500[size],y_Fch_XEFT600[size1],y_Fch_CST[size1],y_Fm_Conv[size1],y_Fm_XEFT500[size],y_Fm_XEFT600[size1],y_Fm_CST[size1];
 Float_t x_Fch_Conv_temp,x_Fch_XEFT500_temp,x_Fch_XEFT600_temp,x_Fch_CST_temp,x_Fm_Conv_temp,x_Fm_XEFT500_temp,x_Fm_XEFT600_temp,x_Fm_CST_temp,y_Fch_Conv_temp,y_Fch_XEFT500_temp,y_Fch_XEFT600_temp,y_Fch_CST_temp,y_Fm_Conv_temp,y_Fm_XEFT500_temp,y_Fm_XEFT600_temp,y_Fm_CST_temp;
 
+//Adding Error Bands for my fits.
+//Int_t skip17;
+//Int_t skip17;
+//Int_t ncols17;
+//char* str17[1000];
+Float_t x_Fch_New_Up[size1],y_Fch_New_Up[size1],x_Fm_New_Up[size1],y_Fm_New_Up[size1],x_Fch_New_Down[size1],y_Fch_New_Down[size1],x_Fm_New_Down[size1],y_Fm_New_Down[size1];
+Float_t x_Fch_New_Up_temp,y_Fch_New_Up_temp,x_Fm_New_Up_temp,y_Fm_New_Up_temp,x_Fch_New_Down_temp,y_Fch_New_Down_temp,x_Fm_New_Down_temp,y_Fm_New_Down_temp;
+
+
 //Plot Charge FF Fch(Q^2) fm^-2.
 Double_t ChFF_Q2(Double_t *Q2, Double_t *par)
 {
@@ -275,10 +284,10 @@ Double_t ChFF_Deriv(Double_t Q2)
     + (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
     + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
     + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
-    + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
-    + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
-    + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
-    + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
+  + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
+  + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
+  + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
+  + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
   // + (Q12ch[z]/(1.0+2.0*pow(R12[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R12[z]) + (2.0*pow(R12[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R12[z])/(pow(Q2,0.5)*R12[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
  
   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
@@ -359,8 +368,8 @@ void Multifit_FF_Plots()
       //3He
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=13_100_12_21_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_100_12_17_2018.txt","r");
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_1352_12_22_2018.txt","r");//Final values.
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=12_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=11_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=10_100_12_11_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_Final_n=9_100_12_11_2018.txt","r");
@@ -374,8 +383,8 @@ void Multifit_FF_Plots()
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Wider_Ri_100_12_20_2018.txt","r");
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
@@ -1152,6 +1161,82 @@ void Multifit_FF_Plots()
   fclose(fp16);
   cout<<"nlines16 = "<<nlines16<<endl;
 
+  //Fch upper error band for my new fits.
+  FILE *fp17;
+
+  if(target == 0)
+    {
+      fp17 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_New_Errors_Up.txt","r");
+    }
+  if(target == 1)
+    {
+      fp17 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_New_Errors_Up.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines17 < skip17)
+	{
+	  fgets(str17,1000,fp17);
+	  nlines17++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols17 = fscanf(fp17,"%f %f", &x_Fch_New_Up_temp, &y_Fch_New_Up_temp);
+	  
+	  if (ncols17 < 0) break;    
+	  
+	  x_Fch_New_Up[nlines17-skip17] = x_Fch_New_Up_temp;
+	  y_Fch_New_Up[nlines17-skip17] = y_Fch_New_Up_temp;
+	  //cout<<"!!! x_Fch_New_Up["<<nlines17-skip17<<"] = "<<x_Fch_New_Up[nlines17-skip17]<<"   x_Fch_New_Up_temp["<<nlines17-skip17<<"] = "<<x_Fch_New_Up_temp<<endl;
+	  nlines17++;
+	}
+    }
+  fclose(fp17);
+  cout<<"nlines17 = "<<nlines17<<endl;
+
+  //Fch lower error band for my new fits.
+  FILE *fp18;
+
+  if(target == 0)
+    {
+      fp18 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3He_Fch_New_Errors_Down.txt","r");
+    }
+  if(target == 1)
+    {
+      fp18 = fopen("/home/skbarcus/Tritium/Analysis/SOG/3H_Fch_New_Errors_Down.txt","r");
+    }
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines18 < skip18)
+	{
+	  fgets(str18,1000,fp18);
+	  nlines18++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols18 = fscanf(fp18,"%f %f", &x_Fch_New_Down_temp, &y_Fch_New_Down_temp);
+	  
+	  if (ncols18 < 0) break;    
+	  
+	  x_Fch_New_Down[nlines18-skip18] = x_Fch_New_Down_temp;
+	  y_Fch_New_Down[nlines18-skip18] = y_Fch_New_Down_temp;
+	  //cout<<"!!! x_Fch_New_Up["<<nlines17-skip17<<"] = "<<x_Fch_New_Up[nlines17-skip17]<<"   x_Fch_New_Up_temp["<<nlines17-skip17<<"] = "<<x_Fch_New_Up_temp<<endl;
+	  nlines18++;
+	}
+    }
+  fclose(fp18);
+  cout<<"nlines18 = "<<nlines18<<endl;
+
   //Now plot all of the curves on one canvas to form an error band.
   TCanvas* cFch=new TCanvas("cFch");
   cFch->SetGrid();
@@ -1651,6 +1736,46 @@ void Multifit_FF_Plots()
   gr12->SetLineWidth(2);
   gr12->Draw("SAME l");
   
+  /*
+  //Now draw my new error bands.
+  //Fch upper error band. 118 points
+  TGraph *gr17 = new TGraph (nlines17, x_Fch_New_Up, y_Fch_New_Up);  
+  gr17->SetLineColorAlpha(kRed, 0.35);
+  gr17->SetLineWidth(2);
+  gr17->Draw("SAME l");
+
+  
+  //Fch lower error band. 116 points
+  TGraph *gr18 = new TGraph (nlines18, x_Fch_New_Down, y_Fch_New_Down);  
+  gr18->SetLineColorAlpha(kRed, 0.35);
+  gr18->SetLineWidth(2);
+  gr18->Draw("SAME l");
+  */
+  if(target == 0)
+    {
+      TGraph *grshade17 = new TGraph(nlines17-35+80);
+      Int_t offset17 = 35;//40
+      
+      
+      for (Int_t i=0;i<nlines17-offset17;i++) 
+	{
+	  grshade17->SetPoint(i,x_Fch_New_Up[i+offset17],y_Fch_New_Up[i+offset17]);
+	  cout<<"i = "<<i<<"   x_Fch_New_Up["<<i+offset17<<"] = "<<x_Fch_New_Up[i+offset17]<<"   y_Fch_New_Up["<<i+offset17<<"] = "<<y_Fch_New_Up[i+offset17]<<endl;
+	}
+      
+      Int_t offset18 = 80;//80
+      
+      for(Int_t i=0;i<offset18;i++)
+	{
+	  grshade17->SetPoint(nlines17-offset17+i,x_Fch_New_Down[nlines18-i-1],y_Fch_New_Down[nlines18-i-1]);
+	  cout<<"nlines17-offset17+i = "<<nlines17-offset17+i<<"   x_Fch_New_Down[nlines18-offset17-i-1] = "<<x_Fch_New_Down[nlines18-i-1]<<"   y_Fch_New_Down[nlines18-offset18-i-1] = "<<y_Fch_New_Down[nlines18-i-1]<<endl;
+	}
+    }
+  
+  //TGraph *grshade17 = new TGraph(128);
+  grshade17->SetFillStyle(1001);
+  grshade17->SetFillColorAlpha(kRed, 0.35);
+  grshade17->Draw("F");
 
   if(target == 0)
     {
