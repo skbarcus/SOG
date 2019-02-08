@@ -42,7 +42,10 @@ Int_t showgaus = 0;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
-Int_t showplots = 0;
+Int_t showplots = 0;                     //1 = now just prints that data read in.
+Int_t show_fits = 0;                     //0 = don't plot new fits. 1 = plot the individual fits.
+Int_t show_theory = 0;                   //1 = plot theory curves from Marcucci 2016.
+Int_t show_amroun = 0;                   //1 = plot Amroun curve and error band. 
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
@@ -63,7 +66,7 @@ Double_t range = fabs(ymaxFF - yminFF);
 Int_t n = 10000;
 Int_t ndim = n+1;
 Int_t npdraw = 1001;                     //Number of points to be used when drawing a function.
-Double_t transparency = 0.2;//0.05              //Sets the transparency level of the multiplot lines.
+Double_t transparency = 0.2;//0.2//0.05              //Sets the transparency level of the multiplot lines.
 Double_t linewidth = 2.;
 Double_t truncate = 100.;                 //Truncate the histogram before inverse FFT. [fm^-2]
 Int_t skip = 1.;                          //Gives number of lines to skip at top of data file. 
@@ -344,6 +347,11 @@ Double_t poisson(Double_t*x,Double_t*par)
 
 void Multifit_FF_Plots() 
 {
+
+  if(show_fits == 0)
+    {
+      transparency = 0.0;
+    }
 
   if(target == 0)
     {
@@ -1405,11 +1413,13 @@ void Multifit_FF_Plots()
 	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
 	      cFch->cd();
-	      fChFF[current_loop]->Draw("L");
-	
+
+	      fChFF[current_loop]->Draw("L");	
+
 	      cCh_den->cd();
+
 	      frho_ch[current_loop]->Draw("L");
-	      
+
 	      if(Chi2[current_loop]<min_chi2)
 		{
 		  //cout<<"*****Hello there!*****"<<endl;
@@ -1549,7 +1559,7 @@ void Multifit_FF_Plots()
 		  cFch->cd();
 
 		  fChFF[current_loop]->Draw("L");
-	        
+		      
 		  if(target == 0)
 		    {
 		      fChFF[current_loop]->SetTitle("^{3}He Charge Form Factor");
@@ -1597,9 +1607,11 @@ void Multifit_FF_Plots()
 	      else
 		{
 		  cFch->cd();
-		  fChFF[current_loop]->Draw("L SAME");
-		    
+
+		  fChFF[current_loop]->Draw("L SAME");		    
+
 		  cCh_den->cd();
+
 		  frho_ch[current_loop]->Draw("L SAME");
 		  //frho_ch_int[current_loop]->Draw("L SAME");
 		}
@@ -1677,7 +1689,10 @@ void Multifit_FF_Plots()
   fChFF_Amroun->SetLineWidth(linewidth);
 
   cFch->cd();
-  fChFF_Amroun->Draw("L SAME");
+  if(show_amroun == 1)
+    {
+      fChFF_Amroun->Draw("L SAME");
+    }
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
   /*
   if(target == 0)
@@ -1710,7 +1725,8 @@ void Multifit_FF_Plots()
   TGraph *gr1 = new TGraph (nlines1, x_Fch_up, y_Fch_up);  
   gr1->SetLineColorAlpha(kBlue, 0.35);
   gr1->SetLineWidth(2);
-  gr1->Draw("SAME l");
+  //gr1->Draw("SAME l");
+
   //TSpline3 *s3 = new TSpline3("s3",gr1->GetX(),gr1->GetY(),gr1->GetN());
   //s3->SetLineColor(kGreen);
   //s3->Draw("l same");
@@ -1720,7 +1736,7 @@ void Multifit_FF_Plots()
   TGraph *gr2 = new TGraph (nlines2, x_Fch_down, y_Fch_down);
   gr2->SetLineColorAlpha(kBlue, 0.35);
   gr2->SetLineWidth(2);
-  gr2->Draw("SAME l");
+  //gr2->Draw("SAME l");
 
   if(target == 0)
     {
@@ -1766,7 +1782,10 @@ void Multifit_FF_Plots()
   grshade1->SetFillStyle(1001);
   grshade1->SetFillColorAlpha(kBlue, 0.35);
   //grshade1->SetFillColor(kBlue);
-  grshade1->Draw("F");
+  if(show_amroun)
+    {
+      grshade1->Draw("F");
+    }
 
   //IA
   if(target == 0)
@@ -1792,26 +1811,38 @@ void Multifit_FF_Plots()
   TGraph *gr9 = new TGraph (nlines9, x_Fch_Conv, y_Fch_Conv); 
   gr9->SetLineColor(kGreen+1);
   gr9->SetLineWidth(2);
-  gr9->Draw("SAME l");
-
+  if(show_theory == 1)
+    {
+      gr9->Draw("SAME l");
+    }     
+  
   //Plot Marcucci CST theory line.
   TGraph *gr10 = new TGraph (nlines10, x_Fch_CST, y_Fch_CST); 
   gr10->SetLineColor(6);
   gr10->SetLineWidth(2);
-  gr10->Draw("SAME l");
-
+  if(show_theory == 1)
+    {
+      gr10->Draw("SAME l");
+    }     
+  
   //Plot Marcucci XEFT 500 theory line.
   TGraph *gr11 = new TGraph (nlines11, x_Fch_XEFT500, y_Fch_XEFT500); 
   gr11->SetLineColor(kMagenta+2);
   gr11->SetLineWidth(2);
-  gr11->Draw("SAME l");
-
+  if(show_theory == 1)
+    {
+      gr11->Draw("SAME l");
+    }
+      
   //Plot Marcucci XEFT 600 theory line.
   TGraph *gr12 = new TGraph (nlines12, x_Fch_XEFT600, y_Fch_XEFT600); 
   gr12->SetLineColor(kCyan+2);
   gr12->SetLineWidth(2);
-  gr12->Draw("SAME l");
-  
+  if(show_theory == 1)
+    {
+      gr12->Draw("SAME l");
+    }  
+
   /*
   //Now draw my new error bands.
   //Fch upper error band. 118 points
@@ -1871,32 +1902,52 @@ void Multifit_FF_Plots()
   
   //TGraph *grshade17 = new TGraph(128);
   grshade17->SetFillStyle(1001);
-  grshade17->SetFillColorAlpha(kRed, 0.35);
+  grshade17->SetFillColorAlpha(kRed, 0.50);//0.35
   grshade17->Draw("F");
 
   if(target == 0)
     {
-      ChFF_leg->AddEntry(fChFF[0],"New ^{3}He |F_{ch}(q^{2})| Fits","l");
+      if(show_fits == 1)
+	{
+	  ChFF_leg->AddEntry(fChFF[0],"New ^{3}He |F_{ch}(q^{2})| Fits","l");
+	}
+      ChFF_leg->AddEntry(grshade17,"Error Band for New Fits","F");
       ChFF_leg->AddEntry(fChFF[rep_fit],"New Representative Fit","l");
-      ChFF_leg->AddEntry("fChFF_Amroun","Representative Fit from Amroun et al 1994","l");
-      ChFF_leg->AddEntry(grshade1,"Error Band from Amroun et al 1994","F");// No "" for anything that needs to be filled.
+      if(show_amroun == 1)
+	{
+	  ChFF_leg->AddEntry("fChFF_Amroun","Representative Fit from Amroun et al 1994","l");
+	  ChFF_leg->AddEntry(grshade1,"Error Band from Amroun et al 1994","F");// No "" for anything that needs to be filled.
+	}
       //ChFF_leg->AddEntry(gr8,"Impulse Approximation","l");
       //ChFF_leg->AddEntry(gr7,"Impulse Approximation + Meson Exchange Currents","l");
-      ChFF_leg->AddEntry(gr9,"Conventional Approach Marcucci et al 2016","l");
-      ChFF_leg->AddEntry(gr10,"CST Marcucci et al 2016","l");
-      ChFF_leg->AddEntry(gr11,"#chiEFT 500 Marcucci et al 2016","l");
-      ChFF_leg->AddEntry(gr12,"#chiEFT 600 Marcucci et al 2016","l");
+      if(show_theory == 1)
+	{
+	  ChFF_leg->AddEntry(gr9,"Conventional Approach Marcucci et al 2016","l");
+	  ChFF_leg->AddEntry(gr10,"CST Marcucci et al 2016","l");
+	  ChFF_leg->AddEntry(gr11,"#chiEFT 500 Marcucci et al 2016","l");
+	  ChFF_leg->AddEntry(gr12,"#chiEFT 600 Marcucci et al 2016","l");
+	}
     }
   if(target == 1)
     {
-      ChFF_leg->AddEntry(fChFF[0],"New ^{3}H |F_{ch}(q^{2})| Fits","l");
+      if(show_fits == 1)
+	{
+	  ChFF_leg->AddEntry(fChFF[0],"New ^{3}H |F_{ch}(q^{2})| Fits","l");
+	}
+      ChFF_leg->AddEntry(grshade17,"Error Band for New Fits","F");
       ChFF_leg->AddEntry(fChFF[rep_fit],"New Representative Fit","l");
-      ChFF_leg->AddEntry("fChFF_Amroun","Representative Fit from Amroun et al 1994","l");
-      ChFF_leg->AddEntry(grshade1,"Error Band from Amroun et al 1994","F");// No "" for anything that needs to be filled.
-      ChFF_leg->AddEntry(gr9,"Conventional Approach Marcucci et al 2016","l");
-      ChFF_leg->AddEntry(gr10,"CST Marcucci et al 2016","l");
-      ChFF_leg->AddEntry(gr11,"#chiEFT 500 Marcucci et al 2016","l");
-      ChFF_leg->AddEntry(gr12,"#chiEFT 600 Marcucci et al 2016","l");
+      if(show_amroun == 1)
+	{
+	  ChFF_leg->AddEntry("fChFF_Amroun","Representative Fit from Amroun et al 1994","l");
+	  ChFF_leg->AddEntry(grshade1,"Error Band from Amroun et al 1994","F");// No "" for anything that needs to be filled.
+	}
+      if(show_theory == 1)
+	{
+	  ChFF_leg->AddEntry(gr9,"Conventional Approach Marcucci et al 2016","l");
+	  ChFF_leg->AddEntry(gr10,"CST Marcucci et al 2016","l");
+	  ChFF_leg->AddEntry(gr11,"#chiEFT 500 Marcucci et al 2016","l");
+	  ChFF_leg->AddEntry(gr12,"#chiEFT 600 Marcucci et al 2016","l");
+	}
     }
   ChFF_leg->Draw();
 
@@ -1935,7 +1986,9 @@ void Multifit_FF_Plots()
 
 	  if(Chi2[current_loop]<maxchi2 && Qimtot[current_loop]>(1-Qim_range) && Qimtot[current_loop]<(1+Qim_range))
 	    {
+
 	      fMFF[current_loop]->Draw("L");
+
 	      first = 1; //No longer first plot.
 	      //cout<<"Sum Qim = "<<Qimtot[current_loop]<<endl;
 	    }
@@ -2063,7 +2116,10 @@ void Multifit_FF_Plots()
   fMFF_Amroun->SetLineColor(4);
   fMFF_Amroun->SetLineWidth(linewidth);
   //fMFF_Amroun->SetLineColorAlpha(4,0.1);
-  fMFF_Amroun->Draw("L SAME");
+  if(show_amroun == 1)
+    {
+      fMFF_Amroun->Draw("L SAME");
+    }
   /*
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   if(target == 0)
@@ -2091,13 +2147,13 @@ void Multifit_FF_Plots()
   TGraph *gr3 = new TGraph (nlines3, x_Fm_up, y_Fm_up);
   gr3->SetLineColorAlpha(kBlue, 0.35);
   gr3->SetLineWidth(2);
-  gr3->Draw("SAME l");
+  //gr3->Draw("SAME l");
 
   //Fm Lower error band.
   TGraph *gr4 = new TGraph (nlines4, x_Fm_down, y_Fm_down);
   gr4->SetLineColorAlpha(kBlue, 0.35);
   gr4->SetLineWidth(2);
-  gr4->Draw("SAME l");
+  //gr4->Draw("SAME l");
 
   if(target == 0)
     {
@@ -2141,7 +2197,10 @@ void Multifit_FF_Plots()
 
   grshade2->SetFillStyle(1001);
   grshade2->SetFillColorAlpha(kBlue, 0.35);
-  grshade2->Draw("F");
+  if(show_amroun == 1)
+    {
+      grshade2->Draw("F");
+    }
 
   if(target == 0)
     {
@@ -2164,23 +2223,35 @@ void Multifit_FF_Plots()
   TGraph *gr13 = new TGraph (nlines13, x_Fm_Conv, y_Fm_Conv);
   gr13->SetLineColor(kGreen+1);
   gr13->SetLineWidth(2);
-  gr13->Draw("SAME l");
-
+  if(show_theory == 1)
+    {
+      gr13->Draw("SAME l");
+    }     
+  
   TGraph *gr14 = new TGraph (nlines14, x_Fm_CST, y_Fm_CST);
   gr14->SetLineColor(6);
   gr14->SetLineWidth(2);
-  gr14->Draw("SAME l");
-
+  if(show_theory == 1)
+    {
+      gr14->Draw("SAME l");
+    }     
+  
   TGraph *gr15 = new TGraph (nlines15, x_Fm_XEFT500, y_Fm_XEFT500);
   gr15->SetLineColor(kMagenta+2);
   gr15->SetLineWidth(2);
-  gr15->Draw("SAME l");
-
+  if(show_theory == 1)
+    {
+      gr15->Draw("SAME l");
+    }
+  
   TGraph *gr16 = new TGraph (nlines16, x_Fm_XEFT600, y_Fm_XEFT600);
   gr16->SetLineColor(kCyan+2);
   gr16->SetLineWidth(2);
-  gr16->Draw("SAME l");
-
+  if(show_theory == 1)
+    {
+      gr16->Draw("SAME l");
+    }
+  
   if(target == 0)
     {
       TGraph *grshade19 = new TGraph(nlines19-25+40);
@@ -2224,33 +2295,53 @@ void Multifit_FF_Plots()
     }
   
   grshade19->SetFillStyle(1001);
-  grshade19->SetFillColorAlpha(kRed, 0.35);
+  grshade19->SetFillColorAlpha(kRed, 0.50);//0.35
   grshade19->Draw("F");
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   if(target == 0)
     {
-      MFF_leg->AddEntry(fMFF[0],"New ^{3}He |F_{m}(q^{2})| Fits","l");
+      if(show_fits == 1)
+	{
+	  MFF_leg->AddEntry(fMFF[0],"New ^{3}He |F_{m}(q^{2})| Fits","l");
+	}
+      MFF_leg->AddEntry(grshade19,"Error Band for New Fits","F");
       MFF_leg->AddEntry(fMFF[rep_fit],"New Representative Fit","l");
-      MFF_leg->AddEntry("fMFF_Amroun","Representative Fit from Amroun et al 1994","l");
-      MFF_leg->AddEntry(grshade2,"Error Band from Amroun et al 1994","f");
+      if(show_amroun == 1)
+	{
+	  MFF_leg->AddEntry("fMFF_Amroun","Representative Fit from Amroun et al 1994","l");
+	  MFF_leg->AddEntry(grshade2,"Error Band from Amroun et al 1994","f");
+	}
       //MFF_leg->AddEntry(gr6,"Impulse Approximation","l");
       //MFF_leg->AddEntry(gr5,"Impulse Approximation + Meson Exchange Currents","l");
-      MFF_leg->AddEntry(gr13,"Conventional Approach Marcucci et al 2016","l");
-      MFF_leg->AddEntry(gr14,"CST Marcucci et al 2016","l");
-      MFF_leg->AddEntry(gr15,"#chiEFT 500 Marcucci et al 2016","l");
-      MFF_leg->AddEntry(gr16,"#chiEFT 600 Marcucci et al 2016","l");
+      if(show_theory == 1)
+	{
+	  MFF_leg->AddEntry(gr13,"Conventional Approach Marcucci et al 2016","l");
+	  MFF_leg->AddEntry(gr14,"CST Marcucci et al 2016","l");
+	  MFF_leg->AddEntry(gr15,"#chiEFT 500 Marcucci et al 2016","l");
+	  MFF_leg->AddEntry(gr16,"#chiEFT 600 Marcucci et al 2016","l");
+	}
     }
   if(target == 1)
     {
-      MFF_leg->AddEntry(fMFF[0],"New ^{3}H |F_{m}(q^{2})| Fits","l");
+      if(show_fits == 1)
+	{
+	  MFF_leg->AddEntry(fMFF[0],"New ^{3}H |F_{m}(q^{2})| Fits","l");
+	}
+      MFF_leg->AddEntry(grshade19,"Error Band for New Fits","F");
       MFF_leg->AddEntry(fMFF[rep_fit],"New Representative Fit","l");
-      MFF_leg->AddEntry("fMFF_Amroun","Representative Fit from Amroun et al 1994","l");
-      MFF_leg->AddEntry(grshade2,"Error Band from Amroun et al 1994","f");
-      MFF_leg->AddEntry(gr13,"Conventional Approach Marcucci et al 2016","l");
-      MFF_leg->AddEntry(gr14,"CST Marcucci et al 2016","l");
-      MFF_leg->AddEntry(gr15,"#chiEFT 500 Marcucci et al 2016","l");
-      MFF_leg->AddEntry(gr16,"#chiEFT 600 Marcucci et al 2016","l");
+      if(show_amroun == 1)
+	{
+	  MFF_leg->AddEntry("fMFF_Amroun","Representative Fit from Amroun et al 1994","l");
+	  MFF_leg->AddEntry(grshade2,"Error Band from Amroun et al 1994","f");
+	}
+      if(show_theory == 1)
+	{
+	  MFF_leg->AddEntry(gr13,"Conventional Approach Marcucci et al 2016","l");
+	  MFF_leg->AddEntry(gr14,"CST Marcucci et al 2016","l");
+	  MFF_leg->AddEntry(gr15,"#chiEFT 500 Marcucci et al 2016","l");
+	  MFF_leg->AddEntry(gr16,"#chiEFT 600 Marcucci et al 2016","l");
+	}
     }
   MFF_leg->Draw();
   
