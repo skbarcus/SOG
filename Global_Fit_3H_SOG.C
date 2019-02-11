@@ -581,12 +581,12 @@ void print_fit()//Never finished since I'm not sure this will be useful.
   fChFF1->Draw("L");
   c_FF->SetTitle("Current Fit Form Factors");
   fChFF1->SetTitle("^{3}H Charge Form Factor");
-  fChFF1->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
+  fChFF1->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(Q^{2})|");
   fChFF1->GetHistogram()->GetYaxis()->CenterTitle(true);
   fChFF1->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
   fChFF1->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
   fChFF1->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-  fChFF1->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+  fChFF1->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
   fChFF1->GetHistogram()->GetXaxis()->CenterTitle(true);
   fChFF1->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
   fChFF1->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -601,12 +601,12 @@ void print_fit()//Never finished since I'm not sure this will be useful.
     fMFF->Draw("L");
     //c4->SetTitle("He3 Magnetic Form Factor");
     fMFF->SetTitle("^{3}H Magnetic Form Factor");
-    fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
+    fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(Q^{2})|");
     fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
     fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
     fMFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
     fMFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-    fMFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+    fMFF->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
     fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
     fMFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
     fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -1895,12 +1895,12 @@ void Global_Fit_3H_SOG()
       //c2->SetTitle("Charge Form Factor");
       //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
       fChFF->SetTitle("^{3}H Charge Form Factor");
-      fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
+      fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(Q^{2})|");
       fChFF->GetHistogram()->GetYaxis()->CenterTitle(true);
       fChFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
       fChFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
       fChFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-      fChFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+      fChFF->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
       fChFF->GetHistogram()->GetXaxis()->CenterTitle(true);
       fChFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
       fChFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -1925,12 +1925,12 @@ void Global_Fit_3H_SOG()
       //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
       //fMFF->GetHistogram()->SetTitle("^{3}H Magnetic Form Factor");
       fMFF->SetTitle("^{3}H Magnetic Form Factor");
-      fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
+      fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(Q^{2})|");
       fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
       fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
       fMFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
       fMFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-      fMFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+      fMFF->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
       fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
       fMFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
       fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -1964,8 +1964,8 @@ void Global_Fit_3H_SOG()
       fChFF_Amroun->Draw("L same");
       TLegend *ChFF_leg;
       ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
-      ChFF_leg->AddEntry("fChFF","New ^{3}H |F_{ch}(q^{2})| Fit","l");
-      ChFF_leg->AddEntry("fChFF_Amroun","^{3}H |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
+      ChFF_leg->AddEntry("fChFF","New ^{3}H |F_{ch}(Q^{2})| Fit","l");
+      ChFF_leg->AddEntry("fChFF_Amroun","Fit from Amroun et al.","l");
       ChFF_leg->Draw();
      
       c5->cd(2);
@@ -1985,8 +1985,8 @@ void Global_Fit_3H_SOG()
       fMFF_Amroun->Draw("L same");
       TLegend *MFF_leg;
       MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
-      MFF_leg->AddEntry("fMFF","New ^{3}H |F_{m}(q^{2})| Fit","l");
-      MFF_leg->AddEntry("fMFF_Amroun","^{3}H |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
+      MFF_leg->AddEntry("fMFF","New ^{3}H |F_{m}(Q^{2})| Fit","l");
+      MFF_leg->AddEntry("fMFF_Amroun","Fit from Amroun et al.","l");
       MFF_leg->Draw();
 
       c5->cd(3);
