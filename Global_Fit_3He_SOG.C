@@ -2201,6 +2201,18 @@ void Global_Fit_3He_SOG()
       fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
       fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
 
+      Float_t xtest[1],ytest[1];
+      xtest[0] = 30.0;
+      ytest[0] = 0.0001;
+
+      TGraph *gr1 = new TGraph (1, xtest, ytest); 
+      gr1->SetMarkerColorAlpha(kBlue, 0.35);
+      gr1->SetMarkerStyle(20);
+      gr1->SetMarkerSize(5);
+      //gr1->SetLineColorAlpha(kBlue, 0.35);
+      //gr1->SetLineWidth(2);
+      gr1->Draw("same p");
+
       //Save the canvas as a .png file and a .C file.
       c4->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/MFF.png");
       c4->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/MFF.C");

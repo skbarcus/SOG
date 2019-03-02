@@ -31,7 +31,7 @@ Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
-Int_t Rep_Fit = 122;    //Fit# from Multifit requires -1. From Plot_FFs or Chi2_Sorted Fit# is just the number.
+Int_t Rep_Fit = 30;//122    //Fit# from Multifit requires -1. From Plot_FFs or Chi2_Sorted Fit# is just the number.
 Int_t loops = 1;
 const Int_t datapts = 259;//248
 Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand.
@@ -44,7 +44,7 @@ Int_t showplots = 1;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
@@ -114,7 +114,9 @@ Double_t m = 2.;
 
 
 //Double_t R[12] = {0.190672,0.693568,1.06127,1.5556,1.97331,2.42858,3.13643,3.87028,4.60607,5.52267};//Avg. Ri 357 fits x^2<505.
-Double_t R[12] = {0.3,0.7,0.9,1.4,1.7,2.2,2.9,3.6,4.3,4.9};//Min Chi^2 of 357 (#556 combined). 
+//Double_t R[12] = {0.3,0.7,0.9,1.4,1.7,2.2,2.9,3.6,4.3,4.9};//Min Chi^2 of 357 (#556 combined). 
+
+Double_t R[12] = {0.3, 0.7, 0.9, 1.1, 1.5, 1.6, 2.2, 2.7, 3.3, 4.2, 4.3, 4.8};  //My fit 3He
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 
 //Double_t Qich[12] = {0.0440183,0.116665,0.202577,0.26934,0.0690628,0.179559,0.0854789,0.0318623,0.00963141,9.4369e-16,0.,0.};//9/15/18 51.
@@ -165,8 +167,14 @@ Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amro
 
 //Double_t Qich[12] = {0.0511376,0.212372,0.255953,0.235852,0.104617,0.11099,0.0458289,0.0164548,0.00625,0.000121054};   //Avg. Ri 357 fits x^2<505.
 //Double_t Qim[12] = {0.106411,0.21999,0.219267,0.210835,0.118368,0.120021,0.0755027,0.0153253,0.0224693,0.0127534};     //Avg. Ri 357 fits x^2<505.
-Double_t Qich[12] = {0.101632,0.170317,0.165379,0.250085,0.0841009,0.140841,0.0673786,0.0214391,0.00704491,1.00142e-13};   //Min Chi^2 of 357 (#556 combined).
-Double_t Qim[12] = {0.156834,0.0554965,0.250939,0.18088,0.120042,0.136881,0.0686315,0.0252427,0.0147734,2.08722e-13};     //Min Chi^2 of 357 (#556 combined).
+//Double_t Qich[12] = {0.101632,0.170317,0.165379,0.250085,0.0841009,0.140841,0.0673786,0.0214391,0.00704491,1.00142e-13};   //Min Chi^2 of 357 (#556 combined).
+//Double_t Qim[12] = {0.156834,0.0554965,0.250939,0.18088,0.120042,0.136881,0.0686315,0.0252427,0.0147734,2.08722e-13};     //Min Chi^2 of 357 (#556 combined).
+
+
+
+  Double_t Qich[12] = {0.0996392,0.214304,0.0199385,0.195676,0.0785533,0.167223,0.126926,0.0549379,0.0401401,0.0100803,0.0007217,4.98962e-12};//My fit
+  Double_t Qim[12] = {0.159649,0.0316168,0.277843,0.0364955,0.0329718,0.233469,0.117059,0.0581085,0.0485212,1.77602e-12,0.0240927,8.94934e-12};//My fit
+
 Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
 Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
@@ -309,9 +317,11 @@ void Plot_FFs()
   //Set SOG parameters to the representative fit's parameters.
   for(Int_t i=0;i<ngaus;i++)
     {
+      /*
       R[i] = Rmulti[Rep_Fit][i];
       Qich[i] = Qichmulti[Rep_Fit][i];
       Qim[i] = Qimmulti[Rep_Fit][i];
+      */
     }
 
   TCanvas* cFch=new TCanvas("cFch");
@@ -327,6 +337,7 @@ void Plot_FFs()
     //Define SOG for charge FF.
     for(Int_t i=0; i<ngaus; i++)
       { 	
+	//cout<<"Qich["<<i<<"] = "<<Qich[i]<<endl;
 	//Use SOG fit for C12 Qi coefficients and R[i] values. 
 	//sumchtemp = (Qi[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
 
@@ -517,7 +528,7 @@ void Plot_FFs()
   //fMFF_Amroun->Draw("L");
   fxs->SetNpx(npdraw);
   fxs->Draw("L");
-  fxs->SetTitle("^{3}He Cross Section at 3.356 Gev");
+  fxs->SetTitle("^{3}He Cross Section at E_{0} = 3.356 Gev");
   fxs->GetHistogram()->GetYaxis()->SetTitle("#frac{d#sigma}{d#Omega} (fm^{2}/sr)");
   fxs->GetHistogram()->GetYaxis()->CenterTitle(true);
   fxs->GetHistogram()->GetYaxis()->SetLabelSize(0.04);
@@ -575,27 +586,28 @@ void Plot_FFs()
   fxs_Amroun->SetLineColor(4);
   //fxs_Amroun->Draw("L SAME");
 
+  //Plot my data point.
+  m1 = new TMarker(34.0981, 1.33459E-10, 20);
+  m1->SetMarkerColor(kBlack);//(kOrange+7);
+  m1->SetMarkerSize(1);
+  //m1->Draw();
+
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fxs","New ^{3}He Cross Section","l");
   //MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun et al.","l");
+  //MFF_leg->AddEntry(m1,"^{3}He Cross Section from Experiment E08-014","p");
   MFF_leg->Draw();
-
-  //Plot my data point.
-  m1 = new TMarker(34.0981, 1.33459E-10, 20);
-  m1->SetMarkerColor(kOrange+7);
-  m1->SetMarkerSize(1);
-  //m1->Draw();
 
   //Show two lines representing the edges of our bin in Q^2.
   TLine *line = new TLine(bin_min_Q2,0.,bin_min_Q2,fxs->Eval(bin_min_Q2));
   line->SetLineColor(kBlack);
   line->SetLineWidth(2);
-  //line->Draw();
+  line->Draw();
 
   TLine *line1 = new TLine(bin_max_Q2,0.,bin_max_Q2,fxs->Eval(bin_max_Q2));
   line1->SetLineColor(kBlack);
   line1->SetLineWidth(2);
-  //line1->Draw();
+  line1->Draw();
 
   using namespace std;
 
