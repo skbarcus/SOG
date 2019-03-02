@@ -195,6 +195,16 @@ Float_t Rmulti[size][12];
 Float_t Qichmulti[size][12];
 Float_t Qimmulti[size][12];
 
+//Adding FF world data for plots.
+const Int_t size1 = 100;
+Int_t nlines1;
+Int_t skip1 = 0;
+Int_t skip11;
+Int_t ncols11;
+char* str11[1000];
+Float_t q2_cam16[size1],fch_cam16[size1],dq2_cam16[size1],dfch_cam16[size1];
+Float_t q2_cam16_temp,fch_cam16_temp,dfch_cam16_temp;
+
 void Plot_FFs() 
 {
   //Read in parameters for the representative fit.
@@ -314,6 +324,42 @@ void Plot_FFs()
 	}
     }
 
+
+  //Open and read in files for Camsonne 2016 Fch.
+  FILE *fp1;
+
+  fp1 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Camsonne2016_Fch.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines1 < skip1)
+	{
+	  fgets(str1,1000,fp1);
+	  nlines1++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols1 = fscanf(fp1,"%f %f %f", &q2_cam16_temp, &fch_cam16_temp, &dfch_cam16_temp);
+	  
+	  if (ncols1 < 0) break;    
+	  
+	  q2_cam16[nlines1-skip1] = q2_cam16_temp;
+	  fch_cam16[nlines1-skip1] = fch_cam16_temp;
+	  dfch_cam16[nlines1-skip1] = dfch_cam16_temp;
+	  dq2_cam16[nlines1-skip1] = 0.;
+	  cout<<"q2_cam16[["<<nlines1-skip1<<"] = "<<q2_cam16[nlines1-skip1]<<"   fch_cam16["<<nlines1-skip1<<"] = "<<fch_cam16[nlines1-skip1]<<"   dfch_cam16["<<nlines-skip<<"] = "<<dfch_cam16[nlines1-skip1]<<endl;
+	  nlines1++;
+	}
+    }
+  fclose(fp1);
+  cout<<"nlines1 = "<<nlines1<<endl;
+
+
+
   //Set SOG parameters to the representative fit's parameters.
   for(Int_t i=0;i<ngaus;i++)
     {
@@ -402,9 +448,17 @@ void Plot_FFs()
   fChFF_Amroun->SetNpx(npdraw);
   fChFF_Amroun->SetLineColor(4);
   fChFF_Amroun->Draw("L same");
+
+  TGraphErrors *gr1 = new TGraphErrors (nlines1, q2_cam16, fch_cam16, dq2_cam16, dfch_cam16); 
+  gr1->SetMarkerColorAlpha(kBlue, 0.35);
+  gr1->SetMarkerStyle(20);
+  gr1->SetMarkerSize(1);
+  gr1->Draw("same p");
+
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
   ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
-  ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
+  ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al.","l");
+  ChFF_leg->AddEntry(gr1,"Camsonne 2016","p");
   ChFF_leg->Draw();
 
 
@@ -478,7 +532,7 @@ void Plot_FFs()
   fMFF_Amroun->Draw("L same");
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
-  MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
+  MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al.","l");
   MFF_leg->Draw();
 
   TCanvas* cxs=new TCanvas("cxs");

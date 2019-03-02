@@ -2201,17 +2201,47 @@ void Global_Fit_3He_SOG()
       fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
       fMFF->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
 
-      Float_t xtest[1],ytest[1];
-      xtest[0] = 30.0;
-      ytest[0] = 0.0001;
-
-      TGraph *gr1 = new TGraph (1, xtest, ytest); 
+      //Being used to test plotting FF world data. Moved to Plot_FFs.C since it's faster.
+      /*
+      Float_t xtest1[1],ytest1[1],xtest2[1],ytest2[1];
+      xtest1[0] = 30.0;
+      ytest1[0] = 0.0001;
+      xtest2[0] = 40.0;
+      ytest2[0] = 0.0001;
+      
+      TGraph *gr1 = new TGraph (1, xtest1, ytest1); 
       gr1->SetMarkerColorAlpha(kBlue, 0.35);
       gr1->SetMarkerStyle(20);
       gr1->SetMarkerSize(5);
       //gr1->SetLineColorAlpha(kBlue, 0.35);
       //gr1->SetLineWidth(2);
       gr1->Draw("same p");
+
+      TGraph *gr2 = new TGraph (1, xtest2, ytest2); 
+      gr2->SetMarkerColorAlpha(kRed, 0.35);
+      gr2->SetMarkerStyle(20);
+      gr2->SetMarkerSize(5);
+      gr2->Draw("same p");
+
+      TLegend *test_leg;
+      test_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
+      test_leg->AddEntry("fMFF","New ^{3}He |F_{m}(Q^{2})| Fit","l");
+      test_leg->AddEntry(gr1,"Test 1","p");
+      test_leg->AddEntry(gr2,"Test 2","p");
+      test_leg->Draw();
+      */
+
+      /*
+      TGraph *gr1 = new TGraph (2);
+      for(Int_t i=0;i<1;i++)
+	{
+	  gr1->SetPoint(i,xtest[0],ytest[0]);
+	}
+      for(Int_t i=1;i<2;i++)
+	{
+	  gr1->SetPoint(i,xtest[1],ytest[1]);
+	}
+      */
 
       //Save the canvas as a .png file and a .C file.
       c4->SaveAs("/home/skbarcus/Tritium/Analysis/SOG/Output/MFF.png");
