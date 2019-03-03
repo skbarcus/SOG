@@ -199,11 +199,21 @@ Float_t Qimmulti[size][12];
 const Int_t size1 = 100;
 Int_t nlines1,nlines2,nlines3,nlines4,nlines5,nlines6,nlines7,nlines8,nlines9,nlines10,nlines11,nlines12,nlines13,nlines14,nlines15,nlines16;
 Int_t skip1 = 0,skip2 = 0,skip3 = 0,skip4 = 0,skip5 = 0,skip6 = 0,skip7 = 0,skip8 = 0,skip9 = 0,skip10 = 0,skip11 = 0,skip12 = 0,skip13 = 0,skip14 = 0,skip15 = 0,skip16 = 0;
-char* str1[1000],str2[1000],str3[1000],str4[1000],str5[1000],str6[1000],str7[1000],str8[1000],str9[1000],str10[1000],str11[1000],str12[1000],str13[1000],str14[1000],str15[1000],str16[1000],;
+char* str1[1000],str2[1000],str3[1000],str4[1000],str5[1000],str6[1000],str7[1000],str8[1000],str9[1000],str10[1000],str11[1000],str12[1000],str13[1000],str14[1000],str15[1000],str16[1000];
 Float_t q2_fch_cam16[size1],fch_cam16[size1],dq2_fch_cam16[size1],dfch_cam16[size1],q2_fm_cam16[size1],fm_cam16[size1],dq2_fm_cam16[size1],dfm_cam16[size1];
 Float_t q2_fch_cam16_temp,fch_cam16_temp,dfch_cam16_temp,q2_fm_cam16_temp,fm_cam16_temp,dfm_cam16_temp;
 Float_t q2_col65[size1],fch_col65[size1],dq2_col65[size1],dfch_col65[size1],fm_col65[size1],dfm_col65[size1];
 Float_t q2_col65_temp,fch_col65_temp,dfch_col65_temp,fm_col65_temp,dfm_col65_temp;
+Float_t q2_sza77[size1],fch_sza77[size1],dq2_sza77[size1],dfch_sza77[size1];
+Float_t q2_sza77_temp,fch_sza77_temp,dfch_sza77_temp;
+Float_t q2_arn78[size1],fch_arn78[size1],dq2_arn78[size1],dfch_arn78[size1];
+Float_t q2_arn78_temp,fch_arn78_temp,dfch_arn78_temp;
+Float_t q2_dun83[size1],fch_dun83[size1],dq2_dun83[size1],dfch_dun83[size1];
+Float_t q2_dun83_temp,fch_dun83_temp,dfch_dun83_temp;
+Float_t q2_cav82[size1],fm_cav82[size1],dq2_cav82[size1],dfm_cav82[size1];
+Float_t q2_cav82_temp,fm_cav82_temp,dfm_cav82_temp;
+Float_t q2_nak01[size1],fm_nak01[size1],dq2_nak01[size1],dfm_nak01[size1];
+Float_t q2_nak01_temp,fm_nak01_temp,dfm_nak01_temp;
 
 void Plot_FFs() 
 {
@@ -420,6 +430,161 @@ void Plot_FFs()
   fclose(fp3);
   cout<<"nlines3 = "<<nlines3<<endl;
 
+  //Open and read in files for Szalata Fch 1977.
+  FILE *fp4;
+  fp4 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Szalata1977_Fch.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines4 < skip4)
+	{
+	  fgets(str4,1000,fp4);
+	  nlines4++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp4,"%f %f %f", &q2_sza77_temp, &fch_sza77_temp, &dfch_sza77_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_sza77[nlines4-skip4] = q2_sza77_temp;
+	  fch_sza77[nlines4-skip4] = fch_sza77_temp;
+	  dfch_sza77[nlines4-skip4] = dfch_sza77_temp;
+	  dq2_sza77[nlines4-skip4] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines4++;
+	}
+    }
+  fclose(fp4);
+  cout<<"nlines4 = "<<nlines4<<endl;
+
+  //Open and read in files for Arnold Fch 1978.
+  FILE *fp5;
+  fp5 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Arnold1978_Fch.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines5 < skip5)
+	{
+	  fgets(str5,1000,fp5);
+	  nlines5++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp5,"%f %f %f", &q2_arn78_temp, &fch_arn78_temp, &dfch_arn78_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_arn78[nlines5-skip5] = q2_arn78_temp;
+	  fch_arn78[nlines5-skip5] = fch_arn78_temp;
+	  dfch_arn78[nlines5-skip5] = dfch_arn78_temp;
+	  dq2_arn78[nlines5-skip5] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines5++;
+	}
+    }
+  fclose(fp5);
+  cout<<"nlines5 = "<<nlines5<<endl;
+
+  //Open and read in files for Dunn Fch 1983.
+  FILE *fp6;
+  fp6 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Dunn1983_Fch.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines6 < skip6)
+	{
+	  fgets(str6,1000,fp6);
+	  nlines6++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp6,"%f %f %f", &q2_dun83_temp, &fch_dun83_temp, &dfch_dun83_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_dun83[nlines6-skip6] = q2_dun83_temp;
+	  fch_dun83[nlines6-skip6] = fch_dun83_temp;
+	  dfch_dun83[nlines6-skip6] = dfch_dun83_temp;
+	  dq2_dun83[nlines6-skip6] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines6++;
+	}
+    }
+  fclose(fp6);
+  cout<<"nlines6 = "<<nlines6<<endl;
+
+  //Open and read in files for Cavedon Fm 1982.
+  FILE *fp7;
+  fp7 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Cavedon1982_Fm.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines7 < skip7)
+	{
+	  fgets(str7,1000,fp7);
+	  nlines7++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp7,"%f %f %f", &q2_cav82_temp, &fm_cav82_temp, &dfm_cav82_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_cav82[nlines7-skip7] = q2_cav82_temp;
+	  fm_cav82[nlines7-skip7] = fm_cav82_temp;
+	  dfm_cav82[nlines7-skip7] = dfm_cav82_temp;
+	  dq2_cav82[nlines7-skip7] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines7++;
+	}
+    }
+  fclose(fp7);
+  cout<<"nlines7 = "<<nlines7<<endl;
+
+  //Open and read in files for Nakagawa Fm 2001.
+  FILE *fp8;
+  fp8 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Nakagawa2001_Fm.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines8 < skip8)
+	{
+	  fgets(str8,1000,fp8);
+	  nlines8++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp8,"%f %f %f", &q2_nak01_temp, &fm_nak01_temp, &dfm_nak01_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_nak01[nlines8-skip8] = q2_nak01_temp;
+	  fm_nak01[nlines8-skip8] = fm_nak01_temp;
+	  dfm_nak01[nlines8-skip8] = dfm_nak01_temp;
+	  dq2_nak01[nlines8-skip8] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines8++;
+	}
+    }
+  fclose(fp8);
+  cout<<"nlines8 = "<<nlines8<<endl;
+
   //Set SOG parameters to the representative fit's parameters.
   for(Int_t i=0;i<ngaus;i++)
     {
@@ -510,21 +675,42 @@ void Plot_FFs()
   fChFF_Amroun->Draw("L same");
 
   TGraphErrors *gr1 = new TGraphErrors (nlines1, q2_fch_cam16, fch_cam16, dq2_fch_cam16, dfch_cam16); 
-  gr1->SetMarkerColorAlpha(kBlue, 0.35);
+  gr1->SetMarkerColor(1);
   gr1->SetMarkerStyle(20);
   gr1->SetMarkerSize(1);
   gr1->Draw("same p");
 
   TGraphErrors *gr3 = new TGraphErrors (nlines3, q2_col65, fch_col65, dq2_col65, dfch_col65); 
-  gr3->SetMarkerColorAlpha(kRed, 0.35);
+  gr3->SetMarkerColor(4);
   gr3->SetMarkerStyle(20);
   gr3->SetMarkerSize(1);
   gr3->Draw("same p");
+
+  TGraphErrors *gr5 = new TGraphErrors (nlines4, q2_sza77, fch_sza77, dq2_sza77, dfch_sza77); 
+  gr5->SetMarkerColor(3);
+  gr5->SetMarkerStyle(20);
+  gr5->SetMarkerSize(1);
+  gr5->Draw("same p");
+
+  TGraphErrors *gr6 = new TGraphErrors (nlines5, q2_arn78, fch_arn78, dq2_arn78, dfch_arn78); 
+  gr6->SetMarkerColor(kGreen+2);
+  gr6->SetMarkerStyle(20);
+  gr6->SetMarkerSize(1);
+  gr6->Draw("same p");
+
+  TGraphErrors *gr7 = new TGraphErrors (nlines6, q2_dun83, fch_dun83, dq2_dun83, dfch_dun83); 
+  gr7->SetMarkerColor(6);
+  gr7->SetMarkerStyle(20);
+  gr7->SetMarkerSize(1);
+  gr7->Draw("same p");
 
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
   ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
   ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al.","l");
   ChFF_leg->AddEntry(gr3,"Collard 1965","p");
+  ChFF_leg->AddEntry(gr5,"Szalata 1977","p");
+  ChFF_leg->AddEntry(gr6,"Arnold 1978","p");
+  ChFF_leg->AddEntry(gr7,"Dunn 1983","p");
   ChFF_leg->AddEntry(gr1,"Camsonne 2016","p");
   ChFF_leg->Draw();
 
@@ -599,21 +785,35 @@ void Plot_FFs()
   fMFF_Amroun->Draw("L same");
 
   TGraphErrors *gr2 = new TGraphErrors (nlines2, q2_fm_cam16, fm_cam16, dq2_fm_cam16, dfm_cam16); 
-  gr2->SetMarkerColorAlpha(kBlue, 0.35);
+  gr2->SetMarkerColor(1);
   gr2->SetMarkerStyle(20);
   gr2->SetMarkerSize(1);
   gr2->Draw("same p");
 
   TGraphErrors *gr4 = new TGraphErrors (nlines3, q2_col65, fm_col65, dq2_col65, dfm_col65); 
-  gr4->SetMarkerColorAlpha(kRed, 0.35);
+  gr4->SetMarkerColor(4);
   gr4->SetMarkerStyle(20);
   gr4->SetMarkerSize(1);
   gr4->Draw("same p");
+
+  TGraphErrors *gr8 = new TGraphErrors (nlines7, q2_cav82, fm_cav82, dq2_cav82, dfm_cav82); 
+  gr8->SetMarkerColor(2);
+  gr8->SetMarkerStyle(20);
+  gr8->SetMarkerSize(1);
+  gr8->Draw("same p");
+
+  TGraphErrors *gr9 = new TGraphErrors (nlines8, q2_nak01, fm_nak01, dq2_nak01, dfm_nak01); 
+  gr9->SetMarkerColor(7);
+  gr9->SetMarkerStyle(20);
+  gr9->SetMarkerSize(1);
+  gr9->Draw("same p");
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
   MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al.","l");
   MFF_leg->AddEntry(gr4,"Collard 1965","p");
+  MFF_leg->AddEntry(gr8,"Cavedon 1982 (Amroun 1994)","p");
+  MFF_leg->AddEntry(gr9,"Nakagawa 2001","p");
   MFF_leg->AddEntry(gr2,"Camsonne 2016","p");
   MFF_leg->Draw();
 

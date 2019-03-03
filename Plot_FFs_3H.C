@@ -39,7 +39,7 @@ Int_t showplots = 1;
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 7;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 10;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 1.;                         //Atomic number H3.
@@ -82,11 +82,11 @@ Double_t m = 2.;
 //Double_t R[12] = {0.1*m, 0.5*m, 0.9*m, 1.3*m, 1.6*m, 2.0*m, 2.4*m, 2.9*m, 3.4*m, 4.0*m, 4.6*m, 5.2*m};  //Radii [fm].//0.8,1.4,1.7
 //Double_t R[12] = {0.2,0.7,1.3,1.5,2.1,2.8,3.6,4.2,5.2,0.,0.,0.};//{0.3,0.7,1.3,2.,2.7,3.6,4.3,5.5,0.,0.,0.,0.};//{0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 
-Double_t R[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9}; 
+Double_t R[12] = {0.3,0.8,1.4,1.9,2.5,3.3,4.1,4.8}; //My Fit.
 Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
 
-Double_t Qich[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121}; //Amroun 3H
-Double_t Qim[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};
+Double_t Qich[12] = {0.151488,0.348372,0.29635,0.0978631,0.121983,0.0242654,0.049329,4.40751e-11}; //My Fit
+Double_t Qim[12] = {0.190646,0.301416,0.318972,0.159433,0.173933,0.106361,0.0665564,0.0148866};//My Fit
 
 //Double_t Qich[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121}; //Amroun 3H
 //Double_t Qim[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077}; //Amroun 3H
@@ -104,8 +104,115 @@ Double_t Chi2_FB[datapts]={};
 Double_t residual_FB[datapts]={};
 Double_t FBfit[datapts]={};
 
+//Adding FF world data for plots.
+const Int_t size1 = 100;
+Int_t nlines1,nlines2,nlines3,nlines4,nlines5,nlines6,nlines7,nlines8,nlines9,nlines10,nlines11,nlines12,nlines13,nlines14,nlines15,nlines16;
+Int_t skip1 = 0,skip2 = 0,skip3 = 0,skip4 = 0,skip5 = 0,skip6 = 0,skip7 = 0,skip8 = 0,skip9 = 0,skip10 = 0,skip11 = 0,skip12 = 0,skip13 = 0,skip14 = 0,skip15 = 0,skip16 = 0;
+char* str1[1000],str2[1000],str3[1000],str4[1000],str5[1000],str6[1000],str7[1000],str8[1000],str9[1000],str10[1000],str11[1000],str12[1000],str13[1000],str14[1000],str15[1000],str16[1000];
+Float_t q2_col65[size1],fch_col65[size1],dq2_col65[size1],dfch_col65[size1],fm_col65[size1],dfm_col65[size1];
+Float_t q2_col65_temp,fch_col65_temp,dfch_col65_temp,fm_col65_temp,dfm_col65_temp;
+Float_t q2_fch_bec84[size1],fch_bec84[size1],dq2_fch_bec84[size1],dfch_bec84[size1];
+Float_t q2_fch_bec84_temp,fch_bec84_temp,dfch_bec84_temp;
+Float_t q2_fm_bec84[size1],fm_bec84[size1],dq2_fm_bec84[size1],dfm_bec84[size1];
+Float_t q2_fm_bec84_temp,fm_bec84_temp,dfm_bec84_temp;
+
 void Plot_FFs_3H() 
 {
+  //Open and read in files for Collard 1965.
+  FILE *fp1;
+  fp1 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Collard1965_3H.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines1 < skip1)
+	{
+	  fgets(str1,1000,fp1);
+	  nlines1++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp1,"%f %f %f %f %f", &q2_col65_temp, &fch_col65_temp, &dfch_col65_temp, &fm_col65_temp, &dfm_col65_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_col65[nlines1-skip1] = q2_col65_temp;
+	  fch_col65[nlines1-skip1] = fch_col65_temp;
+	  dfch_col65[nlines1-skip1] = dfch_col65_temp;
+	  fm_col65[nlines1-skip1] = fm_col65_temp;
+	  dfm_col65[nlines1-skip1] = dfm_col65_temp;
+	  dq2_col65[nlines1-skip1] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines1++;
+	}
+    }
+  fclose(fp1);
+  cout<<"nlines1 = "<<nlines1<<endl;
+
+  //Open and read in files for Beck 1984 Fch.
+  FILE *fp2;
+  fp2 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Beck1984_Fch.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines2 < skip2)
+	{
+	  fgets(str2,1000,fp2);
+	  nlines2++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp2,"%f %f %f", &q2_fch_bec84_temp, &fch_bec84_temp, &dfch_bec84_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_fch_bec84[nlines2-skip2] = q2_fch_bec84_temp;
+	  fch_bec84[nlines2-skip2] = fch_bec84_temp;
+	  dfch_bec84[nlines2-skip2] = dfch_bec84_temp;
+	  dq2_fch_bec84[nlines2-skip2] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines2++;
+	}
+    }
+  fclose(fp2);
+  cout<<"nlines2 = "<<nlines2<<endl;
+
+  //Open and read in files for Beck 1984 Fm.
+  FILE *fp3;
+  fp3 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Beck1984_Fm.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines3 < skip3)
+	{
+	  fgets(str3,1000,fp3);
+	  nlines3++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp3,"%f %f %f", &q2_fm_bec84_temp, &fm_bec84_temp, &dfm_bec84_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_fm_bec84[nlines3-skip3] = q2_fm_bec84_temp;
+	  fm_bec84[nlines3-skip3] = fm_bec84_temp;
+	  dfm_bec84[nlines3-skip3] = dfm_bec84_temp;
+	  dq2_fm_bec84[nlines3-skip3] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines3++;
+	}
+    }
+  fclose(fp3);
+  cout<<"nlines3 = "<<nlines3<<endl;
+
   TCanvas* cFch=new TCanvas("cFch");
   cFch->SetGrid();
   cFch->SetLogy();
@@ -140,7 +247,7 @@ void Plot_FFs_3H()
   fChFF->Draw("L");
   cFch->SetTitle("Charge Form Factor");
   //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
-  fChFF->SetTitle("^{3}He Charge Form Factor");
+  fChFF->SetTitle("^{3}H Charge Form Factor");
   fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
   fChFF->GetHistogram()->GetYaxis()->CenterTitle(true);
   fChFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -183,9 +290,24 @@ void Plot_FFs_3H()
   fChFF_Amroun->SetNpx(npdraw);
   fChFF_Amroun->SetLineColor(4);
   fChFF_Amroun->Draw("L same");
+
+  TGraphErrors *gr1 = new TGraphErrors (nlines1, q2_col65, fch_col65, dq2_col65, dfch_col65); 
+  gr1->SetMarkerColor(4);
+  gr1->SetMarkerStyle(20);
+  gr1->SetMarkerSize(1);
+  gr1->Draw("same p");
+
+  TGraphErrors *gr2 = new TGraphErrors (nlines1, q2_fch_bec84, fch_bec84, dq2_fch_bec84, dfch_bec84); 
+  gr2->SetMarkerColor(1);
+  gr2->SetMarkerStyle(20);
+  gr2->SetMarkerSize(1);
+  gr2->Draw("same p");
+
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
-  ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al. [4]","l");
+  ChFF_leg->AddEntry("fChFF","New ^{3}H |F_{ch}(q^{2})| Fit","l");
+  ChFF_leg->AddEntry("fChFF_Amroun","^{3}H |F_{ch}(q^{2})| Fit from Amroun et al.","l");
+  ChFF_leg->AddEntry(gr1,"Collard 1965","p");
+  ChFF_leg->AddEntry(gr2,"Beck 1984","p");
   ChFF_leg->Draw();
 
 
@@ -215,10 +337,10 @@ void Plot_FFs_3H()
     return fitm;
   }
 
-  TF1 *fMFF = new TF1("fMFF",MFF_Q2,0.,70.,1);
+  TF1 *fMFF = new TF1("fMFF",MFF_Q2,0.,60.,1);
   fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fMFF->Draw("L");
-  fMFF->SetTitle("^{3}He Magnetic Form Factor");
+  fMFF->SetTitle("^{3}H Magnetic Form Factor");
   fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
   fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
   fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -257,8 +379,23 @@ void Plot_FFs_3H()
   fMFF_Amroun->SetNpx(npdraw);
   fMFF_Amroun->SetLineColor(4);
   fMFF_Amroun->Draw("L same");
+
+ TGraphErrors *gr3 = new TGraphErrors (nlines1, q2_col65, fm_col65, dq2_col65, dfm_col65); 
+  gr3->SetMarkerColor(4);
+  gr3->SetMarkerStyle(20);
+  gr3->SetMarkerSize(1);
+  gr3->Draw("same p");
+
+  TGraphErrors *gr4 = new TGraphErrors (nlines3, q2_fm_bec84, fm_bec84, dq2_fm_bec84, dfm_bec84); 
+  gr4->SetMarkerColor(1);
+  gr4->SetMarkerStyle(20);
+  gr4->SetMarkerSize(1);
+  gr4->Draw("same p");
+
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
-  MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al. [4]","l");
+  MFF_leg->AddEntry("fMFF","New ^{3}H |F_{m}(q^{2})| Fit","l");
+  MFF_leg->AddEntry("fMFF_Amroun","^{3}H |F_{m}(q^{2})| Fit from Amroun et al.","l");
+  MFF_leg->AddEntry(gr3,"Collard 1965","p");
+  MFF_leg->AddEntry(gr4,"Beck 1984","p");
   MFF_leg->Draw();
 }

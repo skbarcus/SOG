@@ -43,7 +43,7 @@ Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason,
 Int_t loops = 1;
 Int_t userand = 3;                       //0 = use predetermined Ri from Amroun. 1 = use random Ri in generated in a range around Amroun's. 2 = use random Ri, ngaus=12, generated in increments of 0.1 with larger possible spacing at greater radii. 3 = use predetermined Ri for the purposes of trying to tune the fit by hand. 4 = ngaus=8. 5 = ngaus=9. 6 = ngaus=10. 7 = ngaus=11.
 Int_t usedifmin = 1;                     //0 = Remove some of the points in the diffractive minimum. 
-Int_t showgaus = 0;
+Int_t showgaus = 1;
 Int_t fitvars = 0;                       //0 = fit only Qi, 1 = fit R[i] and Qi, 2 = Fit R[i], Qi, and gamma.
 Int_t fft = 0;                           //0 = don't use FFT to try to get a charge radii. 1 = do use FFT to extract a charge radii.
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
@@ -654,10 +654,23 @@ Double_t fitg(Double_t *Q, Double_t *par)
 {
   Double_t val = 0.;
   
+  //Show Gaussian Part of FFs.
   val = (par[0]/(1.0+2.0*pow(par[1],2.0)/pow(Gamma,2.0))) * ( cos(Q[0]*par[1]) + (2.0*pow(par[1],2.0)/pow(Gamma,2.0)) * (sin(Q[0]*par[1])/(Q[0]*par[1])) );
   
   val = val * exp(-0.25*pow(Q[0],2.)*pow(Gamma,2.0));
-  
+
+  return val;
+}
+
+Double_t fitg_rho(Double_t *r, Double_t *par)
+{
+  Double_t val = 0.;
+
+  //Show Gaussian part of rho.
+  val = par[0]/( 1+2*pow(par[1],2.)/pow(Gamma,2.) ) * (  exp( -pow((r[0]-par[1]),2.)/pow(Gamma,2.) ) + exp( -pow((r[0]+par[1]),2.)/pow(Gamma,2.) )  );
+
+  val = Z/(2*pow(pi,1.5)*pow(Gamma,3.)) * val;
+
   return val;
 }
 
@@ -2065,7 +2078,7 @@ void Global_Fit_3He_SOG()
   output.close();
 
   //print_fit();
-
+  /*
   if(showgaus == 1)
     {
       //Plot individual Gaussians with their fit parameters. 
@@ -2143,7 +2156,7 @@ void Global_Fit_3He_SOG()
       cout<<"Integral g10 = "<<g10->Integral(yminFF,ymaxFF)<<endl;
       cout<<"Integral g11 = "<<g11->Integral(yminFF,ymaxFF)<<endl;
     }
- 
+  */
   if(showplots == 1)
     {
       TCanvas* c2=new TCanvas("c2");
@@ -2325,8 +2338,114 @@ void Global_Fit_3He_SOG()
  
   TF1 *frho_ch = new TF1("frho_ch",rho_ch,0.,4.,1);
   frho_ch->SetNpx(npdraw);
+  frho_ch->SetTitle("^{3}He Charge Charge Density");
+  frho_ch->GetHistogram()->GetXaxis()->SetTitle("r (fm)");
+  frho_ch->GetHistogram()->GetXaxis()->CenterTitle(true);
+  frho_ch->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+  frho_ch->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+  frho_ch->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+  frho_ch->GetHistogram()->GetYaxis()->SetTitle("e/fm^{3}");
+  frho_ch->GetHistogram()->GetYaxis()->CenterTitle(true);
+  frho_ch->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+  frho_ch->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+  frho_ch->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
   frho_ch->SetLineColor(2);
   frho_ch->Draw();
+
+  if(showgaus == 1)
+    {
+      //Plot individual Gaussians with their fit parameters. 
+      TF1 *g0 = new TF1("g0", fitg_rho, yminFF, ymaxFF+20,2.);
+      g0->SetParameters(Qich[0],R[0]);
+      g0->SetLineColor(1);
+      g0->SetNpx(npdraw);
+      g0->Draw("csame");
+      TF1 *g1 = new TF1("g1", fitg_rho, yminFF, ymaxFF+20,2.);
+      g1->SetParameters(Qich[1],R[1]);
+      g1->SetLineColor(30);
+      g1->SetNpx(npdraw);
+      g1->Draw("cSame");
+      TF1 *g2 = new TF1("g2", fitg_rho, yminFF, ymaxFF+20,2.);
+      g2->SetParameters(Qich[2],R[2]);
+      g2->SetLineColor(3);
+      g2->SetNpx(npdraw);
+      g2->Draw("cSame");
+      TF1 *g3 = new TF1("g3", fitg_rho, yminFF, ymaxFF+20,2.);
+      g3->SetParameters(Qich[3],R[3]);
+      g3->SetLineColor(4);
+      g3->SetNpx(npdraw);
+      g3->Draw("cSame");
+      TF1 *g4 = new TF1("g4", fitg_rho, yminFF, ymaxFF+20,2.);
+      g4->SetParameters(Qich[4],R[4]);
+      g4->SetLineColor(5);
+      g4->SetNpx(npdraw);
+      g4->Draw("cSame");
+      TF1 *g5 = new TF1("g5", fitg_rho, yminFF, ymaxFF+20,2.);
+      g5->SetParameters(Qich[5],R[5]);
+      g5->SetLineColor(6);
+      g5->SetNpx(npdraw);
+      g5->Draw("cSame");
+      TF1 *g6 = new TF1("g6", fitg_rho, yminFF, ymaxFF+20,2.);
+      g6->SetParameters(Qich[6],R[6]);
+      g6->SetLineColor(7);
+      g6->SetNpx(npdraw);
+      g6->Draw("cSame");
+      TF1 *g7 = new TF1("g7", fitg_rho, yminFF, ymaxFF+20,2.);
+      g7->SetParameters(Qich[7],R[7]);
+      g7->SetLineColor(8);
+      g7->SetNpx(npdraw);
+      g7->Draw("cSame");
+      TF1 *g8 = new TF1("g8", fitg_rho, yminFF, ymaxFF+20,2.);
+      g8->SetParameters(Qich[8],R[8]);
+      g8->SetLineColor(9);
+      g8->SetNpx(npdraw);
+      g8->Draw("cSame");
+      TF1 *g9 = new TF1("g9", fitg_rho, yminFF, ymaxFF+20,2.);
+      g9->SetParameters(Qich[9],R[9]);
+      g9->SetLineColor(46);
+      g9->SetNpx(npdraw);
+      g9->Draw("cSame");
+      TF1 *g10 = new TF1("g10", fitg_rho, yminFF, ymaxFF+20,2.);
+      g10->SetParameters(Qich[10],R[10]);
+      g10->SetLineColor(11);
+      g10->SetNpx(npdraw);
+      g10->Draw("cSame");
+      TF1 *g11 = new TF1("g11", fitg_rho, yminFF, ymaxFF+20,2.);
+      g11->SetParameters(Qich[11],R[11]);
+      g11->SetLineColor(12);
+      g11->SetNpx(npdraw);
+      g11->Draw("cSame");
+
+      cout<<"Integral g0 = "<<g0->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g1 = "<<g1->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g2 = "<<g2->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g3 = "<<g3->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g4 = "<<g4->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g5 = "<<g5->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g6 = "<<g6->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g7 = "<<g7->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g8 = "<<g8->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g9 = "<<g9->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g10 = "<<g10->Integral(yminFF,ymaxFF)<<endl;
+      cout<<"Integral g11 = "<<g11->Integral(yminFF,ymaxFF)<<endl;
+    }
+
+  TLegend *rho_leg;
+  rho_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
+  rho_leg->AddEntry("frho_ch","New ^{3}He Charge Density","l");
+  rho_leg->AddEntry("g0","Gaussian 1","l");
+  rho_leg->AddEntry("g1","Gaussian 2","l");
+  rho_leg->AddEntry("g2","Gaussian 3","l");
+  rho_leg->AddEntry("g3","Gaussian 4","l");
+  rho_leg->AddEntry("g4","Gaussian 5","l");
+  rho_leg->AddEntry("g5","Gaussian 6","l");
+  rho_leg->AddEntry("g6","Gaussian 7","l");
+  rho_leg->AddEntry("g7","Gaussian 8","l");
+  rho_leg->AddEntry("g8","Gaussian 9","l");
+  rho_leg->AddEntry("g9","Gaussian 10","l");
+  rho_leg->AddEntry("g10","Gaussian 11","l");
+  rho_leg->AddEntry("g11","Gaussian 12","l");
+  rho_leg->Draw();
 
   TF1 *frho_ch_int = new TF1("frho_ch_int",rho_ch_int,0.,4.,1);
   frho_ch_int->SetNpx(npdraw);
