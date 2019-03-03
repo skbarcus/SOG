@@ -625,7 +625,7 @@ void Plot_FFs()
     return fitch;
   }
 
-  TF1 *fChFF = new TF1("fChFF",ChFF_Q2,yminFF,ymaxFF+54,1);
+  TF1 *fChFF = new TF1("fChFF",ChFF_Q2,0.,65,1);
   fChFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fChFF->Draw("L");
   cFch->SetTitle("Charge Form Factor");
@@ -668,7 +668,7 @@ void Plot_FFs()
     return fitch;
   }
 
-  TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,yminFF,ymaxFF+54,1);
+  TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,0.,65,1);
   //cout<<fChFF_Amroun->Eval(35)<<endl;
   fChFF_Amroun->SetNpx(npdraw);
   fChFF_Amroun->SetLineColor(4);
@@ -706,7 +706,7 @@ void Plot_FFs()
 
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
   ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
-  ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al.","l");
+  ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun 1994.","l");
   ChFF_leg->AddEntry(gr3,"Collard 1965","p");
   ChFF_leg->AddEntry(gr5,"Szalata 1977","p");
   ChFF_leg->AddEntry(gr6,"Arnold 1978","p");
@@ -741,7 +741,7 @@ void Plot_FFs()
     return fitm;
   }
 
-  TF1 *fMFF = new TF1("fMFF",MFF_Q2,0.,70.,1);
+  TF1 *fMFF = new TF1("fMFF",MFF_Q2,0.,65.,1);
   fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fMFF->Draw("L");
   fMFF->SetTitle("^{3}He Magnetic Form Factor");
@@ -778,7 +778,7 @@ void Plot_FFs()
     return fitm;
   }
 
-  TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,yminFF,ymaxFF+54,1);
+  TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,0.,65,1);
   //cout<<fMFF_Amroun->Eval(30)<<endl;
   fMFF_Amroun->SetNpx(npdraw);
   fMFF_Amroun->SetLineColor(4);
@@ -810,7 +810,7 @@ void Plot_FFs()
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
-  MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al.","l");
+  MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun 1994","l");
   MFF_leg->AddEntry(gr4,"Collard 1965","p");
   MFF_leg->AddEntry(gr8,"Cavedon 1982 (Amroun 1994)","p");
   MFF_leg->AddEntry(gr9,"Nakagawa 2001","p");
@@ -930,7 +930,7 @@ void Plot_FFs()
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fxs","New ^{3}He Cross Section","l");
-  //MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun et al.","l");
+  //MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun 1994","l");
   //MFF_leg->AddEntry(m1,"^{3}He Cross Section from Experiment E08-014","p");
   MFF_leg->Draw();
 

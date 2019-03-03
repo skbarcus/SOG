@@ -248,12 +248,12 @@ void Plot_FFs_3H()
   cFch->SetTitle("Charge Form Factor");
   //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
   fChFF->SetTitle("^{3}H Charge Form Factor");
-  fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(q^{2})|");
+  fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(Q^{2})|");
   fChFF->GetHistogram()->GetYaxis()->CenterTitle(true);
   fChFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
   fChFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
   fChFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-  fChFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+  fChFF->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
   fChFF->GetHistogram()->GetXaxis()->CenterTitle(true);
   fChFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
   fChFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -304,8 +304,8 @@ void Plot_FFs_3H()
   gr2->Draw("same p");
 
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  ChFF_leg->AddEntry("fChFF","New ^{3}H |F_{ch}(q^{2})| Fit","l");
-  ChFF_leg->AddEntry("fChFF_Amroun","^{3}H |F_{ch}(q^{2})| Fit from Amroun et al.","l");
+  ChFF_leg->AddEntry("fChFF","New ^{3}H |F_{ch}(Q^{2})| Fit","l");
+  ChFF_leg->AddEntry("fChFF_Amroun","^{3}H |F_{ch}(Q^{2})| Fit from Amroun 1994","l");
   ChFF_leg->AddEntry(gr1,"Collard 1965","p");
   ChFF_leg->AddEntry(gr2,"Beck 1984","p");
   ChFF_leg->Draw();
@@ -341,12 +341,12 @@ void Plot_FFs_3H()
   fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fMFF->Draw("L");
   fMFF->SetTitle("^{3}H Magnetic Form Factor");
-  fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(q^{2})|");
+  fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(Q^{2})|");
   fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
   fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
   fMFF->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
   fMFF->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-  fMFF->GetHistogram()->GetXaxis()->SetTitle("q^{2} (fm^{-2})");
+  fMFF->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
   fMFF->GetHistogram()->GetXaxis()->CenterTitle(true);
   fMFF->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
   fMFF->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
@@ -393,8 +393,8 @@ void Plot_FFs_3H()
   gr4->Draw("same p");
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  MFF_leg->AddEntry("fMFF","New ^{3}H |F_{m}(q^{2})| Fit","l");
-  MFF_leg->AddEntry("fMFF_Amroun","^{3}H |F_{m}(q^{2})| Fit from Amroun et al.","l");
+  MFF_leg->AddEntry("fMFF","New ^{3}H |F_{m}(Q^{2})| Fit","l");
+  MFF_leg->AddEntry("fMFF_Amroun","^{3}H |F_{m}(Q^{2})| Fit from Amroun 1994","l");
   MFF_leg->AddEntry(gr3,"Collard 1965","p");
   MFF_leg->AddEntry(gr4,"Beck 1984","p");
   MFF_leg->Draw();

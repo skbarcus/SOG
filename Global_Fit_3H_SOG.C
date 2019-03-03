@@ -1946,10 +1946,12 @@ void Global_Fit_3H_SOG()
       //Now draw both FFs on the same plot for the GRC poster. 
       TCanvas* c5=new TCanvas("c5");
       c5->SetGrid();
+      /*
       c5->Divide(1,3);
       c5->cd(1)->SetLogy();
       c5->cd(1);
       fChFF->Draw("L");
+      */
       //cout<<fChFF->Eval(35)<<endl;
       //Now add Amroun's fit to the plot for comparison.
       /*for(Int_t i=0;i<ngaus;i++)
@@ -1961,18 +1963,20 @@ void Global_Fit_3H_SOG()
       //cout<<fChFF_Amroun->Eval(35)<<endl;
       fChFF_Amroun->SetNpx(npdraw);
       fChFF_Amroun->SetLineColor(4);
-      fChFF_Amroun->Draw("L same");
+      //fChFF_Amroun->Draw("L same");
       TLegend *ChFF_leg;
       ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
       ChFF_leg->AddEntry("fChFF","New ^{3}H |F_{ch}(Q^{2})| Fit","l");
       ChFF_leg->AddEntry("fChFF_Amroun","Fit from Amroun et al.","l");
-      ChFF_leg->Draw();
+      //ChFF_leg->Draw();
      
+      /*
       c5->cd(2);
       c5->cd(2)->SetLogy();
       //cout<<fMFF->Eval(35)<<endl;
       fMFF->Draw("L");
-     
+      */     
+
       //Now add Amroun's fit to the plot for comparison.
       /*for(Int_t i=0;i<ngaus;i++)
 	{
@@ -1982,15 +1986,15 @@ void Global_Fit_3H_SOG()
       //cout<<fMFF_Amroun->Eval(30)<<endl;
       fMFF_Amroun->SetNpx(npdraw);
       fMFF_Amroun->SetLineColor(4);
-      fMFF_Amroun->Draw("L same");
+      //fMFF_Amroun->Draw("L same");
       TLegend *MFF_leg;
       MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
       MFF_leg->AddEntry("fMFF","New ^{3}H |F_{m}(Q^{2})| Fit","l");
       MFF_leg->AddEntry("fMFF_Amroun","Fit from Amroun et al.","l");
-      MFF_leg->Draw();
+      //MFF_leg->Draw();
 
-      c5->cd(3);
-      TH1F *h1 = new TH1F("h1", "Data Distribution", 50, yminFF, ymaxFF+54);
+      //c5->cd(3);
+      TH1F *h1 = new TH1F("h1", "^{3}H Cross Section World Data Distribution", 50, yminFF, ymaxFF+54);
       if(bootstrap == 0)
 	{
 	  for(Int_t i=0;i<datapts;i++)
@@ -2005,6 +2009,17 @@ void Global_Fit_3H_SOG()
 	      h1->Fill(Q2_bs[i]);
 	    }
 	}
+      h1->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
+      h1->GetXaxis()->CenterTitle(true);
+      h1->GetXaxis()->SetLabelSize(0.05);
+      h1->GetXaxis()->SetTitleSize(0.06);
+      h1->GetXaxis()->SetTitleOffset(0.75);
+      h1->GetYaxis()->SetTitle("Number of Measurements");
+      h1->GetYaxis()->CenterTitle(true);
+      h1->GetYaxis()->SetLabelSize(0.05);
+      h1->GetYaxis()->SetTitleSize(0.06);
+      h1->GetYaxis()->SetTitleOffset(0.75);
+      h1->SetFillColor(4);
       h1->Draw();
 
       //Save the canvas as a .png file and a .C file.
