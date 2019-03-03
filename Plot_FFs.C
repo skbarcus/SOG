@@ -197,13 +197,13 @@ Float_t Qimmulti[size][12];
 
 //Adding FF world data for plots.
 const Int_t size1 = 100;
-Int_t nlines1;
-Int_t skip1 = 0;
-Int_t skip11;
-Int_t ncols11;
-char* str11[1000];
-Float_t q2_cam16[size1],fch_cam16[size1],dq2_cam16[size1],dfch_cam16[size1];
-Float_t q2_cam16_temp,fch_cam16_temp,dfch_cam16_temp;
+Int_t nlines1,nlines2,nlines3,nlines4,nlines5,nlines6,nlines7,nlines8,nlines9,nlines10,nlines11,nlines12,nlines13,nlines14,nlines15,nlines16;
+Int_t skip1 = 0,skip2 = 0,skip3 = 0,skip4 = 0,skip5 = 0,skip6 = 0,skip7 = 0,skip8 = 0,skip9 = 0,skip10 = 0,skip11 = 0,skip12 = 0,skip13 = 0,skip14 = 0,skip15 = 0,skip16 = 0;
+char* str1[1000],str2[1000],str3[1000],str4[1000],str5[1000],str6[1000],str7[1000],str8[1000],str9[1000],str10[1000],str11[1000],str12[1000],str13[1000],str14[1000],str15[1000],str16[1000],;
+Float_t q2_fch_cam16[size1],fch_cam16[size1],dq2_fch_cam16[size1],dfch_cam16[size1],q2_fm_cam16[size1],fm_cam16[size1],dq2_fm_cam16[size1],dfm_cam16[size1];
+Float_t q2_fch_cam16_temp,fch_cam16_temp,dfch_cam16_temp,q2_fm_cam16_temp,fm_cam16_temp,dfm_cam16_temp;
+Float_t q2_col65[size1],fch_col65[size1],dq2_col65[size1],dfch_col65[size1],fm_col65[size1],dfm_col65[size1];
+Float_t q2_col65_temp,fch_col65_temp,dfch_col65_temp,fm_col65_temp,dfm_col65_temp;
 
 void Plot_FFs() 
 {
@@ -327,7 +327,6 @@ void Plot_FFs()
 
   //Open and read in files for Camsonne 2016 Fch.
   FILE *fp1;
-
   fp1 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Camsonne2016_Fch.txt","r");
 
   //Read in data.
@@ -343,22 +342,83 @@ void Plot_FFs()
       else
 	{
 	  //Read in the number of columns of data in your data file. 
-	  ncols1 = fscanf(fp1,"%f %f %f", &q2_cam16_temp, &fch_cam16_temp, &dfch_cam16_temp);
-	  
-	  if (ncols1 < 0) break;    
-	  
-	  q2_cam16[nlines1-skip1] = q2_cam16_temp;
+	  ncols = fscanf(fp1,"%f %f %f", &q2_fch_cam16_temp, &fch_cam16_temp, &dfch_cam16_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_fch_cam16[nlines1-skip1] = q2_fch_cam16_temp;
 	  fch_cam16[nlines1-skip1] = fch_cam16_temp;
 	  dfch_cam16[nlines1-skip1] = dfch_cam16_temp;
-	  dq2_cam16[nlines1-skip1] = 0.;
-	  cout<<"q2_cam16[["<<nlines1-skip1<<"] = "<<q2_cam16[nlines1-skip1]<<"   fch_cam16["<<nlines1-skip1<<"] = "<<fch_cam16[nlines1-skip1]<<"   dfch_cam16["<<nlines-skip<<"] = "<<dfch_cam16[nlines1-skip1]<<endl;
+	  dq2_fch_cam16[nlines1-skip1] = 0.;
+	  //cout<<"q2_fch_cam16[["<<nlines1-skip1<<"] = "<<q2_fch_cam16[nlines1-skip1]<<"   fch_cam16["<<nlines1-skip1<<"] = "<<fch_cam16[nlines1-skip1]<<"   dfch_cam16["<<nlines1-skip1<<"] = "<<dfch_cam16[nlines1-skip1]<<endl;
 	  nlines1++;
 	}
     }
   fclose(fp1);
   cout<<"nlines1 = "<<nlines1<<endl;
 
+  //Open and read in files for Camsonne 2016 Fm.
+  FILE *fp2;
+  fp2 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Camsonne2016_Fm.txt","r");
 
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines2 < skip2)
+	{
+	  fgets(str2,1000,fp2);
+	  nlines2++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp2,"%f %f %f", &q2_fm_cam16_temp, &fm_cam16_temp, &dfm_cam16_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_fm_cam16[nlines2-skip2] = q2_fm_cam16_temp;
+	  fm_cam16[nlines2-skip2] = fm_cam16_temp;
+	  dfm_cam16[nlines2-skip2] = dfm_cam16_temp;
+	  dq2_fm_cam16[nlines2-skip2] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines2++;
+	}
+    }
+  fclose(fp2);
+  cout<<"nlines2 = "<<nlines2<<endl;
+
+  //Open and read in files for Collard 1965.
+  FILE *fp3;
+  fp3 = fopen("/home/skbarcus/Tritium/Analysis/SOG/Collard1965_3He.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines3 < skip3)
+	{
+	  fgets(str3,1000,fp3);
+	  nlines3++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp3,"%f %f %f %f %f", &q2_col65_temp, &fch_col65_temp, &dfch_col65_temp, &fm_col65_temp, &dfm_col65_temp);
+	  if (ncols < 0) break;    
+  
+	  q2_col65[nlines3-skip3] = q2_col65_temp;
+	  fch_col65[nlines3-skip3] = fch_col65_temp;
+	  dfch_col65[nlines3-skip3] = dfch_col65_temp;
+	  fm_col65[nlines3-skip3] = fm_col65_temp;
+	  dfm_col65[nlines3-skip3] = dfm_col65_temp;
+	  dq2_col65[nlines3-skip3] = 0.;
+	  //cout<<"q2_fm_cam16[["<<nlines2-skip2<<"] = "<<q2_fm_cam16[nlines2-skip2]<<"   fm_cam16["<<nlines2-skip2<<"] = "<<fm_cam16[nlines2-skip2]<<"   dfm_cam16["<<nlines2-skip2<<"] = "<<dfm_cam16[nlines2-skip2]<<endl;
+	  nlines3++;
+	}
+    }
+  fclose(fp3);
+  cout<<"nlines3 = "<<nlines3<<endl;
 
   //Set SOG parameters to the representative fit's parameters.
   for(Int_t i=0;i<ngaus;i++)
@@ -449,15 +509,22 @@ void Plot_FFs()
   fChFF_Amroun->SetLineColor(4);
   fChFF_Amroun->Draw("L same");
 
-  TGraphErrors *gr1 = new TGraphErrors (nlines1, q2_cam16, fch_cam16, dq2_cam16, dfch_cam16); 
+  TGraphErrors *gr1 = new TGraphErrors (nlines1, q2_fch_cam16, fch_cam16, dq2_fch_cam16, dfch_cam16); 
   gr1->SetMarkerColorAlpha(kBlue, 0.35);
   gr1->SetMarkerStyle(20);
   gr1->SetMarkerSize(1);
   gr1->Draw("same p");
 
+  TGraphErrors *gr3 = new TGraphErrors (nlines3, q2_col65, fch_col65, dq2_col65, dfch_col65); 
+  gr3->SetMarkerColorAlpha(kRed, 0.35);
+  gr3->SetMarkerStyle(20);
+  gr3->SetMarkerSize(1);
+  gr3->Draw("same p");
+
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
   ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
   ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun et al.","l");
+  ChFF_leg->AddEntry(gr3,"Collard 1965","p");
   ChFF_leg->AddEntry(gr1,"Camsonne 2016","p");
   ChFF_leg->Draw();
 
@@ -530,9 +597,24 @@ void Plot_FFs()
   fMFF_Amroun->SetNpx(npdraw);
   fMFF_Amroun->SetLineColor(4);
   fMFF_Amroun->Draw("L same");
+
+  TGraphErrors *gr2 = new TGraphErrors (nlines2, q2_fm_cam16, fm_cam16, dq2_fm_cam16, dfm_cam16); 
+  gr2->SetMarkerColorAlpha(kBlue, 0.35);
+  gr2->SetMarkerStyle(20);
+  gr2->SetMarkerSize(1);
+  gr2->Draw("same p");
+
+  TGraphErrors *gr4 = new TGraphErrors (nlines3, q2_col65, fm_col65, dq2_col65, dfm_col65); 
+  gr4->SetMarkerColorAlpha(kRed, 0.35);
+  gr4->SetMarkerStyle(20);
+  gr4->SetMarkerSize(1);
+  gr4->Draw("same p");
+
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
   MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun et al.","l");
+  MFF_leg->AddEntry(gr4,"Collard 1965","p");
+  MFF_leg->AddEntry(gr2,"Camsonne 2016","p");
   MFF_leg->Draw();
 
   TCanvas* cxs=new TCanvas("cxs");
