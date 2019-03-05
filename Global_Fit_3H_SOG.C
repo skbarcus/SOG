@@ -1466,6 +1466,17 @@ void Global_Fit_3H_SOG()
 	    {
 	      //hQ2->Fill(Q2[i],Chi2[i]);
 	    }
+
+	  hQ2->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
+	  hQ2->GetXaxis()->CenterTitle(true);
+	  hQ2->GetXaxis()->SetLabelSize(0.05);
+	  hQ2->GetXaxis()->SetTitleSize(0.06);
+	  hQ2->GetXaxis()->SetTitleOffset(0.75);
+	  hQ2->GetYaxis()->SetTitle("#chi^{2}");
+	  hQ2->GetYaxis()->CenterTitle(true);
+	  hQ2->GetYaxis()->SetLabelSize(0.05);
+	  hQ2->GetYaxis()->SetTitleSize(0.06);
+	  hQ2->GetYaxis()->SetTitleOffset(0.75);
 	  hQ2->SetMarkerStyle(20);
 	  hQ2->SetMarkerSize(1);
 	  gStyle->SetOptStat(0);
@@ -1669,6 +1680,17 @@ void Global_Fit_3H_SOG()
 	    {
 	      //hxsresidualQ2->Fill(theta[i],sigexp[i]/xsfit[i]);
 	    }
+
+	  hxsresidualQ2->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
+	  hxsresidualQ2->GetXaxis()->CenterTitle(true);
+	  hxsresidualQ2->GetXaxis()->SetLabelSize(0.05);
+	  hxsresidualQ2->GetXaxis()->SetTitleSize(0.06);
+	  hxsresidualQ2->GetXaxis()->SetTitleOffset(0.75);
+	  hxsresidualQ2->GetYaxis()->SetTitle("Residual");
+	  hxsresidualQ2->GetYaxis()->CenterTitle(true);
+	  hxsresidualQ2->GetYaxis()->SetLabelSize(0.05);
+	  hxsresidualQ2->GetYaxis()->SetTitleSize(0.06);
+	  hxsresidualQ2->GetYaxis()->SetTitleOffset(0.75);
 	  hxsresidualQ2->SetMarkerStyle(20);
 	  hxsresidualQ2->SetMarkerSize(1);
 	  gStyle->SetOptStat(0);

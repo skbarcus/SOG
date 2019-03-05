@@ -1561,7 +1561,7 @@ void Global_Fit_3He_SOG()
 	  legend1->AddEntry(m1,"Amroun 1994","p");
 	  legend1->AddEntry(m6,"Nakagawa 2001","p");
 	  legend1->AddEntry(m5,"Camsonne 2016","p");
-	  legend1->AddEntry(m7,"Current Analysis, Ye 2018","p");
+	  legend1->AddEntry(m7,"Current Analysis","p");
 	  legend1->Draw();
 
 	  //Save the canvas as a .png file and a .C file.
@@ -1577,6 +1577,17 @@ void Global_Fit_3He_SOG()
 	    {
 	      //hQ2->Fill(Q2[i],Chi2[i]);
 	    }
+
+	  hQ2->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
+	  hQ2->GetXaxis()->CenterTitle(true);
+	  hQ2->GetXaxis()->SetLabelSize(0.05);
+	  hQ2->GetXaxis()->SetTitleSize(0.06);
+	  hQ2->GetXaxis()->SetTitleOffset(0.75);
+	  hQ2->GetYaxis()->SetTitle("#chi^{2}");
+	  hQ2->GetYaxis()->CenterTitle(true);
+	  hQ2->GetYaxis()->SetLabelSize(0.05);
+	  hQ2->GetYaxis()->SetTitleSize(0.06);
+	  hQ2->GetYaxis()->SetTitleOffset(0.75);
 	  hQ2->SetMarkerStyle(20);
 	  hQ2->SetMarkerSize(1);
 	  gStyle->SetOptStat(0);
@@ -1663,7 +1674,7 @@ void Global_Fit_3He_SOG()
 	  legend2->AddEntry(m1,"Amroun 1994","p");
 	  legend2->AddEntry(m6,"Nakagawa 2001","p");
 	  legend2->AddEntry(m5,"Camsonne 2016","p");
-	  legend2->AddEntry(m7,"Current Analysis, Ye 2018","p");
+	  legend2->AddEntry(m7,"Current Analysis","p");
 	  legend2->Draw();
 
 	  //Save the canvas as a .png file and a .C file.
@@ -1775,7 +1786,7 @@ void Global_Fit_3He_SOG()
 	  legend3->AddEntry(m1,"Amroun 1994","p");
 	  legend3->AddEntry(m6,"Nakagawa 2001","p");
 	  legend3->AddEntry(m5,"Camsonne 2016","p");
-	  legend3->AddEntry(m7,"Current Analysis, Ye 2018","p");
+	  legend3->AddEntry(m7,"Current Analysis","p");
 	  legend3->Draw();
 
 	  //Save the canvas as a .png file and a .C file.
@@ -1885,7 +1896,7 @@ void Global_Fit_3He_SOG()
 	  legend4->AddEntry(m1,"Amroun 1994","p");
 	  legend4->AddEntry(m6,"Nakagawa 2001","p");
 	  legend4->AddEntry(m5,"Camsonne 2016","p");
-	  legend4->AddEntry(m7,"Current Analysis, Ye 2018","p");
+	  legend4->AddEntry(m7,"Current Analysis","p");
 	  legend4->Draw();
 
 	  //Save the canvas as a .png file and a .C file.
@@ -1902,6 +1913,17 @@ void Global_Fit_3He_SOG()
 	    {
 	      //hxsresidualQ2->Fill(theta[i],sigexp[i]/xsfit[i]);
 	    }
+
+	  hxsresidualQ2->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
+	  hxsresidualQ2->GetXaxis()->CenterTitle(true);
+	  hxsresidualQ2->GetXaxis()->SetLabelSize(0.05);
+	  hxsresidualQ2->GetXaxis()->SetTitleSize(0.06);
+	  hxsresidualQ2->GetXaxis()->SetTitleOffset(0.75);
+	  hxsresidualQ2->GetYaxis()->SetTitle("Residual");
+	  hxsresidualQ2->GetYaxis()->CenterTitle(true);
+	  hxsresidualQ2->GetYaxis()->SetLabelSize(0.05);
+	  hxsresidualQ2->GetYaxis()->SetTitleSize(0.06);
+	  hxsresidualQ2->GetYaxis()->SetTitleOffset(0.75);
 	  hxsresidualQ2->SetMarkerStyle(20);
 	  hxsresidualQ2->SetMarkerSize(1);
 	  gStyle->SetOptStat(0);
@@ -1997,7 +2019,7 @@ void Global_Fit_3He_SOG()
 	  legend5->AddEntry(m1,"Amroun 1994","p");
 	  legend5->AddEntry(m6,"Nakagawa 2001","p");
 	  legend5->AddEntry(m5,"Camsonne 2016","p");
-	  legend5->AddEntry(m7,"Current Analysis, Ye 2018","p");
+	  legend5->AddEntry(m7,"Current Analysis","p");
 	  legend5->Draw();
 
 	  //Save the canvas as a .png file and a .C file.
@@ -2667,7 +2689,7 @@ void Global_Fit_3He_SOG()
 	  legend6->AddEntry(m1,"Amroun 1994","p");
 	  legend6->AddEntry(m6,"Nakagawa 2001","p");
 	  legend6->AddEntry(m5,"Camsonne 2016","p");
-	  legend6->AddEntry(m7,"Current Analysis, Ye 2018","p");
+	  legend6->AddEntry(m7,"Current Analysis","p");
 	  legend6->Draw();
 
 	  //Save the canvas as a .png file and a .C file.
