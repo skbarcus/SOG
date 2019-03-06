@@ -22,6 +22,7 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t alpha = 1.0/137.0;              //Fine structure constant.
 //Double_t E0 = 0.0;               //Initial electron energy [GeV].
 Double_t Ef = 1.0;                       //Final energy of the electron after scattering.
+Double_t muHe3 = -2.1275*(3.0/2.0);      //Magnetic moment of 3He.
 Double_t MtH3 = 3.0160492*0.9315;       //Mass of trinucleon (H3 or He3) [GeV].
 Double_t MtHe3 = 3.0160293*0.9315;
 Double_t Q2 = 0.;                       //fm^-2
@@ -131,12 +132,25 @@ void Rosenbluth_Separation()
   graph->SetMarkerColor(1);
   graph->SetMarkerSize(0.4);
   graph->SetMarkerStyle(20);
-  graph->SetTitle("Rosenbluth Separation Plot; #\epsilon; #\sigma_{r}");
+  graph->SetTitle("Rosenbluth Separation Plot; #\epsilon; #frac{d#\sigma}{d#\Omega}_{r}");
 
+  //graph->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(Q^{2})|");
+  graph->GetHistogram()->GetYaxis()->CenterTitle(true);
+  graph->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+  graph->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+  graph->GetHistogram()->GetYaxis()->SetTitleOffset(0.55);
+  //graph->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
+  graph->GetHistogram()->GetXaxis()->CenterTitle(true);
+  graph->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+  graph->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+  graph->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+  
   TF1 *func_line = new TF1("func_line",fit_line,0,1,2);
   graph->Fit("func_line","R M");
 
   Double_t GE2 = func_line->GetParameter(1);
   Double_t GM2 = func_line->GetParameter(0)/tau;
   cout<<"GE^2 = "<<GE2<<"   GM^2 = "<<GM2<<"   GM2/GE2 = "<<GM2/GE2<<endl;
+  cout<<"|GE| = "<<pow(GE2,0.5)<<"   |GM| = "<<pow(GM2,0.5)<<"   |GM|/|GE| = "<<pow(GM2,0.5)/pow(GE2,0.5)<<endl;
+  cout<<"|Fch| = "<<pow(GE2,0.5)<<"   |Fm| = "<<fabs(pow(GM2,0.5)/muHe3)<<"   |Fm|/|Fch| = "<<fabs((pow(GM2,0.5)/muHe3)/pow(GE2,0.5))<<endl;
 }
