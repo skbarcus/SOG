@@ -920,8 +920,21 @@ void Plot_FFs()
   //fMFF_Amroun->Draw("L");
   fxs_Amroun->SetNpx(npdraw);
   fxs_Amroun->SetLineColor(4);
-  //fxs_Amroun->Draw("L SAME");
+  fxs_Amroun->Draw("L SAME");
 
+  Double_t my_q2[1], my_dq2[1], my_xs[1], my_dxs[1];
+  my_q2[0] = 34.19;
+  my_dq2[0] = 0;
+  my_xs[0] = 1.335e-10;
+  my_dxs[0] = 0.086e-10;
+
+  TGraphErrors *gr10 = new TGraphErrors (1, my_q2, my_xs, my_dq2, my_dxs); 
+  gr10->SetMarkerColor(1);
+  gr10->SetMarkerStyle(20);
+  gr10->SetMarkerSize(1);
+  //gr10->GetHistogram()->SetLineWidth(6);
+  gr10->Draw("same p");
+  
   //Plot my data point.
   m1 = new TMarker(34.0981, 1.33459E-10, 20);
   m1->SetMarkerColor(kBlack);//(kOrange+7);
@@ -930,20 +943,21 @@ void Plot_FFs()
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fxs","New ^{3}He Cross Section","l");
-  //MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun 1994","l");
+  MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun 1994","l");
   //MFF_leg->AddEntry(m1,"^{3}He Cross Section from Experiment E08-014","p");
+  MFF_leg->AddEntry(gr10,"^{3}He Cross Section from Experiment E08-014","p");
   MFF_leg->Draw();
 
   //Show two lines representing the edges of our bin in Q^2.
   TLine *line = new TLine(bin_min_Q2,0.,bin_min_Q2,fxs->Eval(bin_min_Q2));
   line->SetLineColor(kBlack);
   line->SetLineWidth(2);
-  line->Draw();
+  //line->Draw();
 
   TLine *line1 = new TLine(bin_max_Q2,0.,bin_max_Q2,fxs->Eval(bin_max_Q2));
   line1->SetLineColor(kBlack);
   line1->SetLineWidth(2);
-  line1->Draw();
+  //line1->Draw();
 
   using namespace std;
 
