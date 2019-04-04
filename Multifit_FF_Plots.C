@@ -25,12 +25,12 @@ Double_t C = 299792458.0;                //Speed of light [m/s].
 Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;        //1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0);      //3He -2.1275*(3.0/2.0). Diens has this 3/2 factor for some reason, but it fits the data much better.       //2*2.793-1.913 is too naive. //3H 2.9788*(3.0/1.0)
-Int_t target = 0;                        //3He = 0. 3H = 1. 
+Int_t target = 1;                        //3He = 0. 3H = 1. 
 Int_t single_fit = 0;                    //Draw a single representative fit in a different color.
-Int_t rep_fit = 30;//3He = 30//3H = 15                      //Single fit chosen as the representative fit. Now set below!
+Int_t rep_fit = 15;//3He = 30//3H = 15                      //Single fit chosen as the representative fit. Now set below!
 
 const Int_t nfunc = 3000;
-Double_t maxchi2 = 500;//Finals 3H n=8 603, 3He n=12 500. //3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
+Double_t maxchi2 = 1000000;//Finals 3H n=8 603, 3He n=12 500. //3H 611.70 n=7 100//3H 603 n=8 100//3H 604 n=9 100//3H 603 n=10 100//3H 602 n=11 100//3He 765 n=8 100 //3He 521 n=9 100 //3He 519 n=10 100 //3He 503 n=11 100 //3He 501 n=12 100//3He 500 n=13 100//My old point for combined 3He 505, 3H 603   //Max chi2 value above which fits are removed from the analysis.
 Double_t Qim_range = 50.; //Determines the amount above or below 1 the sum of the magnetic Qi may have and be accepted. (Note Qich is consistently close to 1 so it is not cut on.
 Int_t loops = 1;
 Int_t current_loop = 0;
@@ -44,16 +44,19 @@ Int_t fft = 0;                           //0 = don't use FFT to try to get a cha
 Int_t Amroun_Qi = 0;                     //1 = Override fitted Qi and use Amroun's values.
 Int_t showplots = 0;                     //1 = now just prints that data read in.
 Int_t show_fits = 1;                     //0 = don't plot new fits. 1 = plot the individual fits.
-Int_t show_theory = 0;                   //1 = plot theory curves from Marcucci 2016.
-Int_t show_errors = 0;                   //1 = plot the error bands.
+Int_t show_theory = 1;                   //1 = plot theory curves from Marcucci 2016.
+Int_t show_my_errors = 0;                //1 = plot my error bands.
+Int_t show_amroun_errors = 1;            //1 = plot Amroun's error bands.
 Int_t show_amroun = 1;                   //1 = plot Amroun curve and error band. 
 Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
-Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
+Int_t ngaus = 8;                        //Number of Gaussians used to fit data.
 Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
 Double_t Z = 2.;                         //Atomic number He3.
+Double_t Z_3He = 2.;                         //Atomic number He3.
+Double_t Z_3H = 1.;                         //Atomic number H3.
 Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //3.0160293*0.9315 Mass of He3 in GeV. 3.0160492*0.9315 mass 3H.
 Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
@@ -101,11 +104,11 @@ Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amro
 Double_t Qich[15] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
 Double_t Qim[15] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
 
-Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
-Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
+//Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};//3He
+//Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};//3He
 
-//Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
-//Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
+Double_t Qich_Amroun[12] = {0.054706, 0.172505, 0.313852, 0.072056, 0.225333, 0.020849, 0.097374, 0.022273, 0.011933, 0.009121};//Amroun 3H
+Double_t Qim_Amroun[12] = {0.075234, 0.164700, 0.273033, 0.037591, 0.252089, 0.027036, 0.098445, 0.040160, 0.016696, 0.015077};//Amroun 3H
 
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
@@ -268,7 +271,15 @@ Double_t rho_ch(Double_t *r, Double_t *par)
       rho = rho + rho_temp;
     }
 
-  rho = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho; //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+  if(target == 0)
+    {
+      rho = Z_3He/(2*pow(pi,1.5)*pow(gamma,3.)) * rho; //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+    }
+
+  if(target == 1)
+    {
+      rho = Z_3H/(2*pow(pi,1.5)*pow(gamma,3.)) * rho; //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+    }
 
   return rho;
 }
@@ -287,11 +298,11 @@ Double_t ChFF_Deriv(Double_t Q2)
     + (Q4ch[z]/(1.0+2.0*pow(R4[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R4[z]) + (2.0*pow(R4[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R4[z])/(pow(Q2,0.5)*R4[z])) )
     + (Q5ch[z]/(1.0+2.0*pow(R5[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R5[z]) + (2.0*pow(R5[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R5[z])/(pow(Q2,0.5)*R5[z])) )
     + (Q6ch[z]/(1.0+2.0*pow(R6[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R6[z]) + (2.0*pow(R6[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R6[z])/(pow(Q2,0.5)*R6[z])) )
-    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) )
-  + (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
-  + (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
-  + (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
-  + (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
+    + (Q7ch[z]/(1.0+2.0*pow(R7[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R7[z]) + (2.0*pow(R7[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R7[z])/(pow(Q2,0.5)*R7[z])) );
+  //+ (Q8ch[z]/(1.0+2.0*pow(R8[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R8[z]) + (2.0*pow(R8[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R8[z])/(pow(Q2,0.5)*R8[z])) )
+  //+ (Q9ch[z]/(1.0+2.0*pow(R9[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R9[z]) + (2.0*pow(R9[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R9[z])/(pow(Q2,0.5)*R9[z])) )
+  //+ (Q10ch[z]/(1.0+2.0*pow(R10[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R10[z]) + (2.0*pow(R10[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R10[z])/(pow(Q2,0.5)*R10[z])) )
+  //+ (Q11ch[z]/(1.0+2.0*pow(R11[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R11[z]) + (2.0*pow(R11[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R11[z])/(pow(Q2,0.5)*R11[z])) );
   // + (Q12ch[z]/(1.0+2.0*pow(R12[z],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2,0.5)*R12[z]) + (2.0*pow(R12[z],2.0)/pow(gamma,2.0)) * (sin(pow(Q2,0.5)*R12[z])/(pow(Q2,0.5)*R12[z])) );//Need to make this smart badly. Add loop and set the pars to the Ri and Qi.
  
   fitch = fitch * exp(-0.25*Q2*pow(gamma,2.0));
@@ -311,7 +322,14 @@ Double_t rho_ch_int(Double_t *r, Double_t *par)
       rho_int = rho_int + rho_int_temp;
     }
 
-  rho_int = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_int * 4*pi*pow(r[0],2.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+  if(target == 0)
+    {
+      rho_int = Z_3He/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_int * 4*pi*pow(r[0],2.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+    }
+  if(target == 1)
+    {
+      rho_int = Z_3H/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_int * 4*pi*pow(r[0],2.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+    }
 
   return rho_int;
 }
@@ -328,7 +346,14 @@ Double_t rho_rms(Double_t *r, Double_t *par)
       rho_rms = rho_rms + rho_rms_temp;
     }
 
-  rho_rms = Z/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_rms * 4*pi*pow(r[0],4.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+  if(target == 0)
+    {
+      rho_rms = Z_3He/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_rms * 4*pi*pow(r[0],4.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+    }
+  if(target == 1)
+    {
+      rho_rms = Z_3H/(2*pow(pi,1.5)*pow(gamma,3.)) * rho_rms * 4*pi*pow(r[0],4.); //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+    }
 
   return rho_rms;
 }
@@ -392,8 +417,8 @@ void Multifit_FF_Plots()
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=7_100_12_19_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Wider_Ri_100_12_20_2018.txt","r");
-      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
-      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
+      fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_2600_12_22_2018.txt","r");//Final values.
+      //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=8_Short_12_22_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=9_100_12_12_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=10_100_10_15_2018.txt","r");
       //fp = fopen("/home/skbarcus/Tritium/Analysis/SOG/Ri_Fits_3H_Final_n=11_100_12_12_2018.txt","r");
@@ -1785,7 +1810,7 @@ void Multifit_FF_Plots()
   //grshade1->SetFillColor(kBlue);
   if(show_amroun == 1)
     {
-      if(show_errors == 1)
+      if(show_amroun_errors == 1)
 	{
 	  grshade1->Draw("F");
 	}
@@ -1906,7 +1931,7 @@ void Multifit_FF_Plots()
   //TGraph *grshade17 = new TGraph(128);
   grshade17->SetFillStyle(1001);
   grshade17->SetFillColorAlpha(kRed, 0.50);//0.35
-  if(show_errors == 1)
+  if(show_my_errors == 1)
     {
       grshade17->Draw("F");
     }
@@ -1921,7 +1946,7 @@ void Multifit_FF_Plots()
 	  //ChFF_leg->AddEntry(fChFF[0],"New ^{3}He |F_{ch}(q^{2})| Fits","l");
 	  ChFF_leg->AddEntry(fDummy,"New ^{3}He |F_{ch}(q^{2})| Fits","l");
 	}
-      if(show_errors == 1)
+      if(show_my_errors == 1)
 	{
 	  ChFF_leg->AddEntry(grshade17,"Error Band for New Fits","F");
 	}
@@ -1932,7 +1957,7 @@ void Multifit_FF_Plots()
       if(show_amroun == 1)
 	{
 	  ChFF_leg->AddEntry("fChFF_Amroun","Representative Fit from Amroun et al 1994","l");
-	  if(show_errors == 1)
+	  if(show_amroun_errors == 1)
 	    {
 	      ChFF_leg->AddEntry(grshade1,"Error Band from Amroun et al 1994","F");// No "" for anything that needs to be filled.
 	    }
@@ -1954,7 +1979,7 @@ void Multifit_FF_Plots()
 	  //ChFF_leg->AddEntry(fChFF[0],"New ^{3}H |F_{ch}(q^{2})| Fits","l");
 	  ChFF_leg->AddEntry(fDummy,"New ^{3}He |F_{ch}(q^{2})| Fits","l");
 	}
-      if(show_errors == 1)
+      if(show_my_errors == 1)
 	{
 	  ChFF_leg->AddEntry(grshade17,"Error Band for New Fits","F");
 	}
@@ -1965,7 +1990,7 @@ void Multifit_FF_Plots()
       if(show_amroun == 1)
 	{
 	  ChFF_leg->AddEntry("fChFF_Amroun","Representative Fit from Amroun et al 1994","l");
-	  if(show_errors == 1)
+	  if(show_amroun_errors == 1)
 	    {
 	      ChFF_leg->AddEntry(grshade1,"Error Band from Amroun et al 1994","F");// No "" for anything that needs to be filled.
 	    }
@@ -2228,7 +2253,7 @@ void Multifit_FF_Plots()
   grshade2->SetFillColorAlpha(kBlue, 0.35);
   if(show_amroun == 1)
     {
-      if(show_errors == 1)
+      if(show_amroun_errors == 1)
 	{
 	  grshade2->Draw("F");
 	}
@@ -2329,7 +2354,7 @@ void Multifit_FF_Plots()
   
   grshade19->SetFillStyle(1001);
   grshade19->SetFillColorAlpha(kRed, 0.50);//0.35
-  if(show_errors == 1)
+  if(show_my_errors == 1)
     {
       grshade19->Draw("F");
     }
@@ -2342,7 +2367,7 @@ void Multifit_FF_Plots()
 	  //MFF_leg->AddEntry(fMFF[0],"New ^{3}He |F_{m}(q^{2})| Fits","l");
 	  MFF_leg->AddEntry(fDummy,"New ^{3}He |F_{m}(q^{2})| Fits","l");
 	}
-      if(show_errors == 1)
+      if(show_my_errors == 1)
 	{
 	  MFF_leg->AddEntry(grshade19,"Error Band for New Fits","F");
 	}
@@ -2353,7 +2378,7 @@ void Multifit_FF_Plots()
       if(show_amroun == 1)
 	{
 	  MFF_leg->AddEntry("fMFF_Amroun","Representative Fit from Amroun et al 1994","l");
-	  if(show_errors == 1)
+	  if(show_amroun_errors == 1)
 	    {
 	      MFF_leg->AddEntry(grshade2,"Error Band from Amroun et al 1994","f");
 	    }
@@ -2375,7 +2400,7 @@ void Multifit_FF_Plots()
 	  //MFF_leg->AddEntry(fMFF[0],"New ^{3}H |F_{m}(q^{2})| Fits","l");
 	  MFF_leg->AddEntry(fDummy,"New ^{3}He |F_{m}(q^{2})| Fits","l");
 	}
-      if(show_errors == 1)
+      if(show_my_errors == 1)
 	{
 	  MFF_leg->AddEntry(grshade19,"Error Band for New Fits","F");
 	}
@@ -2386,7 +2411,7 @@ void Multifit_FF_Plots()
       if(show_amroun == 1)
 	{
 	  MFF_leg->AddEntry("fMFF_Amroun","Representative Fit from Amroun et al 1994","l");
-	  if(show_errors == 1)
+	  if(show_amroun_errors == 1)
 	    {
 	      MFF_leg->AddEntry(grshade2,"Error Band from Amroun et al 1994","f");
 	    }

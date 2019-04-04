@@ -45,9 +45,10 @@ Int_t useFB = 1;                         //Turn on Fourier Bessel fit.
 Int_t useFB_GM = 1;                      //0 = Turn on Fourier Bessel fit just for GE. 1 = Turn on Fourier Bessel fit attempting GE and GM.
 Int_t npar = 48;                         //Number of parameters in fit.
 Int_t ngaus = 12;                        //Number of Gaussians used to fit data.
-Int_t ngaus_Amroun = 12;                        //Number of Gaussians used to fit data from Amroun.
+Int_t ngaus_Amroun = 8;                        //Number of Gaussians used to fit data from Amroun.
 Int_t nFB = 12;                          //Number of Fourrier-Bessel sums to use.
-Double_t Z = 2.;                         //Atomic number He3.
+Double_t Z_3He = 2.;                         //Atomic number 3He.
+Double_t Z_3H = 1.;                         //Atomic number 3H.
 Double_t A = 3.;                        //Mass number He3.
 Double_t MtHe3 = 3.0160293*0.9315;         //Mass of He3 in GeV.
 Double_t gamma = 0.8*pow(2.0/3.0,0.5);   //Gaussian width [fm] from Amroun gamma*sqrt(3/2) = 0.8 fm.
@@ -117,66 +118,14 @@ Double_t m = 2.;
 //Double_t R[12] = {0.3,0.7,0.9,1.4,1.7,2.2,2.9,3.6,4.3,4.9};//Min Chi^2 of 357 (#556 combined). 
 
 Double_t R[12] = {0.3, 0.7, 0.9, 1.1, 1.5, 1.6, 2.2, 2.7, 3.3, 4.2, 4.3, 4.8};  //My fit 3He
-Double_t R_Amroun[12] = {0.1,0.5,0.9,1.3,1.6,2.0,2.4,2.9,3.4,4.,4.6,5.2}; //Amroun Fit
-
-//Double_t Qich[12] = {0.0440183,0.116665,0.202577,0.26934,0.0690628,0.179559,0.0854789,0.0318623,0.00963141,9.4369e-16,0.,0.};//9/15/18 51.
-//Double_t Qim[12] = {0.0725889,0.0926902,0.209459,0.231037,0.079899,0.188591,0.0836548,0.0440054,0.0235449,2.42131e-10,0.,0.};
-//Double_t Qich[12] = {0.0366999,0.207852,0.0914645,0.143132,0.189135,0.193206,0.0976287,0.0374533,0.0115873,7.80417E-10,0.,0.};//48
-//Double_t Qim[12] = {0.0589855,0.265678,2.06176E-10,0.248498,0.068945,0.209543,0.0894644,0.0417275,0.0185915,4.6805E-10,0.,0.};
-//Double_t Qich[12] = {0.0877489,0.157569,0.251965,0.153987,0.18569,0.114409,0.042258,0.0141493,5.25852e-12,0.,0.,0.};//9/14/18 42
-//Double_t Qim[12] = {0.151938,0.0687805,0.318107,0.0627664,0.234607,0.100287,0.0562909,0.00777628,0.018992,0.,0.,0.};
-//Double_t Qich[12] = {0.087498,0.157869,0.245378,0.101457,0.223892,0.123962,0.0483213,0.014929,0.00494579,0.,0.,0.};//9/14/18 40
-//Double_t Qim[12] = {0.148784,0.0789473,0.304254,0.026821,0.248647,0.120223,0.05251,0.0205607,0.0136972,0.,0.,0.};
-//Double_t Qich[12] = {0.0973238,0.238908,6.91669E-14,0.287191,0.219123,0.107724,0.0415777,0.0141707,0.0010956,0.,0.,0.};//38
-//Double_t Qim[12] = {0.156104,0.129574,0.314365,1.9168E-13,0.262833,0.127868,0.098301,0.0779688,0.0382781,0.,0.,0.};
-//Double_t Qich[12] = {0.0346018,0.186348,0.296016,0.208675,0.141902,0.0958882,0.0407531,0.000755174,0.00273895,0.,0.,0.};//34
-//Double_t Qim[12] = {0.0897322,0.129928,0.299251,0.198647,0.131083,0.1176,0.0376243,0.0275592,0.00978282,0.,0.,0.};
-//Double_t Qich[12] = {0.0639697,0.315117,0.225156,0.13069,0.163794,0.0767875,0.0269792,0.00477479,1.95333e-11,0.,0.,0.};//9/14/18 modified 32
-//Double_t Qim[12] = {0.056945,0.243831,0.158645,0.0456532,0.046148,0.0984145,0.0466099,0.0416049,0.0220442,0.,0.,0.};
-//Double_t Qich[12] = {0.0509747,0.238208,0.239747,0.142914,0.189107,0.104061,0.0383111,0.0033425,0.000442121,0.,0.,0.};//9/13/18 31
-//Double_t Qim[12] = {0.0993896,0.17783,0.271219,0.116363,0.185706,0.131835,0.0496486,0.0399545,0.0223591,0.,0.,0.};
-//Double_t Qich[12] = {0.0639787,0.315092,0.225231,0.131057,0.163557,0.077119,0.027274,0.00349874,2.54989e-09,0.,0.,0.};//9/13/18 28
-//Double_t Qim[12] = {0.107046,0.252678,0.310642,0.0425304,0.184205,0.0965293,0.0376706,0.0422947,0.0229587,0.,0.,0.};
-//Double_t Qich[12] = {0.108444,0.321339,0.0334387,0.3054,0.13961,0.0594638,0.0319809,0.00944856,9.35541e-12,0.,0.,0.};//9/13/18 27
-//Double_t Qim[12] = {0.160582,0.187699,0.164107,0.20848,0.164083,0.023726,0.0274688,1.31014e-08,1.78631e-09,0.,0.,0.};
-//Double_t Qich[12] = {0.110049,0.316031,0.156167,0.186552,0.11344,0.0849853,0.0285813,0.0108707,2.74628e-11,0.,0.,0.};//9/13/18 25
-//Double_t Qim[12] = {0.153001,0.248979,0.219662,0.100067,0.168079,0.0703413,0.0666113,0.0560969,0.0270054,0.,0.,0.};
-//Double_t Qich[12] = {0.0644352,0.311729,0.274891,0.128099,0.126056,0.0656117,0.0319948,0.00588861,4.54212e-10,0.,0.,0.};//9/13/18 24
-//Double_t Qim[12] = {0.10636,0.252116,0.309826,0.0695926,0.146614,0.0447945,0.0110169,1.55139e-11,1.19383e-10,0.,0.,0.};
-//Double_t Qich[12] = {0.109056,0.322187,2.53868E-10,0.271415,0.140634,0.110921,0.0422077,0.00991945,9.37812E-10,0.,0.,0.};//23
-//Double_t Qim[12] = {0.168311,0.172808,0.166683,0.189821,0.155563,0.169979,0.103117,0.111622,0.0574435,0.,0.,0.};
-//Double_t Qich[12] = {0.110029,0.313268,0.188735,0.195501,0.116327,0.0664477,0.0154455,0.000856117,0.,0.,0.,0.};//18
-//Double_t Qim[12] = {0.15363,0.241968,0.227636,0.141837,0.150786,0.0857793,0.0873129,0.0398393,0.,0.,0.,0.};
-//Double_t Qich[12] = {0.0649212,0.308528,0.299338,0.187702,0.102192,0.0379261,0.00712276,2.74347e-12,0.,0.,0.,0.};//11
-//Double_t Qim[12] = {0.0997782,0.274768,0.285966,0.191182,0.109338,0.0645759,0.0435615,0.0126547,0.,0.,0.,0.};
-//Double_t Qich[12] = {0.0784469,0.247165,0.406019,0.120177,0.137968,4.57535E-11,0.0200847,2.63439E-9,0.,0.,0.,0.};//7
-//Double_t Qim[12] = {0.0770148,0.298502,0.282963,0.175066,0.0769078,0.0381075,0.0899692,0.0675,0.,0.,0.,0.};
-//Double_t Qich[12] = {0.0896211,0.234994,0.367953,0.193344,0.0460444,0.0763543,1.05355e-12,1.20741E-10,0.,0.,0.,0.};//5
-//Double_t Qim[12] = {0.0738571,0.287688,0.219872,0.125082,0.000139601,7.65055e-13,0.0676226,0.0808108,0.,0.,0.,0.};
-//Double_t Qich[12] = {0.0433495,0.189163,0.153897,0.236151,0.140139,0.155516,0.0690597,0.0159103,0.00495952,2.61974E-12,0.,0.};//4.
-//Double_t Qim[12] = {0.0711952,0.177756,0.146683,0.219108,0.142134,0.180037,0.0992368,0.0517247,0.0363374,0.0161585,0.,0.};
-//Double_t Qich[12] = {0.0419664,0.220685,0.160807,0.293756,0.0525773,0.147678,0.0700733,0.0169877,0.00368665,6.48132E-12,0.,0.};//9/12/18 3.
-//Double_t Qim[12] = {0.0701842,0.207855,0.149425,0.271277,0.064722,0.153486,0.083882,0.0352331,0.0250242,1.03941E-8,0.,0.};
-//Double_t Qich[12] = {0.0411639,0.236983,0.204183,0.276745,0.0977119,0.0724304,0.0541865,0.0207177,1.26197e-07,0.00411213,0.,0.};//2
-//Double_t Qim[12] = {0.07112,0.213554,0.205701,0.238441,0.162279,0.017472,0.0869983,0.0239365,0.0295892,5.58285e-10,0.,0.};
-//Double_t Qich[12] = {0.0411535,0.237047,0.203676,0.277975,0.092553,0.0821181,0.0562533,0.0157997,2.61438e-10,0.00176867,0.,0.};//9/12/18 pretty good 1.
-//Double_t Qim[12] = {0.0692335,0.221858,0.189445,0.254013,0.127296,0.0508983,0.0726007,0.0160226,0.0224739,4.38656E-10,0.,0.};
-//Double_t Qim[12] = {0.059577,0.0966408,0.24088,0.227914,0.123278,0.160815,0.0806045,0.00262875,0.0494118,0.0140003,0.,0.};
-//Double_t Qich[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
-//Double_t Qim[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
-
-//Double_t Qich[12] = {0.0511376,0.212372,0.255953,0.235852,0.104617,0.11099,0.0458289,0.0164548,0.00625,0.000121054};   //Avg. Ri 357 fits x^2<505.
-//Double_t Qim[12] = {0.106411,0.21999,0.219267,0.210835,0.118368,0.120021,0.0755027,0.0153253,0.0224693,0.0127534};     //Avg. Ri 357 fits x^2<505.
-//Double_t Qich[12] = {0.101632,0.170317,0.165379,0.250085,0.0841009,0.140841,0.0673786,0.0214391,0.00704491,1.00142e-13};   //Min Chi^2 of 357 (#556 combined).
-//Double_t Qim[12] = {0.156834,0.0554965,0.250939,0.18088,0.120042,0.136881,0.0686315,0.0252427,0.0147734,2.08722e-13};     //Min Chi^2 of 357 (#556 combined).
+Double_t R_Amroun[12] = {0.3,0.8,1.4,1.9,2.5,3.3,4.1,4.8}; //My 3H Fit
 
 
+Double_t Qich[12] = {0.0996392,0.214304,0.0199385,0.195676,0.0785533,0.167223,0.126926,0.0549379,0.0401401,0.0100803,0.0007217,4.98962e-12};//My 3He fit
+Double_t Qim[12] = {0.159649,0.0316168,0.277843,0.0364955,0.0329718,0.233469,0.117059,0.0581085,0.0485212,1.77602e-12,0.0240927,8.94934e-12};//My 3He fit
 
-  Double_t Qich[12] = {0.0996392,0.214304,0.0199385,0.195676,0.0785533,0.167223,0.126926,0.0549379,0.0401401,0.0100803,0.0007217,4.98962e-12};//My fit
-  Double_t Qim[12] = {0.159649,0.0316168,0.277843,0.0364955,0.0329718,0.233469,0.117059,0.0581085,0.0485212,1.77602e-12,0.0240927,8.94934e-12};//My fit
-
-Double_t Qich_Amroun[12] = {0.027614,0.170847,0.219805,0.170486,0.134453,0.100953,0.074310,0.053970,0.023689,0.017502,0.002034,0.004338};
-Double_t Qim_Amroun[12] = {0.059785,0.138368,0.281326,0.000037,0.289808,0.019056,0.114825,0.042296,0.028345,0.018312,0.007843,0.};
+Double_t Qich_Amroun[12] = {0.151488,0.348372,0.29635,0.0978631,0.121983,0.0242654,0.049329,4.40751e-11};//My 3H fit
+Double_t Qim_Amroun[12] = {0.190646,0.301416,0.318972,0.159433,0.173933,0.106361,0.0665564,0.0148866};//My 3H fit
 Double_t av[24] = {9.9442E-3, 2.0829E-2, 1.8008E-2, 8.9117E-3, 2.3151E-3, 2.3263E-3, 2.5850E-3, 1.9014E-3, 1.2746E-3, 7.0446E-4, 3.0493E-4, 1.1389E-4};
 Double_t averr[24] = {};
 Double_t Qicherr[12]={}; 
@@ -215,7 +164,7 @@ Float_t q2_cav82_temp,fm_cav82_temp,dfm_cav82_temp;
 Float_t q2_nak01[size1],fm_nak01[size1],dq2_nak01[size1],dfm_nak01[size1];
 Float_t q2_nak01_temp,fm_nak01_temp,dfm_nak01_temp;
 
-void Plot_FFs() 
+void Compare_FFs() 
 {
   //Read in parameters for the representative fit.
   FILE *fp;
@@ -625,7 +574,7 @@ void Plot_FFs()
     return fitch;
   }
 
-  TF1 *fChFF = new TF1("fChFF",ChFF_Q2,0.,65,1);
+  TF1 *fChFF = new TF1("fChFF",ChFF_Q2,0.,35.,1);
   fChFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fChFF->Draw("L");
   cFch->SetTitle("Charge Form Factor");
@@ -668,12 +617,13 @@ void Plot_FFs()
     return fitch;
   }
 
-  TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,0.,65,1);
+  TF1 *fChFF_Amroun = new TF1("fChFF_Amroun",ChFF_Q2_Amroun,0.,35.,1);
   //cout<<fChFF_Amroun->Eval(35)<<endl;
   fChFF_Amroun->SetNpx(npdraw);
   fChFF_Amroun->SetLineColor(4);
   fChFF_Amroun->Draw("L same");
 
+  /*
   TGraphErrors *gr1 = new TGraphErrors (nlines1, q2_fch_cam16, fch_cam16, dq2_fch_cam16, dfch_cam16); 
   gr1->SetMarkerColor(1);
   gr1->SetMarkerStyle(20);
@@ -703,15 +653,16 @@ void Plot_FFs()
   gr7->SetMarkerStyle(20);
   gr7->SetMarkerSize(1);
   gr7->Draw("same p");
+*/
 
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
   ChFF_leg->AddEntry("fChFF","New ^{3}He |F_{ch}(q^{2})| Fit","l");
-  ChFF_leg->AddEntry("fChFF_Amroun","^{3}He |F_{ch}(q^{2})| Fit from Amroun 1994","l");
-  ChFF_leg->AddEntry(gr3,"Collard 1965","p");
-  ChFF_leg->AddEntry(gr5,"Szalata 1977","p");
-  ChFF_leg->AddEntry(gr6,"Arnold 1978","p");
-  ChFF_leg->AddEntry(gr7,"Dunn 1983","p");
-  ChFF_leg->AddEntry(gr1,"Camsonne 2016","p");
+  ChFF_leg->AddEntry("fChFF_Amroun","New ^{3}H |F_{ch}(q^{2})| Fit","l");
+  //ChFF_leg->AddEntry(gr3,"Collard 1965","p");
+  //ChFF_leg->AddEntry(gr5,"Szalata 1977","p");
+  //ChFF_leg->AddEntry(gr6,"Arnold 1978","p");
+  //ChFF_leg->AddEntry(gr7,"Dunn 1983","p");
+  //ChFF_leg->AddEntry(gr1,"Camsonne 2016","p");
   ChFF_leg->Draw();
 
 
@@ -741,7 +692,7 @@ void Plot_FFs()
     return fitm;
   }
 
-  TF1 *fMFF = new TF1("fMFF",MFF_Q2,0.,65.,1);
+  TF1 *fMFF = new TF1("fMFF",MFF_Q2,0.,35.,1);
   fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fMFF->Draw("L");
   fMFF->SetTitle("^{3}He Magnetic Form Factor");
@@ -778,12 +729,13 @@ void Plot_FFs()
     return fitm;
   }
 
-  TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,0.,65,1);
+  TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,0.,35.,1);
   //cout<<fMFF_Amroun->Eval(30)<<endl;
   fMFF_Amroun->SetNpx(npdraw);
   fMFF_Amroun->SetLineColor(4);
   fMFF_Amroun->Draw("L same");
 
+  /*
   TGraphErrors *gr2 = new TGraphErrors (nlines2, q2_fm_cam16, fm_cam16, dq2_fm_cam16, dfm_cam16); 
   gr2->SetMarkerColor(1);
   gr2->SetMarkerStyle(20);
@@ -807,15 +759,79 @@ void Plot_FFs()
   gr9->SetMarkerStyle(20);
   gr9->SetMarkerSize(1);
   gr9->Draw("same p");
+  */
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   MFF_leg->AddEntry("fMFF","New ^{3}He |F_{m}(q^{2})| Fit","l");
-  MFF_leg->AddEntry("fMFF_Amroun","^{3}He |F_{m}(q^{2})| Fit from Amroun 1994","l");
-  MFF_leg->AddEntry(gr4,"Collard 1965","p");
-  MFF_leg->AddEntry(gr8,"Cavedon 1982 (Amroun 1994)","p");
-  MFF_leg->AddEntry(gr9,"Nakagawa 2001","p");
-  MFF_leg->AddEntry(gr2,"Camsonne 2016","p");
+  MFF_leg->AddEntry("fMFF_Amroun","New ^{3}H |F_{m}(q^{2})| Fit","l");
+  //MFF_leg->AddEntry(gr4,"Collard 1965","p");
+  //MFF_leg->AddEntry(gr8,"Cavedon 1982 (Amroun 1994)","p");
+  //MFF_leg->AddEntry(gr9,"Nakagawa 2001","p");
+  //MFF_leg->AddEntry(gr2,"Camsonne 2016","p");
   MFF_leg->Draw();
+
+  //Define the charge density from I. Sick. 
+  Double_t rho_3he(Double_t *r, Double_t *par)
+  {
+    Double_t rho = 0;
+    Double_t rho_temp = 0;
+    
+    for(Int_t i=0;i<ngaus;i++)
+      {
+	rho_temp = Qich[i]/( 1+2*pow(R[i],2.)/pow(gamma,2.) ) * (  exp( -pow((r[0]-R[i]),2.)/pow(gamma,2.) ) + exp( -pow((r[0]+R[i]),2.)/pow(gamma,2.) )  );
+	rho = rho + rho_temp;
+      }
+    
+    rho = Z_3He/(2*pow(pi,1.5)*pow(gamma,3.)) * rho; //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+    
+    return rho;
+  }
+
+  TCanvas* crho=new TCanvas("crho");
+  crho->SetGrid();
+
+  TF1 *f3He_Rho = new TF1("f3He_Rho",rho_3he,0.,5,1);
+  f3He_Rho->SetNpx(npdraw);
+  f3He_Rho->SetLineColor(2);
+  f3He_Rho->Draw("L");
+  f3He_Rho->SetTitle("Charge Densities");
+  f3He_Rho->GetHistogram()->GetYaxis()->SetTitle("#rho e/fm^{3}");
+  f3He_Rho->GetHistogram()->GetYaxis()->CenterTitle(true);
+  f3He_Rho->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
+  f3He_Rho->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+  f3He_Rho->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
+  f3He_Rho->GetHistogram()->GetXaxis()->SetTitle("r (fm)");
+  f3He_Rho->GetHistogram()->GetXaxis()->CenterTitle(true);
+  f3He_Rho->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+  f3He_Rho->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+  f3He_Rho->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+
+  //Define the charge density from I. Sick. 
+  Double_t rho_3h(Double_t *r, Double_t *par)
+  {
+    Double_t rho = 0;
+    Double_t rho_temp = 0;
+    
+    for(Int_t i=0;i<ngaus;i++)
+      {
+	rho_temp = Qich_Amroun[i]/( 1+2*pow(R_Amroun[i],2.)/pow(gamma,2.) ) * (  exp( -pow((r[0]-R_Amroun[i]),2.)/pow(gamma,2.) ) + exp( -pow((r[0]+R_Amroun[i]),2.)/pow(gamma,2.) )  );
+	rho = rho + rho_temp;
+      }
+    
+    rho = Z_3H/(2*pow(pi,1.5)*pow(gamma,3.)) * rho; //Really Z*e factor but to make the units of rho be e/fm^3 I divided out e here.
+    
+    return rho;
+  }
+
+  TF1 *f3H_Rho = new TF1("f3H_Rho",rho_3h,0.,5,1);
+  f3H_Rho->SetNpx(npdraw);
+  f3H_Rho->SetLineColor(4);
+  f3H_Rho->Draw("L SAME");
+
+  auto Rho_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
+  Rho_leg->AddEntry("f3He_Rho","New ^{3}He Charge Density Fit","l");
+  Rho_leg->AddEntry("f3H_Rho","New ^{3}H Charge Density Fit","l");
+  Rho_leg->Draw();
 
   TCanvas* cxs=new TCanvas("cxs");
   cxs->SetGrid();
@@ -850,7 +866,7 @@ void Plot_FFs()
     Double_t Qtemp = 0.;
 
     //Calculate Mott XS.
-    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+    mottxs = (  (pow(Z_3He,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
 
     //Calculate XS from FFs.
     val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta/2),2))*pow(MFF_Q2(Q2,par),2.) ); 
@@ -906,7 +922,7 @@ void Plot_FFs()
     Double_t Qtemp = 0.;
 
     //Calculate Mott XS.
-    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+    mottxs = (  (pow(Z_3H,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
 
     //Calculate XS from FFs.
     val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2_Amroun(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2.)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta/2.),2.))*pow(MFF_Q2_Amroun(Q2,par),2.) ); 
@@ -1012,7 +1028,7 @@ void Plot_FFs()
   cout<<"E0 = "<<E0<<"   Ef = "<<E0/(1.0+2.0*E0*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)/MtHe3)<<endl;
   cout<<"Amroun's theta = "<<2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ) * 180./pi<<endl;
   cout<<"Amroun's theta Q^2eff Correction = "<<2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/   pow(  pow(test_point,0.5)/(1+(1.5*2*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.,1./3.)))  ,2.)   )-(2.*E0/MtHe3))) , 0.5 )  ) * 180./pi<<endl;
-  cout<<"Amroun Mott = "<<(  (pow(Z,2.)*((E0/(1.0+2.0*E0*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)/MtHe3))/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),4.0)))*pow(cos((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)  ) * 1.0/25.7<<endl;
+  cout<<"Amroun Mott = "<<(  (pow(Z_3He,2.)*((E0/(1.0+2.0*E0*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)/MtHe3))/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),4.0)))*pow(cos((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)  ) * 1.0/25.7<<endl;
   cout<<"fChFF(test_point) = "<<fChFF_Amroun->Eval(test_point)<<endl;
   cout<<"fMFF(test_point) = "<<fMFF_Amroun->Eval(test_point)<<endl;
   cout<<"******************************************************************"<<endl;

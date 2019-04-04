@@ -130,7 +130,7 @@ void Rosenbluth_Separation()
   graph->SetLineColor(4);
   graph->SetFillColor(0);
   graph->SetMarkerColor(1);
-  graph->SetMarkerSize(0.4);
+  graph->SetMarkerSize(0.9);//0.4
   graph->SetMarkerStyle(20);
   graph->SetTitle("Rosenbluth Separation Plot; #\epsilon; #frac{d#\sigma}{d#\Omega}_{r}");
 
