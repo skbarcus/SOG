@@ -31,6 +31,11 @@ Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
+Double_t theta_A = 25.*pi/180.;       //Spectrometer angle for asymmetry measurements.
+Double_t E0_A = 2.22;         //Beam energy for asymmetry measurement (GeV).
+Double_t theta_pol = pi/2;    //Polar polarization vector of target.
+Double_t phi_pol = 0;         //Azimuthal polarization vector of target.
+
 Int_t Rep_Fit = 30;//122    //Fit# from Multifit requires -1. From Plot_FFs or Chi2_Sorted Fit# is just the number.
 Int_t loops = 1;
 const Int_t datapts = 259;//248
@@ -1085,4 +1090,180 @@ void Plot_FFs()
   //Calculate weighted average by multiplying each Q^2 value in the bin by the XS value (weight) and summing these weighted Q^2. Then divide by the sum of the weights.
   Q2_cor = Q2_weight_tot/weight_tot;
   cout<<"Average Q^2 for the bin = "<<((Q2_min+Q2_max)/2)/GeV2fm<<" GeV^2 = "<<(Q2_min+Q2_max)/2<<" fm^-2.   Corrected bin center = "<<Q2_cor/GeV2fm<<" GeV^2 = "<<Q2_cor<<" fm^-2."<<endl;
+
+
+  //Plot physical asymmetry.
+  TCanvas* casymm=new TCanvas("casymm");
+  casymm->SetGrid();
+
+  /*
+  Double_t Asymm(Double_t *Q2, Double_t *par)
+  {
+    Double_t asymm = 0;
+    Double_t tau = Q2[0]/(4*pow(MtHe3,2)*pow(GeV2fm,-1.));  //Tau using fm^-2.
+    Double_t epsilon = pow( 1 + 2*(1+tau)*pow(tan(theta_A/2),2.) ,-1.);
+    theta_A = 2*TMath::ASin(  pow( (1/(4*pow(E0_A,2.)*GeV2fm/Q2[0]-2*E0_A/MtHe3)) , 0.5 )  );   //Spectrometer angle from Q^2.
+
+    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(ChFF_Q2(Q2,par),2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(MFF_Q2(Q2,par),2.) ) * ( sin(theta_pol)*cos(phi_pol)*ChFF_Q2(Q2,par)*MFF_Q2(Q2,par) + pow(tau*(1+(1+tau)pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(MFF_Q2(Q2,par),2.) );
+   
+    return asymm;
+  }
+   */
+
+  /*
+  //Define Charge FF Fch(Q^2) fm^-2.
+  Double_t ChFF_Q(Double_t *Q, Double_t *par)
+  {
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(pow(Q[0],2.),0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(pow(Q[0],2.),0.5)*R[i])/(pow(pow(Q[0],2.),0.5)*R[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+
+    fitch = fitch * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+    //fitch = fabs(fitch);
+    return fitch;
+  }
+
+  //Define magnetic FF(Q^2) fm^-2.
+  Double_t MFF_Q(Double_t *Q, Double_t *par)
+  {
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+       
+    //Define SOG for magnetic FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(pow(Q[0],2.),0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(pow(Q[0],2.),0.5)*R[i])/(pow(pow(Q[0],2.),0.5)*R[i])) );
+	   
+	fitm = fitm + summtemp;
+      }
+       
+    fitm = fitm * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+    //fitm = fabs(fitm);
+    return fitm;
+  }
+
+  //Define function for the physical asymmetry.
+  Double_t Asymm(Double_t *Q, Double_t *par)
+  {
+    //Double_t Q2 = pow(Q2[0],2.);
+    Double_t asymm = 0;
+    Double_t tau = pow(Q[0],2.)/(4*pow(MtHe3,2.)*GeV2fm);  //Tau using fm^-2.
+    Double_t epsilon = pow( 1 + 2*(1+tau)*pow(tan(theta_A/2),2.) ,-1.);
+    theta_A = 2*TMath::ASin(  pow( (1/(4*pow(E0_A,2.)*GeV2fm/pow(Q[0],2.)-2*E0_A/MtHe3)) , 0.5 )  );   //Spectrometer angle from Q^2.
+    //theta_A = 2*TMath::ASin( pow( pow(Q[0],2.)/(4*pow(E0_A,2.)*GeV2fm - 2*pow(Q[0],2.)/(MtHe3*pow(GeV2fm,0.5))) ,0.5)  );
+
+    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(ChFF_Q2(Q,par),2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(MFF_Q2(Q,par),2.) ) * ( sin(theta_pol)*cos(phi_pol)*ChFF_Q2(Q,par)*MFF_Q2(Q,par)*muHe3 + pow(tau*(1+(1+tau)pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(MFF_Q2(Q,par),2.)*pow(muHe3,2.) );
+   
+    return asymm;
+  }
+*/
+
+
+  //Define Charge FF Fch(Q^2) fm^-2.
+  Double_t ChFF_Q(Double_t *Q, Double_t *par)
+  {
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(pow(Q[0],2.),0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(pow(Q[0],2.),0.5)*R[i])/(pow(pow(Q[0],2.),0.5)*R[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+
+    fitch = fitch * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+    //fitch = fabs(fitch);
+    return fitch;
+  }
+
+  //Define magnetic FF(Q^2) fm^-2.
+  Double_t MFF_Q(Double_t *Q, Double_t *par)
+  {
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+       
+    //Define SOG for magnetic FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(pow(Q[0],2.),0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(pow(Q[0],2.),0.5)*R[i])/(pow(pow(Q[0],2.),0.5)*R[i])) );
+	   
+	fitm = fitm + summtemp;
+      }
+       
+    fitm = fitm * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+    //fitm = fabs(fitm);
+    return fitm;
+  }
+
+  //Define function for the physical asymmetry.
+  Double_t Asymm(Double_t *Q, Double_t *par)
+  {
+    //Double_t Q2 = pow(Q2[0],2.);
+    Double_t asymm = 0;
+    Double_t tau = pow(Q[0],2.)/(4*pow(MtHe3,2.)*GeV2fm);  //Tau using fm^-2.
+    Double_t epsilon = pow( 1 + 2*(1+tau)*pow(tan(theta_A/2),2.) ,-1.);
+    theta_A = 2*TMath::ASin(  pow( (1/(4*pow(E0_A,2.)*GeV2fm/pow(Q[0],2.)-2*E0_A/MtHe3)) , 0.5 )  );   //Spectrometer angle from Q^2.
+    //theta_A = 2*TMath::ASin( pow( pow(Q[0],2.)/(4*pow(E0_A,2.)*GeV2fm - 2*pow(Q[0],2.)/(MtHe3*pow(GeV2fm,0.5))) ,0.5)  );
+
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(pow(Q[0],2.),0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(pow(Q[0],2.),0.5)*R[i])/(pow(pow(Q[0],2.),0.5)*R[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+
+    fitch = fitch * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+    //fitch = fabs(fitch);
+
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+       
+    //Define SOG for magnetic FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(pow(Q[0],2.),0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(pow(Q[0],2.),0.5)*R[i])/(pow(pow(Q[0],2.),0.5)*R[i])) );
+	   
+	fitm = fitm + summtemp;
+      }
+       
+    fitm = fitm * exp(-0.25*pow(Q[0],2.)*pow(gamma,2.0));
+    //fitm = fabs(fitm);
+
+    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(fitch,2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(fitm,2.) ) * ( sin(theta_pol)*cos(phi_pol)*fitch*fitm*muHe3 + pow(tau*(1+(1+tau)pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(fitm,2.)*pow(muHe3,2.) );
+   
+    return asymm;
+  }
+
+
+
+
+  TF1 *fChFF_Q = new TF1("fChFFQ",ChFF_Q,0.,10.,1);
+  //fChFF_Q->Draw("L");
+  TF1 *fasymm = new TF1("fasymm",Asymm,0.,13.,1);
+  fasymm->SetNpx(npdraw);
+  fasymm->Draw("L");
+  fasymm->SetTitle(Form("Polarized ^{3}He Physical Asymmetry %.2f GeV",E0_A));
+  fasymm->GetHistogram()->GetYaxis()->SetTitle("A_{phys}");
+  fasymm->GetHistogram()->GetYaxis()->CenterTitle(true);
+  fasymm->GetHistogram()->GetYaxis()->SetLabelSize(0.04);
+  fasymm->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
+  fasymm->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
+  fasymm->GetHistogram()->GetXaxis()->SetTitle("Q (fm^{-1})");
+  fasymm->GetHistogram()->GetXaxis()->CenterTitle(true);
+  fasymm->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
+  fasymm->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
+  fasymm->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
 }
