@@ -60,7 +60,7 @@ Double_t theta = 0.;//21.04;
 Double_t theta_cor = 0.;                //Theta that corrects for the Q^2eff adjustment. Basically when we plot the XS and FFs the Q2[0] is really Q^2eff if we don't use this theta_cor. This variable is for the slightly smaller theta representing the real scattering angle.
 Double_t bin_min_Q2 = 30.5589;
 Double_t bin_max_Q2 = 41.247;
-Double_t E0 = 3.356;                    //Initial e- energy GeV.
+Double_t E0 = 1; //3.356                   //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
 Double_t ymax = 100.;//100
@@ -869,7 +869,7 @@ void Plot_FFs()
   //fMFF_Amroun->Draw("L");
   fxs->SetNpx(npdraw);
   fxs->Draw("L");
-  fxs->SetTitle("^{3}He Cross Section at E_{0} = 3.356 Gev");
+  fxs->SetTitle(Form("^{3}He Cross Section at E_{0} = %.3f Gev",E0));
   fxs->GetHistogram()->GetYaxis()->SetTitle("#frac{d#sigma}{d#Omega} (fm^{2}/sr)");
   fxs->GetHistogram()->GetYaxis()->CenterTitle(true);
   fxs->GetHistogram()->GetYaxis()->SetLabelSize(0.04);
@@ -925,7 +925,7 @@ void Plot_FFs()
   //fMFF_Amroun->Draw("L");
   fxs_Amroun->SetNpx(npdraw);
   fxs_Amroun->SetLineColor(4);
-  fxs_Amroun->Draw("L SAME");
+  //fxs_Amroun->Draw("L SAME");
 
   Double_t my_q2[1], my_dq2[1], my_xs[1], my_dxs[1];
   my_q2[0] = 34.19;
@@ -947,10 +947,11 @@ void Plot_FFs()
   //m1->Draw();
 
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
-  MFF_leg->AddEntry("fxs","New ^{3}He Cross Section","l");
-  MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun 1994","l");
+  MFF_leg->AddEntry("fxs","^{3}He Cross Section","l");
+  //MFF_leg->AddEntry("fxs","New ^{3}He Cross Section","l");
+  //MFF_leg->AddEntry("fxs_Amroun","^{3}He Cross Section from Amroun 1994","l");
   //MFF_leg->AddEntry(m1,"^{3}He Cross Section from Experiment E08-014","p");
-  MFF_leg->AddEntry(gr10,"^{3}He Cross Section from Experiment E08-014","p");
+  //MFF_leg->AddEntry(gr10,"^{3}He Cross Section from Experiment E08-014","p");
   MFF_leg->Draw();
 
   //Show two lines representing the edges of our bin in Q^2.
@@ -1165,7 +1166,7 @@ void Plot_FFs()
   }
 */
 
-
+  /*
   //Define Charge FF Fch(Q^2) fm^-2.
   Double_t ChFF_Q(Double_t *Q, Double_t *par)
   {
@@ -1203,8 +1204,9 @@ void Plot_FFs()
     //fitm = fabs(fitm);
     return fitm;
   }
-
-  //Define function for the physical asymmetry.
+  */
+  /*
+  //Define function for the physical asymmetry (as a function of Q).
   Double_t Asymm(Double_t *Q, Double_t *par)
   {
     //Double_t Q2 = pow(Q2[0],2.);
@@ -1246,22 +1248,63 @@ void Plot_FFs()
    
     return asymm;
   }
+*/
+  
+  //Define function for the physical asymmetry (as a function of Q^2).
+  Double_t Asymm(Double_t *Q2, Double_t *par)
+  {
+    //Double_t Q2 = pow(Q2[0],2.);
+    Double_t asymm = 0;
+    Double_t tau = Q2[0]/(4*pow(MtHe3,2.)*GeV2fm);  //Tau using fm^-2.
+    Double_t epsilon = pow( 1 + 2*(1+tau)*pow(tan(theta_A/2),2.) ,-1.);
+    theta_A = 2*TMath::ASin(  pow( (1/(4*pow(E0_A,2.)*GeV2fm/Q2[0]-2*E0_A/MtHe3)) , 0.5 )  );   //Spectrometer angle from Q^2.
+    //theta_A = 2*TMath::ASin( pow( pow(Q[0],2.)/(4*pow(E0_A,2.)*GeV2fm - 2*pow(Q[0],2.)/(MtHe3*pow(GeV2fm,0.5))) ,0.5)  );
 
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
 
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
 
+    fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    //fitch = fabs(fitch);
 
-  TF1 *fChFF_Q = new TF1("fChFFQ",ChFF_Q,0.,10.,1);
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+       
+    //Define SOG for magnetic FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	fitm = fitm + summtemp;
+      }
+       
+    fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    //fitm = fabs(fitm);
+
+    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(fitch,2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(fitm,2.) ) * ( sin(theta_pol)*cos(phi_pol)*fitch*fitm*muHe3 + pow(tau*(1+(1+tau)pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(fitm,2.)*pow(muHe3,2.) );
+   
+    return asymm;
+  }
+
+  //TF1 *fChFF_Q = new TF1("fChFFQ",ChFF_Q,0.,6.,1);
   //fChFF_Q->Draw("L");
-  TF1 *fasymm = new TF1("fasymm",Asymm,0.,13.,1);
+  TF1 *fasymm = new TF1("fasymm",Asymm,0.,25.,1);
   fasymm->SetNpx(npdraw);
   fasymm->Draw("L");
-  fasymm->SetTitle(Form("Polarized ^{3}He Physical Asymmetry %.2f GeV",E0_A));
+  fasymm->SetTitle(Form("Polarized ^{3}He Physical Asymmetry at %.2f GeV",E0_A));
   fasymm->GetHistogram()->GetYaxis()->SetTitle("A_{phys}");
   fasymm->GetHistogram()->GetYaxis()->CenterTitle(true);
   fasymm->GetHistogram()->GetYaxis()->SetLabelSize(0.04);
   fasymm->GetHistogram()->GetYaxis()->SetTitleSize(0.06);
   fasymm->GetHistogram()->GetYaxis()->SetTitleOffset(0.75);
-  fasymm->GetHistogram()->GetXaxis()->SetTitle("Q (fm^{-1})");
+  fasymm->GetHistogram()->GetXaxis()->SetTitle("Q^{2} (fm^{-2})");
   fasymm->GetHistogram()->GetXaxis()->CenterTitle(true);
   fasymm->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
   fasymm->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
