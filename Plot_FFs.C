@@ -32,7 +32,7 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 Double_t theta_A = 25.*pi/180.;       //Spectrometer angle for asymmetry measurements.
-Double_t E0_A = 2.22;         //Beam energy for asymmetry measurement (GeV).
+Double_t E0_A = 2.216;         //Beam energy for asymmetry measurement (GeV).
 Double_t theta_pol = pi/2;    //Polar polarization vector of target.
 Double_t phi_pol = 0;         //Azimuthal polarization vector of target.
 
@@ -60,7 +60,7 @@ Double_t theta = 0.;//21.04;
 Double_t theta_cor = 0.;                //Theta that corrects for the Q^2eff adjustment. Basically when we plot the XS and FFs the Q2[0] is really Q^2eff if we don't use this theta_cor. This variable is for the slightly smaller theta representing the real scattering angle.
 Double_t bin_min_Q2 = 30.5589;
 Double_t bin_max_Q2 = 41.247;
-Double_t E0 = 1; //3.356                   //Initial e- energy GeV.
+Double_t E0 = 3.; //3.356                   //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
 Double_t ymax = 100.;//100
@@ -219,6 +219,8 @@ Float_t q2_cav82[size1],fm_cav82[size1],dq2_cav82[size1],dfm_cav82[size1];
 Float_t q2_cav82_temp,fm_cav82_temp,dfm_cav82_temp;
 Float_t q2_nak01[size1],fm_nak01[size1],dq2_nak01[size1],dfm_nak01[size1];
 Float_t q2_nak01_temp,fm_nak01_temp,dfm_nak01_temp;
+Float_t Q2_asymm[size1],asymm[size1],Q2_uncertainty_asymm[size1],uncertainty_asymm[size1];
+Float_t Q2_asymm_temp,asymm_temp,Q2_uncertainty_asymm_temp,uncertainty_asymm_temp;
 
 void Plot_FFs() 
 {
@@ -599,6 +601,37 @@ void Plot_FFs()
       Qim[i] = Qimmulti[Rep_Fit][i];
       */
     }
+
+//Open and read in asymmetry data.
+  FILE *fp9;
+  fp9 = fopen("/home/skbarcus/Documents/Asymmetry_Proposal/Asymm_Points.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines9 < skip9)
+	{
+	  fgets(str9,1000,fp9);
+	  nlines9++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp9,"%f %f %f", &Q2_asymm_temp, &asymm_temp, &uncertainty_asymm_temp);
+	  if (ncols < 0) break;    
+  
+	  Q2_asymm[nlines9-skip9] = Q2_asymm_temp;
+	  asymm[nlines9-skip9] = asymm_temp;
+	  uncertainty_asymm[nlines9-skip9] = uncertainty_asymm_temp;
+	  Q2_uncertainty_asymm[nlines9-skip9] = 0;
+	  cout<<"Q2_asymm["<<nlines9-skip9<<"] = "<<Q2_asymm_temp[nlines9-skip9]<<"   asymm["<<nlines9-skip9<<"] = "<<asymm[nlines9-skip9]<<"   uncertainty_asymm["<<nlines9-skip9<<"] = "<<uncertainty_asymm[nlines9-skip9]<<endl;
+	  nlines9++;
+	}
+    }
+  fclose(fp9);
+  cout<<"nlines9 = "<<nlines9<<endl;
 
   TCanvas* cFch=new TCanvas("cFch");
   cFch->SetGrid();
@@ -1295,10 +1328,15 @@ void Plot_FFs()
 
   //TF1 *fChFF_Q = new TF1("fChFFQ",ChFF_Q,0.,6.,1);
   //fChFF_Q->Draw("L");
+
+  //TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,0.,65,1);
+  //cout<<fMFF_Amroun->Eval(30)<<endl;
   TF1 *fasymm = new TF1("fasymm",Asymm,0.,25.,1);
+  cout<<fasymm->Eval(10.)<<endl;
+  cout<<"Real asymmetry value for some reason = "<<fasymm->Eval(10.)<<endl;
   fasymm->SetNpx(npdraw);
   fasymm->Draw("L");
-  fasymm->SetTitle(Form("Polarized ^{3}He Physical Asymmetry at %.2f GeV",E0_A));
+  fasymm->SetTitle(Form("Polarized ^{3}He Physical Asymmetry at %.3f GeV",E0_A));
   fasymm->GetHistogram()->GetYaxis()->SetTitle("A_{phys}");
   fasymm->GetHistogram()->GetYaxis()->CenterTitle(true);
   fasymm->GetHistogram()->GetYaxis()->SetLabelSize(0.04);
@@ -1309,4 +1347,11 @@ void Plot_FFs()
   fasymm->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
   fasymm->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
   fasymm->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
+  cout<<fasymm->Eval(10.)<<endl;
+
+  TGraphErrors *gr_asymm = new TGraphErrors (nlines9, Q2_asymm, asymm, Q2_uncertainty_asymm, uncertainty_asymm); 
+  gr_asymm->SetMarkerColor(1);
+  gr_asymm->SetMarkerStyle(20);
+  gr_asymm->SetMarkerSize(1);
+  gr_asymm->Draw("same p");
 }

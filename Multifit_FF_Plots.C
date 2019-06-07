@@ -171,8 +171,8 @@ Int_t skip9,skip10,skip11,skip12,skip13,skip14,skip15,skip16,skip17,skip18,skip1
 Int_t nlines9,nlines10,nlines11,nlines12,nlines13,nlines14,nlines15,nlines16,nlines17,nlines18,nlines19,nlines20,nlines21,nlines22,nlines23,nlines24 = 0;
 Int_t ncols9,ncols10,ncols11,ncols12,ncols13,ncols14,ncols15,ncols16,ncols17,ncols18,ncols19,ncols20,ncols21,ncols22,ncols23,ncols24;
 char* str9[1000],str10[1000],str11[1000],str12[1000],str13[1000],str14[1000],str15[1000],str16[1000],str17[1000],str18[1000],str19[1000],str20[1000],str21[1000],str22[1000],str23[1000],str24[1000];
-Float_t x_Fch_Conv[size1],x_Fch_XEFT500[size],x_Fch_XEFT600[size1],x_Fch_CST[size1],x_Fm_Conv[size1],x_Fm_XEFT500[size],x_Fm_XEFT600[size1],x_Fm_CST[size1],y_Fch_Conv[size1],y_Fch_XEFT500[size],y_Fch_XEFT600[size1],y_Fch_CST[size1],y_Fm_Conv[size1],y_Fm_XEFT500[size],y_Fm_XEFT600[size1],y_Fm_CST[size1];
-Float_t x_Fch_Conv_temp,x_Fch_XEFT500_temp,x_Fch_XEFT600_temp,x_Fch_CST_temp,x_Fm_Conv_temp,x_Fm_XEFT500_temp,x_Fm_XEFT600_temp,x_Fm_CST_temp,y_Fch_Conv_temp,y_Fch_XEFT500_temp,y_Fch_XEFT600_temp,y_Fch_CST_temp,y_Fm_Conv_temp,y_Fm_XEFT500_temp,y_Fm_XEFT600_temp,y_Fm_CST_temp;
+Float_t x_Fch_Conv[size1],x_Fch_XEFT500[size],x_Fch_XEFT600[size1],x_Fch_CST[size1],x_Fm_Conv[size1],x_Fm_XEFT500[size],x_Fm_XEFT600[size1],x_Fm_CST[size1],y_Fch_Conv[size1],y_Fch_XEFT500[size],y_Fch_XEFT600[size1],y_Fch_CST[size1],y_Fm_Conv[size1],y_Fm_XEFT500[size],y_Fm_XEFT600[size1],y_Fm_CST[size1],Q2_asymm[size1],asymm[size1],uncertainty_asymm[size1];
+Float_t x_Fch_Conv_temp,x_Fch_XEFT500_temp,x_Fch_XEFT600_temp,x_Fch_CST_temp,x_Fm_Conv_temp,x_Fm_XEFT500_temp,x_Fm_XEFT600_temp,x_Fm_CST_temp,y_Fch_Conv_temp,y_Fch_XEFT500_temp,y_Fch_XEFT600_temp,y_Fch_CST_temp,y_Fm_Conv_temp,y_Fm_XEFT500_temp,y_Fm_XEFT600_temp,y_Fm_CST_temp,Q2_asymm_temp,asymm_temp,uncertainty_asymm_temp;
 
 //Adding Error Bands for my fits.
 //Int_t skip17;
@@ -1347,6 +1347,36 @@ void Multifit_FF_Plots()
     }
   fclose(fp20);
   cout<<"nlines20 = "<<nlines20<<endl;
+
+  //Open and read in asymmetry data.
+  FILE *fp21;
+  fp21 = fopen("/home/skbarcus/Documents/Asymmetry_Proposal/Asymm_Points.txt","r");
+
+  //Read in data.
+  while (1) 
+    {
+      //Skips the first skip lines of the file. 
+      if (nlines21 < skip21)
+	{
+	  fgets(str21,1000,fp21);
+	  nlines21++;
+	}
+      //Reads the two columns of data into x and y.
+      else
+	{
+	  //Read in the number of columns of data in your data file. 
+	  ncols = fscanf(fp21,"%f %f %f", &Q2_asymm_temp, &asymm_temp, &uncertainty_asymm_temp);
+	  if (ncols < 0) break;    
+  
+	  Q2_asymm[nlines21-skip21] = Q2_asymm_temp;
+	  asymm[nlines21-skip21] = asymm_temp;
+	  uncertainty_asymm[nlines21-skip21] = uncertainty_asymm_temp;
+	  //cout<<"Q2_asymm["<<nlines21-skip21<<"] = "<<Q2_asymm_temp[nlines21-skip21]<<"   asymm["<<nlines21-skip21<<"] = "<<asymm[nlines21-skip21]<<"   uncertainty_asymm["<<nlines21-skip21<<"] = "<<uncertainty_asymm[nlines21-skip21]<<endl;
+	  nlines21++;
+	}
+    }
+  fclose(fp21);
+  cout<<"nlines21 = "<<nlines21<<endl;
 
   //Now plot all of the curves on one canvas to form an error band.
   TCanvas* cFch=new TCanvas("cFch");
