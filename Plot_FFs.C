@@ -31,7 +31,7 @@ Double_t e = 1.60217662E-19;             //Electron charge C.
 Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure constant.
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
-Double_t theta_A = 25.*pi/180.;       //Spectrometer angle for asymmetry measurements.
+Double_t theta_A = 21.*pi/180.; //25.*pi/180.      //Spectrometer angle for asymmetry measurements.
 Double_t E0_A = 2.216;         //Beam energy for asymmetry measurement (GeV).
 Double_t theta_pol = pi/2;    //Polar polarization vector of target.
 Double_t phi_pol = 0;         //Azimuthal polarization vector of target.
@@ -60,7 +60,7 @@ Double_t theta = 0.;//21.04;
 Double_t theta_cor = 0.;                //Theta that corrects for the Q^2eff adjustment. Basically when we plot the XS and FFs the Q2[0] is really Q^2eff if we don't use this theta_cor. This variable is for the slightly smaller theta representing the real scattering angle.
 Double_t bin_min_Q2 = 30.5589;
 Double_t bin_max_Q2 = 41.247;
-Double_t E0 = 3.; //3.356                   //Initial e- energy GeV.
+Double_t E0 = 2.216; //3.356                   //Initial e- energy GeV.
 Double_t Ef = 0.;                        //Final e- energy GeV.
 Double_t ymin = 30.;//30
 Double_t ymax = 100.;//100
@@ -899,6 +899,7 @@ void Plot_FFs()
   }
 
   TF1 *fxs = new TF1("fxs",xs,yminFF,ymaxFF+54,1);
+  //cout<<"XS at set Q^2 = "<<fxs->Eval(4.57)<<endl;
   //fMFF_Amroun->Draw("L");
   fxs->SetNpx(npdraw);
   fxs->Draw("L");
@@ -1020,11 +1021,11 @@ void Plot_FFs()
       //Test.push_back( pair<double,double>(Chi2[i],i) ); 
       //Test[i].first = Chi2[i];
       //Test[i].second = i;
-      Chi2_Sorted.push_back(Chi2[i]);
+      //      Chi2_Sorted.push_back(Chi2[i]);
     }  
 
   //Sort array in ascending order.
-  sort(Chi2_Sorted.begin(),Chi2_Sorted.end());           
+  //  sort(Chi2_Sorted.begin(),Chi2_Sorted.end());           
   for(Int_t i=0;i<nlines-skip;i++)
     {
       //cout<<"Chi2_Sorted["<<i<<"] = "<<Chi2_Sorted[i]<<endl;
@@ -1045,7 +1046,7 @@ void Plot_FFs()
       //cout<<"Fit Number = "<<Test[i].second<<"   Chi2_Sorted["<<i<<"] = "<<Test[i].first<<endl;
     }
 
-  Double_t test_point = 35.8152;//35.8152;//35.7582;
+  Double_t test_point = 4.57;//35.8152;//35.7582;
   cout<<"My XS at "<<test_point<<" = "<<fxs->Eval(test_point)<<" fm^2/sr = "<<fxs->Eval(test_point)*1E4<<" ub/sr"<<endl;
   cout<<"Amroun's XS at test point = "<<fxs_Amroun->Eval(test_point)<<" fm^2/sr = "<<fxs_Amroun->Eval(test_point)*1E4<<" ub/sr"<<endl;
   cout<<"E0 = "<<E0<<"   Ef = "<<E0/(1.0+2.0*E0*pow(sin((2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/test_point)-(2.*E0/MtHe3))) , 0.5 )  ))/2.0),2.0)/MtHe3)<<endl;
@@ -1326,15 +1327,60 @@ void Plot_FFs()
     return asymm;
   }
 
+  //Define function for the physical asymmetry (as a function of Q^2).
+  Double_t Asymm_Amroun(Double_t *Q2, Double_t *par)
+  {
+    //Double_t Q2 = pow(Q2[0],2.);
+    Double_t asymm = 0;
+    Double_t tau = Q2[0]/(4*pow(MtHe3,2.)*GeV2fm);  //Tau using fm^-2.
+    Double_t epsilon = pow( 1 + 2*(1+tau)*pow(tan(theta_A/2),2.) ,-1.);
+    theta_A = 2*TMath::ASin(  pow( (1/(4*pow(E0_A,2.)*GeV2fm/Q2[0]-2*E0_A/MtHe3)) , 0.5 )  );   //Spectrometer angle from Q^2.
+    //theta_A = 2*TMath::ASin( pow( pow(Q[0],2.)/(4*pow(E0_A,2.)*GeV2fm - 2*pow(Q[0],2.)/(MtHe3*pow(GeV2fm,0.5))) ,0.5)  );
+
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	sumchtemp = (Qich_Amroun[i]/(1.0+2.0*pow(R_Amroun[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R_Amroun[i]) + (2.0*pow(R_Amroun[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R_Amroun[i])/(pow(Q2[0],0.5)*R_Amroun[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+
+    fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    //fitch = fabs(fitch);
+
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+       
+    //Define SOG for magnetic FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	summtemp = (Qim_Amroun[i]/(1.0+2.0*pow(R_Amroun[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R_Amroun[i]) + (2.0*pow(R_Amroun[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R_Amroun[i])/(pow(Q2[0],0.5)*R_Amroun[i])) );
+	   
+	fitm = fitm + summtemp;
+      }
+       
+    fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    //fitm = fabs(fitm);
+
+    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(fitch,2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(fitm,2.) ) * ( sin(theta_pol)*cos(phi_pol)*fitch*fitm*muHe3 + pow(tau*(1+(1+tau)pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(fitm,2.)*pow(muHe3,2.) );
+   
+    return asymm;
+  }
+
   //TF1 *fChFF_Q = new TF1("fChFFQ",ChFF_Q,0.,6.,1);
   //fChFF_Q->Draw("L");
 
   //TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,0.,65,1);
   //cout<<fMFF_Amroun->Eval(30)<<endl;
   TF1 *fasymm = new TF1("fasymm",Asymm,0.,25.,1);
-  cout<<fasymm->Eval(10.)<<endl;
-  cout<<"Real asymmetry value for some reason = "<<fasymm->Eval(10.)<<endl;
+  Double_t test_asymm_Q2 = 13.2869;//18.76; //fm^-2
+  cout<<fasymm->Eval(test_asymm_Q2)<<endl;
+  cout<<"Real asymmetry value for some reason = "<<fasymm->Eval(test_asymm_Q2)<<endl;
   fasymm->SetNpx(npdraw);
+  //fasymm->SetLineWidth(2);
   fasymm->Draw("L");
   fasymm->SetTitle(Form("Polarized ^{3}He Physical Asymmetry at %.3f GeV",E0_A));
   fasymm->GetHistogram()->GetYaxis()->SetTitle("A_{phys}");
@@ -1347,11 +1393,90 @@ void Plot_FFs()
   fasymm->GetHistogram()->GetXaxis()->SetLabelSize(0.05);
   fasymm->GetHistogram()->GetXaxis()->SetTitleSize(0.06);
   fasymm->GetHistogram()->GetXaxis()->SetTitleOffset(0.75);
-  cout<<fasymm->Eval(10.)<<endl;
+  cout<<fasymm->Eval(test_asymm_Q2)<<endl;
+
+  TF1 *fasymm_Amroun = new TF1("fasymm_Amroun",Asymm_Amroun,0.,25.,1);
+  Double_t test_asymm_Amroun_Q2 = 11.39;//18.76; //fm^-2
+  cout<<fasymm->Eval(test_asymm_Amroun_Q2)<<endl;
+  cout<<"Real asymmetry value Amroun for some reason = "<<fasymm->Eval(test_asymm_Amroun_Q2)<<endl;
+  cout<<fasymm->Eval(test_asymm_Amroun_Q2)<<endl;
+  fasymm_Amroun->SetNpx(npdraw);
+  //fasymm_Amroun->Draw("SAME L");
+  fasymm_Amroun->SetLineColor(4);
 
   TGraphErrors *gr_asymm = new TGraphErrors (nlines9, Q2_asymm, asymm, Q2_uncertainty_asymm, uncertainty_asymm); 
   gr_asymm->SetMarkerColor(1);
   gr_asymm->SetMarkerStyle(20);
-  gr_asymm->SetMarkerSize(1);
+  gr_asymm->SetMarkerSize(1.2);
   gr_asymm->Draw("same p");
+
+  //Define function to test XS values (above probably works in fxs but this is a test).
+  Double_t test_xs(Double_t *Q2, Double_t *par)
+  {
+    Double_t val = 0.;
+    Double_t mottxs = 0.;
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+    
+    //All Q[0] were Q2eff previously from SOG fit code.
+
+    //theta = 2*TMath::ASin(  pow( (1/(4*pow(E0,2.)/Q2[0]-2*E0/MtHe3)) , 0.5 )  );
+    theta = 2*TMath::ASin(  pow( (1/(4*pow(E0,2.)*GeV2fm/Q2[0]-2*E0/MtHe3)) , 0.5 )  );
+    theta_cor = 2*TMath::ASin(  pow( (1/((4*pow(E0,2.)*GeV2fm/   pow(  pow(Q2[0],0.5)/(1+(1.5*2*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(3.,1./3.)))  ,2.)   )-(2.*E0/MtHe3))) , 0.5 )  );
+
+    Ef = E0/(1.0+2.0*E0*pow(sin(theta/2.0),2.0)/MtHe3);
+
+    //theta = 2*TMath::ASin( pow( Q2[0]/(4*E0*Ef*GeV2fm), 0.5 ) );
+
+    //Double_t Q2 = 4.0*E0*Ef*pow(sin(theta*deg2rad/2.0),2.0) * GeV2fm;
+    //Double_t Q2eff = pow( pow(Q2,0.5) * (1.0+(1.5*Z*alpha)/(E0*pow(GeV2fm,0.5)*1.12*pow(A,1.0/3.0))) ,2.0);   //Z=2 A=3
+    Double_t W = E0 - Ef;
+    //wHe3 = (Q2*1.0/GeV2fm)/(2.0*MtHe3);
+    Double_t q2_3 = fabs(  pow(W,2.0)*GeV2fm - Q2[0]  );        //Convert w^2 from GeV^2 to fm^-2 to match Q2. [fm^-2]
+    Double_t eta = 1.0 + Q2[0]/(4.0*pow(MtHe3,2.0)*GeV2fm);       //Make sure Mt^2 is converted from GeV^2 to fm^-2 to match Q^2. 
+    Double_t Qtot = 1.0;
+    Double_t Qtemp = 0.;
+
+    //Calculate Mott XS.
+    mottxs = (  (pow(Z,2.)*(Ef/E0)) * (pow(alpha,2.0)/(4.0*pow(E0,2.0)*pow(sin(theta/2.0),4.0)))*pow(cos(theta/2.0),2.0)  ) * 1.0/25.7;    //Convert GeV^-2 to fm^2 by multiplying by 1/25.7.
+
+    Double_t fitch = 0.;
+    Double_t sumchtemp = 0.;
+
+    //Define SOG for charge FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	sumchtemp = (Qich[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	
+	fitch = fitch + sumchtemp;
+      }
+
+    fitch = fitch * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    //fitch = fabs(fitch);
+
+    Double_t fitm = 0.;
+    Double_t summtemp = 0.;
+       
+    //Define SOG for magnetic FF.
+    for(Int_t i=0; i<ngaus; i++)
+      { 	
+	summtemp = (Qim[i]/(1.0+2.0*pow(R[i],2.0)/pow(gamma,2.0))) * ( cos(pow(Q2[0],0.5)*R[i]) + (2.0*pow(R[i],2.0)/pow(gamma,2.0)) * (sin(pow(Q2[0],0.5)*R[i])/(pow(Q2[0],0.5)*R[i])) );
+	   
+	fitm = fitm + summtemp;
+      }
+       
+    fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
+    //fitm = fabs(fitm);
+
+    //Calculate XS from FFs.
+    val = mottxs * (1./eta) * ( (Q2[0]/q2_3)*pow(ChFF_Q2(Q2,par),2.) + (pow(muHe3,2.0)*Q2[0]/(2*pow(MtHe3,2)*GeV2fm))*(0.5*Q2[0]/q2_3 + pow(tan(theta/2),2))*pow(MFF_Q2(Q2,par),2.) ); 
+   
+    return val;
+  }
+
+  TF1 *ftest_xs = new TF1("ftest_xs",test_xs,0.,70.,1);
+  Double_t Q2_xs = 15.93; //fm^-2
+  cout<<"Test XS Value = "<<ftest_xs->Eval(Q2_xs)<<" fm^2/sr = "<<ftest_xs->Eval(Q2_xs)*1E4<<" ub/sr = "<<ftest_xs->Eval(Q2_xs)*1E4*1E-3<<" mb/sr"<<endl;
 }

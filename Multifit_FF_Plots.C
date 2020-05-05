@@ -71,7 +71,7 @@ Int_t n = 10000;
 Int_t ndim = n+1;
 Int_t npdraw = 1001;                     //Number of points to be used when drawing a function.
 Double_t transparency = 0.2;//0.2//0.05              //Sets the transparency level of the multiplot lines.
-Double_t linewidth = 2.;
+Double_t linewidth = 3.;
 Double_t truncate = 100.;                 //Truncate the histogram before inverse FFT. [fm^-2]
 Int_t skip = 1.;                          //Gives number of lines to skip at top of data file. 
 Int_t nlines = 0;                        //Counts number of lines in the data file. 
@@ -1751,6 +1751,9 @@ void Multifit_FF_Plots()
     {
       fChFF_Amroun->Draw("L SAME");
     }
+
+
+
   auto ChFF_leg = new TLegend(0.49,0.64,0.9,0.9); //(0.1,0.7,0.48,0.9)
   /*
   if(target == 0)
@@ -1870,7 +1873,7 @@ void Multifit_FF_Plots()
   //Plot Marcucci conventional theory line.
   TGraph *gr9 = new TGraph (nlines9, x_Fch_Conv, y_Fch_Conv); 
   gr9->SetLineColor(kGreen+1);
-  gr9->SetLineWidth(2);
+  gr9->SetLineWidth(linewidth);
   if(show_theory == 1)
     {
       gr9->Draw("SAME l");
@@ -1879,7 +1882,7 @@ void Multifit_FF_Plots()
   //Plot Marcucci CST theory line.
   TGraph *gr10 = new TGraph (nlines10, x_Fch_CST, y_Fch_CST); 
   gr10->SetLineColor(6);
-  gr10->SetLineWidth(2);
+  gr10->SetLineWidth(linewidth);
   if(show_theory == 1)
     {
       gr10->Draw("SAME l");
@@ -1888,7 +1891,7 @@ void Multifit_FF_Plots()
   //Plot Marcucci XEFT 500 theory line.
   TGraph *gr11 = new TGraph (nlines11, x_Fch_XEFT500, y_Fch_XEFT500); 
   gr11->SetLineColor(kMagenta+2);
-  gr11->SetLineWidth(2);
+  gr11->SetLineWidth(linewidth);
   if(show_theory == 1)
     {
       gr11->Draw("SAME l");
@@ -1897,7 +1900,7 @@ void Multifit_FF_Plots()
   //Plot Marcucci XEFT 600 theory line.
   TGraph *gr12 = new TGraph (nlines12, x_Fch_XEFT600, y_Fch_XEFT600); 
   gr12->SetLineColor(kCyan+2);
-  gr12->SetLineWidth(2);
+  gr12->SetLineWidth(linewidth);
   if(show_theory == 1)
     {
       gr12->Draw("SAME l");
@@ -2035,6 +2038,30 @@ void Multifit_FF_Plots()
 	  ChFF_leg->AddEntry(gr12,"#chiEFT 600 Marcucci et al 2016","l");
 	}
     }
+  
+  TF1 *f1=new TF1("f1","x",0,Qi_ch_divisions/25.7);
+  TGaxis *A2 = new TGaxis(0,1.8,Qi_ch_divisions,1.8,"f1",510,"-");
+  //TGaxis *A2 = new TGaxis(0,gPad->GetUymax(),60,gPad->GetUymax(),"f2",510,"-");
+  A2->SetTitle("Q^{2} (GeV)");
+  A2->CenterTitle(true);
+  A2->SetLabelSize(0.03);
+  A2->SetLabelOffset(-0.045);
+  A2->SetTitleSize(0.04);
+  A2->SetTitleOffset(-0.85);
+  A2->Draw();
+  
+  /*
+  TF1 *f1=new TF1("f1","x",0,Qi_m_divisions/25.7);
+  TGaxis *A1 = new TGaxis(0,1.,Qi_m_divisions,1.,"f1",510,"-");
+  //TGaxis *A1 = new TGaxis(0,gPad->GetUymax(),60,gPad->GetUymax(),"f1",510,"-");
+  A1->SetTitle("Q^{2} (GeV)");
+  A1->CenterTitle(true);
+  A1->SetLabelSize(0.03);
+  A1->SetLabelOffset(-0.045);
+  A1->SetTitleSize(0.04);
+  A1->SetTitleOffset(-0.85);
+  A1->Draw();
+  */
   ChFF_leg->Draw();
 
   TCanvas* cFm=new TCanvas("cFm");
@@ -2311,7 +2338,7 @@ void Multifit_FF_Plots()
 
   TGraph *gr13 = new TGraph (nlines13, x_Fm_Conv, y_Fm_Conv);
   gr13->SetLineColor(kGreen+1);
-  gr13->SetLineWidth(2);
+  gr13->SetLineWidth(linewidth);
   if(show_theory == 1)
     {
       gr13->Draw("SAME l");
@@ -2319,7 +2346,7 @@ void Multifit_FF_Plots()
   
   TGraph *gr14 = new TGraph (nlines14, x_Fm_CST, y_Fm_CST);
   gr14->SetLineColor(6);
-  gr14->SetLineWidth(2);
+  gr14->SetLineWidth(linewidth);
   if(show_theory == 1)
     {
       gr14->Draw("SAME l");
@@ -2327,7 +2354,7 @@ void Multifit_FF_Plots()
   
   TGraph *gr15 = new TGraph (nlines15, x_Fm_XEFT500, y_Fm_XEFT500);
   gr15->SetLineColor(kMagenta+2);
-  gr15->SetLineWidth(2);
+  gr15->SetLineWidth(linewidth);
   if(show_theory == 1)
     {
       gr15->Draw("SAME l");
@@ -2335,7 +2362,7 @@ void Multifit_FF_Plots()
   
   TGraph *gr16 = new TGraph (nlines16, x_Fm_XEFT600, y_Fm_XEFT600);
   gr16->SetLineColor(kCyan+2);
-  gr16->SetLineWidth(2);
+  gr16->SetLineWidth(linewidth);
   if(show_theory == 1)
     {
       gr16->Draw("SAME l");
@@ -2390,7 +2417,18 @@ void Multifit_FF_Plots()
     {
       grshade19->Draw("F");
     }
-
+  
+  TF1 *f1=new TF1("f1","x",0,Qi_m_divisions/25.7);
+  TGaxis *A1 = new TGaxis(0,1.84,Qi_m_divisions,1.84,"f1",510,"-");
+  //TGaxis *A1 = new TGaxis(0,gPad->GetUymax(),60,gPad->GetUymax(),"f1",510,"-");
+  A1->SetTitle("Q^{2} (GeV)");
+  A1->CenterTitle(true);
+  A1->SetLabelSize(0.03);
+  A1->SetLabelOffset(-0.045);
+  A1->SetTitleSize(0.04);
+  A1->SetTitleOffset(-0.85);
+  A1->Draw();
+  
   auto MFF_leg = new TLegend(0.49,0.65,0.9,0.9); //(0.1,0.7,0.48,0.9)
   if(target == 0)
     {

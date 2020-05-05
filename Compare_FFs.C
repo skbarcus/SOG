@@ -577,9 +577,9 @@ void Compare_FFs()
   TF1 *fChFF = new TF1("fChFF",ChFF_Q2,0.,35.,1);
   fChFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fChFF->Draw("L");
-  cFch->SetTitle("Charge Form Factor");
+  cFch->SetTitle("Charge Form Factors");
   //fChFF->SetTitle("C12 Charge Form Factor","#Q^2 (#fm^-2)","#F_{Ch}(q)");
-  fChFF->SetTitle("^{3}He Charge Form Factor");
+  fChFF->SetTitle("Charge Form Factors");
   fChFF->GetHistogram()->GetYaxis()->SetTitle("|F_{ch}(Q^{2})|");
   fChFF->GetHistogram()->GetYaxis()->CenterTitle(true);
   fChFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
@@ -695,7 +695,7 @@ void Compare_FFs()
   TF1 *fMFF = new TF1("fMFF",MFF_Q2,0.,35.,1);
   fMFF->SetNpx(npdraw);   //Sets number of points to use when drawing the function. 
   fMFF->Draw("L");
-  fMFF->SetTitle("^{3}He Magnetic Form Factor");
+  fMFF->SetTitle("Magnetic Form Factors");
   fMFF->GetHistogram()->GetYaxis()->SetTitle("|F_{m}(Q^{2})|");
   fMFF->GetHistogram()->GetYaxis()->CenterTitle(true);
   fMFF->GetHistogram()->GetYaxis()->SetLabelSize(0.05);
