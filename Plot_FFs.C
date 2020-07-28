@@ -32,7 +32,7 @@ Double_t alpha = 0.0072973525664;//1.0/137.0;              //Fine structure cons
 Double_t muHe3 = -2.1275*(3.0/2.0); //Diens has this 3/2 factor for some reason, but it fits the data much better.  //2*2.793-1.913 is too naive.
 
 Double_t theta_A = 21.*pi/180.; //25.*pi/180.      //Spectrometer angle for asymmetry measurements.
-Double_t E0_A = 2.216;         //Beam energy for asymmetry measurement (GeV).
+Double_t E0_A = 2.08;         //Beam energy for asymmetry measurement (GeV).//Was 2.216 GeV for first asymmetry calculations like the proposal.
 Double_t theta_pol = pi/2;    //Polar polarization vector of target.
 Double_t phi_pol = 0;         //Azimuthal polarization vector of target.
 
@@ -1290,8 +1290,10 @@ void Plot_FFs()
     //Double_t Q2 = pow(Q2[0],2.);
     Double_t asymm = 0;
     Double_t tau = Q2[0]/(4*pow(MtHe3,2.)*GeV2fm);  //Tau using fm^-2.
+    //cout<<"tau = "<<tau<<endl;
+    theta_A = 2*TMath::ASin(  pow( (1/(4*pow(E0_A,2.)*GeV2fm/Q2[0]-2*E0_A/MtHe3)) , 0.5 )  );
     Double_t epsilon = pow( 1 + 2*(1+tau)*pow(tan(theta_A/2),2.) ,-1.);
-    theta_A = 2*TMath::ASin(  pow( (1/(4*pow(E0_A,2.)*GeV2fm/Q2[0]-2*E0_A/MtHe3)) , 0.5 )  );   //Spectrometer angle from Q^2.
+    //theta_A = 2*TMath::ASin(  pow( (1/(4*pow(E0_A,2.)*GeV2fm/Q2[0]-2*E0_A/MtHe3)) , 0.5 )  );   //Spectrometer angle from Q^2.
     //theta_A = 2*TMath::ASin( pow( pow(Q[0],2.)/(4*pow(E0_A,2.)*GeV2fm - 2*pow(Q[0],2.)/(MtHe3*pow(GeV2fm,0.5))) ,0.5)  );
 
     Double_t fitch = 0.;
@@ -1322,7 +1324,7 @@ void Plot_FFs()
     fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
     //fitm = fabs(fitm);
 
-    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(fitch,2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(fitm,2.) ) * ( sin(theta_pol)*cos(phi_pol)*fitch*fitm*muHe3 + pow(tau*(1+(1+tau)pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(fitm,2.)*pow(muHe3,2.) );
+    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(fitch,2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(fitm,2.) ) * ( sin(theta_pol)*cos(phi_pol)*fitch*fitm*muHe3 + pow(tau*(1+(1+tau)*pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(fitm,2.)*pow(muHe3,2.) );
    
     return asymm;
   }
@@ -1365,7 +1367,7 @@ void Plot_FFs()
     fitm = fitm * exp(-0.25*Q2[0]*pow(gamma,2.0));
     //fitm = fabs(fitm);
 
-    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(fitch,2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(fitm,2.) ) * ( sin(theta_pol)*cos(phi_pol)*fitch*fitm*muHe3 + pow(tau*(1+(1+tau)pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(fitm,2.)*pow(muHe3,2.) );
+    asymm = ( -2 * pow(tau * (1+tau),0.5) * tan(theta_A/2) ) / ( pow(fitch,2.) + (tau/epsilon) * (pow(muHe3,2.)) * pow(fitm,2.) ) * ( sin(theta_pol)*cos(phi_pol)*fitch*fitm*muHe3 + pow(tau*(1+(1+tau)*pow(tan(theta_A/2),2.)),0.5)*cos(theta_pol)*pow(fitm,2.)*pow(muHe3,2.) );
    
     return asymm;
   }
@@ -1376,7 +1378,7 @@ void Plot_FFs()
   //TF1 *fMFF_Amroun = new TF1("fMFF_Amroun",MFF_Q2_Amroun,0.,65,1);
   //cout<<fMFF_Amroun->Eval(30)<<endl;
   TF1 *fasymm = new TF1("fasymm",Asymm,0.,25.,1);
-  Double_t test_asymm_Q2 = 13.2869;//18.76; //fm^-2
+  Double_t test_asymm_Q2 = 4;//3.385;//13.2869;//18.76; //fm^-2
   cout<<fasymm->Eval(test_asymm_Q2)<<endl;
   cout<<"Real asymmetry value for some reason = "<<fasymm->Eval(test_asymm_Q2)<<endl;
   fasymm->SetNpx(npdraw);
@@ -1404,11 +1406,13 @@ void Plot_FFs()
   //fasymm_Amroun->Draw("SAME L");
   fasymm_Amroun->SetLineColor(4);
 
+  /*
   TGraphErrors *gr_asymm = new TGraphErrors (nlines9, Q2_asymm, asymm, Q2_uncertainty_asymm, uncertainty_asymm); 
   gr_asymm->SetMarkerColor(1);
   gr_asymm->SetMarkerStyle(20);
   gr_asymm->SetMarkerSize(1.2);
   gr_asymm->Draw("same p");
+  */
 
   //Define function to test XS values (above probably works in fxs but this is a test).
   Double_t test_xs(Double_t *Q2, Double_t *par)
